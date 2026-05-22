@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel de Precificação - Verk3D Print</title>
+    <title>Painel Integrado - Verk3D Print</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
@@ -40,7 +40,7 @@
 
         header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
         }
 
         header h1 {
@@ -52,11 +52,39 @@
             color: #6c757d;
         }
 
-        .grid {
+        /* Sistema de Navegação por Abas */
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-size: 16px;
+            font-weight: bold;
+            color: #6c757d;
+            transition: all 0.2s;
+        }
+
+        .tab-btn.active {
+            color: var(--primary);
+            border-bottom: 3px solid var(--primary);
+            margin-bottom: -2px;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
             display: block;
         }
 
-        /* Layout em tabelas simuladas para compatibilidade de fluxo */
+        /* Layout em colunas estruturadas */
         .main-table {
             display: table;
             width: 100%;
@@ -145,7 +173,15 @@
             background-color: var(--secondary-hover);
         }
 
-        /* Listas e Histórico */
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+            padding: 5px 10px;
+            font-size: 12px;
+            width: auto;
+            margin: 0;
+        }
+
         ul {
             list-style: none;
         }
@@ -154,8 +190,9 @@
             padding: 12px;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
-            cursor: pointer;
-            transition: background 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .item-lista:hover {
@@ -186,127 +223,241 @@
 
     <div class="container">
         <header>
-            <h1>Painel de Precificação Verk3D Print</h1>
-            <p>Calcule orçamentos de impressão 3D e gerencie seu catálogo de modelos</p>
+            <h1>Painel de Controle Verk3D Print</h1>
+            <p>Gerencie custos de filamentos, catálogos de modelos e orçamentos em um só lugar</p>
         </header>
 
-        <div class="main-table">
-            <div class="main-cell">
-                
-                <div class="card">
-                    <h2>1. Selecionar ou Cadastrar Modelo</h2>
-                    <div class="form-group">
-                        <label for="modeloSelect">Carregar Modelo Salvo:</label>
-                        <select id="modeloSelect" onchange="carregarModelo()">
-                            <option value="">-- Selecione para autopreencher --</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="nomeModeloNovo">Nome do Modelo (para Salvar Novo):</label>
-                        <input type="text" id="nomeModeloNovo" placeholder="Ex: Urubu do Flamengo">
-                    </div>
-                    <button class="btn btn-secondary" onclick="salvarModeloNoCatalogo()">Salvar Modelo no Catálogo</button>
-                </div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="mudarAba('orcamentos')">Calculadora de Orçamentos</button>
+            <button class="tab-btn" onclick="mudarAba('materiais')">Entrada de Materiais (Estoque/Custos)</button>
+        </div>
 
-                <div class="card">
-                    <h2>2. Dados da Impressão</h2>
-                    <div class="form-group">
-                        <label for="cliente">Nome do Cliente:</label>
-                        <input type="text" id="cliente" placeholder="Ex: João Silva">
+        <div id="aba-orcamentos" class="tab-content active">
+            <div class="main-table">
+                <div class="main-cell">
+                    <div class="card">
+                        <h2>1. Selecionar ou Cadastrar Modelo</h2>
+                        <div class="form-group">
+                            <label for="modeloSelect">Carregar Modelo Salvo:</label>
+                            <select id="modeloSelect" onchange="carregarModelo()">
+                                <option value="">-- Selecione para autopreencher --</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="nomeModeloNovo">Nome do Modelo (para Salvar Novo):</label>
+                            <input type="text" id="nomeModeloNovo" placeholder="Ex: Urubu do Flamengo">
+                        </div>
+                        <button class="btn btn-secondary" onclick="salvarModeloNoCatalogo()">Salvar Modelo no Catálogo</button>
                     </div>
-                    <div class="form-group">
-                        <label for="peso">Peso Estimado (g):</label>
-                        <input type="number" id="peso" placeholder="Ex: 393" step="any">
-                    </div>
-                    <div class="form-group">
-                        <label for="tempo">Tempo de Impressão (Horas):</label>
-                        <input type="number" id="tempo" placeholder="Ex: 21" step="any">
-                    </div>
-                    
-                    <div class="flex-btn-group">
-                        <button class="btn btn-primary" onclick="gerarEsalvar()">Gerar PDF</button>
-                        <button class="btn btn-secondary" style="background-color: #495057;" onclick="limparCampos()">Limpar</button>
-                    </div>
-                    <div class="clear"></div>
-                </div>
 
-            </div>
-
-            <div class="main-cell">
-                
-                <div class="card">
-                    <h2>Configurações de Custo Ocultas</h2>
-                    <div class="form-group">
-                        <label>Custo por Grama (Filamento): R$ 0,10 (R$ 100/kg)</label>
-                        <label>Hora-Máquina Base: R$ 5,00/h</label>
-                        <label>Margem de Lucro (Markup): 50%</label>
+                    <div class="card">
+                        <h2>2. Dados da Impressão</h2>
+                        <div class="form-group">
+                            <label for="cliente">Nome do Cliente:</label>
+                            <input type="text" id="cliente" placeholder="Ex: João Silva">
+                        </div>
+                        <div class="form-group">
+                            <label for="peso">Peso Estimado (g):</label>
+                            <input type="number" id="peso" placeholder="Ex: 393" step="any">
+                        </div>
+                        <div class="form-group">
+                            <label for="tempo">Tempo de Impressão (Horas):</label>
+                            <input type="number" id="tempo" placeholder="Ex: 21" step="any">
+                        </div>
+                        
+                        <div class="flex-btn-group">
+                            <button class="btn btn-primary" onclick="gerarEsalvar()">Gerar PDF</button>
+                            <button class="btn btn-secondary" style="background-color: #495057;" onclick="limparCampos()">Limpar</button>
+                        </div>
+                        <div class="clear"></div>
                     </div>
                 </div>
 
-                <div class="card">
-                    <h2>Histórico de Orçamentos Salvos</h2>
-                    <ul id="listaHistorico">
-                        <li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum orçamento gerado ainda.</li>
-                    </ul>
-                </div>
+                <div class="main-cell">
+                    <div class="card">
+                        <h2>Configurações Atuais de Custo</h2>
+                        <div class="form-group">
+                            <label id="labelCustoGrama">Custo por Grama Médio: Calculando...</label>
+                            <label>Hora-Máquina Base: R$ 5,00/h</label>
+                            <label>Margem de Lucro (Markup): 50%</label>
+                        </div>
+                    </div>
 
+                    <div class="card">
+                        <h2>Histórico de Orçamentos Salvos</h2>
+                        <ul id="listaHistorico">
+                            <li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum orçamento gerado ainda.</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
         </div>
+
+        <div id="aba-materiais" class="tab-content">
+            <div class="main-table">
+                <div class="main-cell">
+                    <div class="card">
+                        <h2>Cadastrar Entrada de Filamento</h2>
+                        <div class="form-group">
+                            <label for="matNome">Marca/Cor do Filamento:</label>
+                            <input type="text" id="matNome" placeholder="Ex: PLA Preto Premium">
+                        </div>
+                        <div class="form-group">
+                            <label for="matPeso">Peso do Carretel (g):</label>
+                            <input type="number" id="matPeso" placeholder="Ex: 1000" value="1000">
+                        </div>
+                        <div class="form-group">
+                            <label for="matPreco">Preço Pago (R$):</label>
+                            <input type="number" id="matPreco" placeholder="Ex: 95.00" step="any">
+                        </div>
+                        <button class="btn btn-primary" onclick="adicionarMaterial()">Adicionar ao Estoque</button>
+                    </div>
+                </div>
+
+                <div class="main-cell">
+                    <div class="card">
+                        <h2>Média Ponderada de Custos</h2>
+                        <div style="font-size: 20px; font-weight: bold; color: var(--secondary); margin-bottom: 15px;" id="mediaDisplay">
+                            R$ 0,1000 /g (R$ 100,00 /kg)
+                        </div>
+                        <p style="font-size: 13px; color: #6c757d; margin-bottom: 20px;">
+                            Este valor médio é calculado com base em todas as entradas registradas abaixo e reflete o custo real do seu estoque.
+                        </p>
+                        <h2>Filamentos Cadastrados</h2>
+                        <ul id="listaMateriais">
+                            <li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum filamento cadastrado.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // --- CONSTANTES DE CONFIGURAÇÃO DE PREÇO ---
-        const CUSTO_POR_GRAMA = 0.10;    // R$ 100 por kg / 1000g
-        const VALOR_HORA_MAQUINA = 5.00; // Valor por hora equilibrado
-        const MARGEM_LUCRO = 0.50;       // 50% de markup sobre o custo
+        // --- VARIÁVEL GLOBAL DINÂMICA (VALOR PADRÃO CASO ESTOQUE ESTEJA VAZIO) ---
+        let CUSTO_POR_GRAMA_MEDIO = 0.10; 
+        const VALOR_HORA_MAQUINA = 5.00; 
+        const MARGEM_LUCRO = 0.50;       
 
-        // --- INICIALIZAÇÃO DO SISTEMA ---
         window.onload = function() {
             atualizarSelectModelos();
             exibirHistorico();
+            atualizarMateriaisEEstatistícas();
         };
 
-        // --- FUNÇÃO 1: SALVAR NOVO MODELO NO CATÁLOGO ---
+        // --- ALTERNADOR DE ABAS ---
+        function mudarAba(aba) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            if(aba === 'orcamentos') {
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
+                document.getElementById('aba-orcamentos').classList.add('active');
+            } else {
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
+                document.getElementById('aba-materiais').classList.add('active');
+            }
+        }
+
+        // --- CONTROLE DE MATERIAIS E MÉDIA ---
+        function adicionarMaterial() {
+            const nome = document.getElementById('matNome').value.trim();
+            const peso = parseFloat(document.getElementById('matPeso').value) || 0;
+            const preco = parseFloat(document.getElementById('matPreco').value) || 0;
+
+            if (!nome || peso <= 0 || preco <= 0) {
+                alert("Por favor, preencha corretamente todos os campos do filamento.");
+                return;
+            }
+
+            const materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            materiais.push({ id: Date.now(), nome, peso, preco });
+            localStorage.setItem('verk3d_materiais', JSON.stringify(materiais));
+
+            document.getElementById('matNome').value = "";
+            document.getElementById('matPreco').value = "";
+            
+            atualizarMateriaisEEstatistícas();
+        }
+
+        function deletarMaterial(id) {
+            let materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            materiais = materiais.filter(m => m.id !== id);
+            localStorage.setItem('verk3d_materiais', JSON.stringify(materiais));
+            atualizarMateriaisEEstatistícas();
+        }
+
+        function atualizarMateriaisEEstatistícas() {
+            const listaUl = document.getElementById('listaMateriais');
+            const materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            
+            if (materiais.length === 0) {
+                listaUl.innerHTML = '<li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum filamento cadastrado. Usando padrão (R$ 0,10/g).</li>';
+                CUSTO_POR_GRAMA_MEDIO = 0.10;
+                document.getElementById('mediaDisplay').textContent = "R$ 0,1000 /g (R$ 100,00 /kg)";
+                document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ 0,10 (Padrão)";
+                return;
+            }
+
+            listaUl.innerHTML = '';
+            let pesoTotalAcumulado = 0;
+            let precoTotalAcumulado = 0;
+
+            materiais.forEach(m => {
+                pesoTotalAcumulado += m.peso;
+                precoTotalAcumulado += m.preco;
+
+                const custoGramaItem = m.preco / m.peso;
+
+                const li = document.createElement('li');
+                li.className = 'item-lista';
+                li.innerHTML = `
+                    <div>
+                        <strong>${m.nome}</strong> - ${m.peso}g por R$ ${m.preco.toFixed(2)} 
+                        <span style="color:#6c757d; font-size:12px;">(R$ ${custoGramaItem.toFixed(4)}/g)</span>
+                    </div>
+                    <button class="btn btn-danger" onclick="deletarMaterial(${m.id})">Remover</button>
+                `;
+                listaUl.appendChild(li);
+            });
+
+            // Média Ponderada Real do Estoque
+            CUSTO_POR_GRAMA_MEDIO = precoTotalAcumulado / pesoTotalAcumulado;
+            const custoKgEquivalente = CUSTO_POR_GRAMA_MEDIO * 1000;
+
+            document.getElementById('mediaDisplay').textContent = `R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} /g (R$ ${custoKgEquivalente.toFixed(2)} /kg)`;
+            document.getElementById('labelCustoGrama').textContent = `Custo por Grama Médio: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} (Estoque Atualizado)`;
+        }
+
+        // --- CATALOGO DE MODELOS ---
         function salvarModeloNoCatalogo() {
             const nome = document.getElementById('nomeModeloNovo').value.trim();
             const peso = parseFloat(document.getElementById('peso').value) || 0;
             const tempo = parseFloat(document.getElementById('tempo').value) || 0;
 
-            if (!nome) {
-                alert("Por favor, digite um nome para registrar o modelo no catálogo.");
-                return;
-            }
-            if (peso <= 0 || tempo <= 0) {
-                alert("Preencha o Peso e o Tempo antes de salvar o modelo.");
+            if (!nome || peso <= 0 || tempo <= 0) {
+                alert("Preencha Nome, Peso e Tempo válidos para salvar no catálogo.");
                 return;
             }
 
             const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
-            
-            // Verifica se o modelo já existe para não duplicar
             const indexExistente = catalogo.findIndex(m => m.nome.toLowerCase() === nome.toLowerCase());
             const novoModelo = { nome, peso, tempo };
 
-            if (indexExistente > -1) {
-                catalogo[indexExistente] = novoModelo; // Atualiza se já existir
-            } else {
-                catalogo.push(novoModelo); // Adiciona novo
-            }
+            if (indexExistente > -1) catalogo[indexExistente] = novoModelo;
+            else catalogo.push(novoModelo);
 
             localStorage.setItem('verk3d_catalogo', JSON.stringify(catalogo));
-            alert(`Modelo "${nome}" salvo com sucesso no catálogo!`);
-            
+            alert(`Modelo "${nome}" catalogado!`);
             document.getElementById('nomeModeloNovo').value = "";
             atualizarSelectModelos();
         }
 
-        // --- FUNÇÃO 2: ATUALIZAR DROPDOWN DE MODELOS ---
         function atualizarSelectModelos() {
             const select = document.getElementById('modeloSelect');
             select.innerHTML = '<option value="">-- Selecione para autopreencher --</option>';
-            
             const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
-            
             catalogo.forEach((modelo, index) => {
                 const opt = document.createElement('option');
                 opt.value = index;
@@ -315,25 +466,20 @@
             });
         }
 
-        // --- FUNÇÃO 3: CARREGAR DADOS DO MODELO SELECIONADO ---
         function carregarModelo() {
             const select = document.getElementById('modeloSelect');
             const index = select.value;
-            
             if (index === "") return;
-
             const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
             const modelo = catalogo[index];
-
             if (modelo) {
-                document.getElementById('peso').value = modelo.weight || modelo.peso;
-                document.getElementById('tempo').value = modelo.time || modelo.tempo;
-                // Preenche o campo de texto de orçamento caso o usuário queira usar o nome do modelo
+                document.getElementById('peso').value = modelo.peso;
+                document.getElementById('tempo').value = modelo.tempo;
                 document.getElementById('cliente').value = "Orçamento: " + modelo.nome;
             }
         }
 
-        // --- FUNÇÃO 4: CALCULAR, SALVAR NO HISTÓRICO E GERAR PDF ---
+        // --- OPERAÇÃO DE PRECIFICAÇÃO E PDF ---
         function gerarEsalvar() {
             try {
                 const clienteInput = document.getElementById('cliente').value;
@@ -342,17 +488,16 @@
                 const tempo = parseFloat(document.getElementById('tempo').value) || 0;
 
                 if (peso <= 0 || tempo <= 0) {
-                    alert("Por favor, preencha peso e tempo válidos para o cálculo.");
+                    alert("Por favor, informe peso e tempo válidos.");
                     return;
                 }
 
-                // Cálculos de engenharia de custo
-                const custoMaterial = peso * CUSTO_POR_GRAMA;
+                // Utiliza a variável dinâmica calculada a partir da aba de materiais
+                const custoMaterial = peso * CUSTO_POR_GRAMA_MEDIO;
                 const custoOperacao = tempo * VALOR_HORA_MAQUINA;
                 const custoTotal = custoMaterial + custoOperacao;
                 const valorFinal = custoTotal * (1 + MARGEM_LUCRO);
 
-                // Armazenamento no histórico local
                 const orcamento = {
                     cliente: cliente,
                     valor: valorFinal.toFixed(2),
@@ -363,13 +508,12 @@
                 lista.push(orcamento);
                 localStorage.setItem('verk3d_orcamentos', JSON.stringify(lista));
 
-                // Processamento de PDF via jsPDF de forma robusta
                 if (window.jspdf && window.jspdf.jsPDF) {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
                     
                     doc.setFontSize(20);
-                    doc.setTextColor(211, 47, 47); // Vermelho institucional Verk3D
+                    doc.setTextColor(211, 47, 47);
                     doc.text("VERK3D PRINT - ORÇAMENTO", 10, 20);
                     
                     doc.setDrawColor(200, 200, 200);
@@ -377,37 +521,36 @@
 
                     doc.setFontSize(12);
                     doc.setTextColor(33, 37, 41);
-                    doc.text(`Identificação / Cliente: ${cliente}`, 10, 35);
-                    doc.text(`Data de Emissão: ${orcamento.data}`, 10, 43);
+                    doc.text(`Cliente: ${cliente}`, 10, 35);
+                    doc.text(`Data: ${orcamento.data}`, 10, 43);
                     
                     doc.setFontSize(14);
-                    doc.text("Especificações do Projeto:", 10, 58);
+                    doc.text("Especificações Técnicas:", 10, 58);
                     doc.setFontSize(12);
-                    doc.text(`- Consumo Estimado de Material: ${peso}g`, 15, 68);
-                    doc.text(`- Tempo Estimado de Máquina: ${tempo} horas`, 15, 76);
+                    doc.text(`- Peso de Material: ${peso}g`, 15, 68);
+                    doc.text(`- Tempo de Operação: ${tempo} horas`, 15, 76);
+                    doc.text(`- Custo do Material Base Aplicado: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}/g`, 15, 84);
                     
-                    doc.line(10, 85, 200, 85);
+                    doc.line(10, 92, 200, 92);
                     doc.setFontSize(16);
-                    doc.text(`VALOR TOTAL SUGERIDO: R$ ${valorFinal.toFixed(2)}`, 10, 98);
+                    doc.text(`VALOR FINAL: R$ ${valorFinal.toFixed(2)}`, 10, 105);
 
                     doc.save(`orcamento_${cliente.replace(/\s+/g, '_')}.pdf`);
                 } else {
-                    alert("Aviso: Falha ao carregar o motor de PDF externo. O histórico foi armazenado.");
+                    alert("Histórico salvo localmente. Biblioteca de PDF indisponível no momento.");
                 }
 
                 exibirHistorico();
 
             } catch (err) {
-                console.error("Erro no processamento:", err);
-                alert("Houve uma falha interna na execução matemática.");
+                console.error(err);
+                alert("Erro ao executar os cálculos técnicos.");
             }
         }
 
-        // --- FUNÇÃO 5: RENDERIZAR HISTÓRICO NA TELA ---
         function exibirHistorico() {
             const listaHistorico = document.getElementById('listaHistorico');
             if (!listaHistorico) return;
-
             const lista = JSON.parse(localStorage.getItem('verk3d_orcamentos') || '[]');
             
             if (lista.length === 0) {
@@ -416,16 +559,15 @@
             }
 
             listaHistorico.innerHTML = '';
-            // Renderiza invertido para ver o mais recente no topo
             lista.slice().reverse().forEach(item => {
                 const li = document.createElement('li');
-                li.className = 'item-lista';
+                li.style.padding = "10px";
+                li.style.borderBottom = "1px solid var(--border)";
                 li.innerHTML = `📅 ${item.data} | <strong>${item.cliente}</strong>: R$ ${item.valor}`;
                 listaHistorico.appendChild(li);
             });
         }
 
-        // --- FUNÇÃO 6: LIMPAR FORMULÁRIO ---
         function limparCampos() {
             document.getElementById('cliente').value = "";
             document.getElementById('peso').value = "";
