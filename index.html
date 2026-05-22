@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Integrado - Verk3D Print</title>
+    <title>Painel Multi-Usuário - Verk3D Print</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
@@ -54,7 +54,7 @@
 
         /* Sistema de Navegação por Abas */
         .tabs {
-            display: flex;
+            display: none; /* Ocultado antes do login */
             margin-bottom: 20px;
             border-bottom: 2px solid var(--border);
         }
@@ -84,7 +84,7 @@
             display: block;
         }
 
-        /* Layout em colunas estruturadas */
+        /* Layout Estruturado */
         .main-table {
             display: table;
             width: 100%;
@@ -182,6 +182,16 @@
             margin: 0;
         }
 
+        .user-badge {
+            background-color: #e9ecef;
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
+            margin-bottom: 15px;
+        }
+
         ul {
             list-style: none;
         }
@@ -217,6 +227,12 @@
         .clear {
             clear: both;
         }
+
+        /* Tela de autenticação centralizada */
+        #aba-auth {
+            max-width: 400px;
+            margin: 40px auto;
+        }
     </style>
 </head>
 <body>
@@ -224,15 +240,38 @@
     <div class="container">
         <header>
             <h1>Painel de Controle Verk3D Print</h1>
-            <p>Gerencie custos de filamentos, catálogos de modelos e orçamentos em um só lugar</p>
+            <p>Precificação inteligente, controle de filamentos e gestão individual de dados</p>
         </header>
 
-        <div class="tabs">
-            <button class="tab-btn active" onclick="mudarAba('orcamentos')">Calculadora de Orçamentos</button>
-            <button class="tab-btn" onclick="mudarAba('materiais')">Entrada de Materiais (Estoque/Custos)</button>
+        <div id="userInfoBar" style="display: none; text-align: right; margin-bottom: 10px;">
+            <span class="user-badge" id="usernameDisplay">Usuário: ...</span>
+            <button class="btn btn-danger" style="padding: 5px 12px; font-size: 13px;" onclick="efetuarLogout()">Sair</button>
         </div>
 
-        <div id="aba-orcamentos" class="tab-content active">
+        <div class="tabs" id="mainTabs">
+            <button class="tab-btn active" onclick="mudarAba('orcamentos')">Calculadora de Orçamentos</button>
+            <button class="tab-btn" onclick="mudarAba('materiais')">Entrada de Materiais (Estoque)</button>
+        </div>
+
+        <div id="aba-auth" class="tab-content active">
+            <div class="card">
+                <h2 id="authTitle">Acesse sua Conta</h2>
+                <div class="form-group">
+                    <label for="authLogin">Nome de Usuário (Login):</label>
+                    <input type="text" id="authLogin" placeholder="Ex: joao3d">
+                </div>
+                <div class="form-group">
+                    <label for="authSenha">Senha:</label>
+                    <input type="password" id="authSenha" placeholder="Digite sua senha">
+                </div>
+                <button class="btn btn-primary" id="btnAuthPrincipal" onclick="efetuarLogin()">Entrar</button>
+                <p style="text-align: center; font-size: 13px; cursor: pointer; color: var(--secondary); margin-top: 10px;" id="toggleAuthMode" onclick="alternarModoAuth()">
+                    Não tem uma conta? Cadastre-se aqui
+                </p>
+            </div>
+        </div>
+
+        <div id="aba-orcamentos" class="tab-content">
             <div class="main-table">
                 <div class="main-cell">
                     <div class="card">
@@ -321,7 +360,7 @@
                             R$ 0,1000 /g (R$ 100,00 /kg)
                         </div>
                         <p style="font-size: 13px; color: #6c757d; margin-bottom: 20px;">
-                            Este valor médio é calculado com base em todas as entradas registradas abaixo e reflete o custo real do seu estoque.
+                            Este valor médio é calculado exclusivamente com base nos materiais cadastrados na sua conta.
                         </p>
                         <h2>Filamentos Cadastrados</h2>
                         <ul id="listaMateriais">
@@ -335,19 +374,105 @@
     </div>
 
     <script>
-        // --- VARIÁVEL GLOBAL DINÂMICA (VALOR PADRÃO CASO ESTOQUE ESTEJA VAZIO) ---
+        // --- VARIÁVEIS DE CONTROLE GLOBAL ---
+        let USUARIO_LOGADO = null;
         let CUSTO_POR_GRAMA_MEDIO = 0.10; 
         const VALOR_HORA_MAQUINA = 5.00; 
         const MARGEM_LUCRO = 0.50;       
+        let MODO_CADASTRO = false;
 
-        window.onload = function() {
+        // --- SISTEMA DE AUTENTICAÇÃO (LOGIN / REGISTRO) ---
+        function alternarModoAuth() {
+            MODO_CADASTRO = !MODO_CADASTRO;
+            const title = document.getElementById('authTitle');
+            const btn = document.getElementById('btnAuthPrincipal');
+            const toggleText = document.getElementById('toggleAuthMode');
+            
+            if (MODO_CADASTRO) {
+                title.textContent = "Criar Nova Conta";
+                btn.textContent = "Registrar e Entrar";
+                toggleText.textContent = "Já tem uma conta? Acesse o Login";
+            } else {
+                title.textContent = "Acesse sua Conta";
+                btn.textContent = "Entrar";
+                toggleText.textContent = "Não tem uma conta? Cadastre-se aqui";
+            }
+        }
+
+        function efetuarLogin() {
+            const user = document.getElementById('authLogin').value.trim().toLowerCase();
+            const senha = document.getElementById('authSenha').value.trim();
+
+            if (!user || !senha) {
+                alert("Preencha todos os campos de acesso.");
+                return;
+            }
+
+            const usuariosCadastrados = JSON.parse(localStorage.getItem('verk3d_usuarios') || '{}');
+
+            if (MODO_CADASTRO) {
+                // Modo Registro
+                if (usuariosCadastrados[user]) {
+                    alert("Este nome de usuário já está sendo utilizado.");
+                    return;
+                }
+                usuariosCadastrados[user] = senha;
+                localStorage.setItem('verk3d_usuarios', JSON.stringify(usuariosCadastrados));
+                alert("Conta registrada com sucesso!");
+            } else {
+                // Modo Login
+                if (!usuariosCadastrados[user] || usuariosCadastrados[user] !== senha) {
+                    alert("Usuário ou senha incorretos.");
+                    return;
+                }
+            }
+
+            // Ativa sessão do usuário
+            USUARIO_LOGADO = user;
+            document.getElementById('authLogin').value = "";
+            document.getElementById('authSenha').value = "";
+            
+            inicializarPainelUsuario();
+        }
+
+        function inicializarPainelUsuario() {
+            // Ajustes de Interface
+            document.getElementById('aba-auth').classList.remove('active');
+            document.getElementById('mainTabs').style.display = 'flex';
+            document.getElementById('userInfoBar').style.display = 'block';
+            document.getElementById('usernameDisplay').textContent = `Usuário: ${USUARIO_LOGADO.toUpperCase()}`;
+            
+            document.getElementById('aba-orcamentos').classList.add('active');
+
+            // Carrega e atualiza as listagens usando as chaves exclusivas do usuário logado
             atualizarSelectModelos();
             exibirHistorico();
             atualizarMateriaisEEstatistícas();
-        };
+        }
+
+        function efetuarLogout() {
+            USUARIO_LOGADO = null;
+            document.getElementById('mainTabs').style.display = 'none';
+            document.getElementById('userInfoBar').style.display = 'none';
+            document.getElementById('aba-orcamentos').classList.remove('active');
+            document.getElementById('aba-materiais').classList.remove('active');
+            
+            // Retorna à tela de login
+            MODO_CADASTRO = false;
+            const title = document.getElementById('authTitle');
+            const btn = document.getElementById('btnAuthPrincipal');
+            const toggleText = document.getElementById('toggleAuthMode');
+            title.textContent = "Acesse sua Conta";
+            btn.textContent = "Entrar";
+            toggleText.textContent = "Não tem uma conta? Cadastre-se aqui";
+            
+            document.getElementById('aba-auth').classList.add('active');
+            limparCampos();
+        }
 
         // --- ALTERNADOR DE ABAS ---
         function mudarAba(aba) {
+            if (!USUARIO_LOGADO) return;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
@@ -360,7 +485,12 @@
             }
         }
 
-        // --- CONTROLE DE MATERIAIS E MÉDIA ---
+        // --- AUXILIARES DE CORES E DATA ISOLADA POR USUÁRIO ---
+        function obterChaveLocal(nomeChave) {
+            return `verk3d_${USUARIO_LOGADO}_${nomeChave}`;
+        }
+
+        // --- CONTROLE DE MATERIAIS INDIVIDUALIZADO ---
         function adicionarMaterial() {
             const nome = document.getElementById('matNome').value.trim();
             const peso = parseFloat(document.getElementById('matPeso').value) || 0;
@@ -371,9 +501,10 @@
                 return;
             }
 
-            const materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            const chave = obterChaveLocal('materiais');
+            const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             materiais.push({ id: Date.now(), nome, peso, preco });
-            localStorage.setItem('verk3d_materiais', JSON.stringify(materiais));
+            localStorage.setItem(chave, JSON.stringify(materiais));
 
             document.getElementById('matNome').value = "";
             document.getElementById('matPreco').value = "";
@@ -382,15 +513,17 @@
         }
 
         function deletarMaterial(id) {
-            let materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            const chave = obterChaveLocal('materiais');
+            let materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             materiais = materiais.filter(m => m.id !== id);
-            localStorage.setItem('verk3d_materiais', JSON.stringify(materiais));
+            localStorage.setItem(chave, JSON.stringify(materiais));
             atualizarMateriaisEEstatistícas();
         }
 
         function atualizarMateriaisEEstatistícas() {
             const listaUl = document.getElementById('listaMateriais');
-            const materiais = JSON.parse(localStorage.getItem('verk3d_materiais') || '[]');
+            const chave = obterChaveLocal('materiais');
+            const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             
             if (materiais.length === 0) {
                 listaUl.innerHTML = '<li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum filamento cadastrado. Usando padrão (R$ 0,10/g).</li>';
@@ -407,7 +540,6 @@
             materiais.forEach(m => {
                 pesoTotalAcumulado += m.peso;
                 precoTotalAcumulado += m.preco;
-
                 const custoGramaItem = m.preco / m.peso;
 
                 const li = document.createElement('li');
@@ -422,7 +554,6 @@
                 listaUl.appendChild(li);
             });
 
-            // Média Ponderada Real do Estoque
             CUSTO_POR_GRAMA_MEDIO = precoTotalAcumulado / pesoTotalAcumulado;
             const custoKgEquivalente = CUSTO_POR_GRAMA_MEDIO * 1000;
 
@@ -430,7 +561,7 @@
             document.getElementById('labelCustoGrama').textContent = `Custo por Grama Médio: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} (Estoque Atualizado)`;
         }
 
-        // --- CATALOGO DE MODELOS ---
+        // --- CATALOGO DE MODELOS INDIVIDUALIZADO ---
         function salvarModeloNoCatalogo() {
             const nome = document.getElementById('nomeModeloNovo').value.trim();
             const peso = parseFloat(document.getElementById('peso').value) || 0;
@@ -441,15 +572,16 @@
                 return;
             }
 
-            const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
+            const chave = obterChaveLocal('catalogo');
+            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
             const indexExistente = catalogo.findIndex(m => m.nome.toLowerCase() === nome.toLowerCase());
             const novoModelo = { nome, peso, tempo };
 
             if (indexExistente > -1) catalogo[indexExistente] = novoModelo;
             else catalogo.push(novoModelo);
 
-            localStorage.setItem('verk3d_catalogo', JSON.stringify(catalogo));
-            alert(`Modelo "${nome}" catalogado!`);
+            localStorage.setItem(chave, JSON.stringify(catalogo));
+            alert(`Modelo "${nome}" catalogado com sucesso!`);
             document.getElementById('nomeModeloNovo').value = "";
             atualizarSelectModelos();
         }
@@ -457,7 +589,8 @@
         function atualizarSelectModelos() {
             const select = document.getElementById('modeloSelect');
             select.innerHTML = '<option value="">-- Selecione para autopreencher --</option>';
-            const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
+            const chave = obterChaveLocal('catalogo');
+            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
             catalogo.forEach((modelo, index) => {
                 const opt = document.createElement('option');
                 opt.value = index;
@@ -470,7 +603,8 @@
             const select = document.getElementById('modeloSelect');
             const index = select.value;
             if (index === "") return;
-            const catalogo = JSON.parse(localStorage.getItem('verk3d_catalogo') || '[]');
+            const chave = obterChaveLocal('catalogo');
+            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
             const modelo = catalogo[index];
             if (modelo) {
                 document.getElementById('peso').value = modelo.peso;
@@ -479,7 +613,7 @@
             }
         }
 
-        // --- OPERAÇÃO DE PRECIFICAÇÃO E PDF ---
+        // --- ORÇAMENTOS E PRODUÇÃO DE PDF INDIVIDUALIZADO ---
         function gerarEsalvar() {
             try {
                 const clienteInput = document.getElementById('cliente').value;
@@ -492,7 +626,6 @@
                     return;
                 }
 
-                // Utiliza a variável dinâmica calculada a partir da aba de materiais
                 const custoMaterial = peso * CUSTO_POR_GRAMA_MEDIO;
                 const custoOperacao = tempo * VALOR_HORA_MAQUINA;
                 const custoTotal = custoMaterial + custoOperacao;
@@ -504,9 +637,10 @@
                     data: new Date().toLocaleDateString()
                 };
 
-                const lista = JSON.parse(localStorage.getItem('verk3d_orcamentos') || '[]');
+                const chave = obterChaveLocal('orcamentos');
+                const lista = JSON.parse(localStorage.getItem(chave) || '[]');
                 lista.push(orcamento);
-                localStorage.setItem('verk3d_orcamentos', JSON.stringify(lista));
+                localStorage.setItem(chave, JSON.stringify(lista));
 
                 if (window.jspdf && window.jspdf.jsPDF) {
                     const { jsPDF } = window.jspdf;
@@ -521,23 +655,24 @@
 
                     doc.setFontSize(12);
                     doc.setTextColor(33, 37, 41);
-                    doc.text(`Cliente: ${cliente}`, 10, 35);
-                    doc.text(`Data: ${orcamento.data}`, 10, 43);
+                    doc.text(`Operador Técnico: ${USUARIO_LOGADO.toUpperCase()}`, 10, 35);
+                    doc.text(`Identificação do Cliente: ${cliente}`, 10, 43);
+                    doc.text(`Data de Geração: ${orcamento.data}`, 10, 51);
                     
                     doc.setFontSize(14);
-                    doc.text("Especificações Técnicas:", 10, 58);
+                    doc.text("Especificações Técnicas:", 10, 66);
                     doc.setFontSize(12);
-                    doc.text(`- Peso de Material: ${peso}g`, 15, 68);
-                    doc.text(`- Tempo de Operação: ${tempo} horas`, 15, 76);
-                    doc.text(`- Custo do Material Base Aplicado: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}/g`, 15, 84);
+                    doc.text(`- Peso de Material Aplicado: ${peso}g`, 15, 76);
+                    doc.text(`- Tempo de Operação Alocado: ${tempo} horas`, 15, 84);
+                    doc.text(`- Custo do Material Médio Calculado: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}/g`, 15, 92);
                     
-                    doc.line(10, 92, 200, 92);
+                    doc.line(10, 100, 200, 100);
                     doc.setFontSize(16);
-                    doc.text(`VALOR FINAL: R$ ${valorFinal.toFixed(2)}`, 10, 105);
+                    doc.text(`VALOR FINAL DE REVENDA: R$ ${valorFinal.toFixed(2)}`, 10, 113);
 
                     doc.save(`orcamento_${cliente.replace(/\s+/g, '_')}.pdf`);
                 } else {
-                    alert("Histórico salvo localmente. Biblioteca de PDF indisponível no momento.");
+                    alert("Orçamento adicionado ao banco local. Gerador de PDF offline.");
                 }
 
                 exibirHistorico();
@@ -551,10 +686,11 @@
         function exibirHistorico() {
             const listaHistorico = document.getElementById('listaHistorico');
             if (!listaHistorico) return;
-            const lista = JSON.parse(localStorage.getItem('verk3d_orcamentos') || '[]');
+            const chave = obterChaveLocal('orcamentos');
+            const lista = JSON.parse(localStorage.getItem(chave) || '[]');
             
             if (lista.length === 0) {
-                listaHistorico.innerHTML = '<li style="color:#6c757d; font-size:14px; padding:10px;">Nenhum orçamento gerado ainda.</li>';
+                listaHistorico.innerHTML = '<li style="color:#6c757d; font-size:14px; padding:10px;">Nenhum orçamento gerado ainda nesta conta.</li>';
                 return;
             }
 
