@@ -3,9 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Multi-Usuário - Verk3D Print</title>
+    <title>Painel Supabase - Verk3D Print</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
@@ -19,252 +20,84 @@
             --border: #dee2e6;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 30px 15px; line-height: 1.5; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 25px; }
+        header h1 { color: var(--primary); font-size: 28px; }
+        header p { color: #6c757d; }
 
-        body {
-            font-family: 'Segoe UI', Arial, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            padding: 30px 15px;
-            line-height: 1.5;
-        }
+        .tabs { display: none; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .tab-btn { padding: 12px 24px; cursor: pointer; background: none; border: none; font-size: 16px; font-weight: bold; color: #6c757d; transition: all 0.2s; }
+        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
 
-        .container {
-            max-width: 1000px;
-            margin: 0 auto;
-        }
+        .main-table { display: table; width: 100%; border-collapse: separate; border-spacing: 20px 0; }
+        .main-cell { display: table-cell; width: 50%; vertical-align: top; }
+        .card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+        .card h2 { font-size: 18px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--border); color: #495057; }
+        
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; background: #fdfdfd; }
+        input:focus, select:focus { outline: none; border-color: var(--primary); background: #fff; }
 
-        header {
-            text-align: center;
-            margin-bottom: 25px;
-        }
+        .btn { display: inline-block; width: 100%; padding: 12px; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s; margin-bottom: 10px; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-secondary { background-color: var(--secondary); color: white; }
+        .btn-secondary:hover { background-color: var(--secondary-hover); }
+        .btn-danger { background-color: #dc3545; color: white; padding: 5px 10px; font-size: 12px; width: auto; margin: 0; }
 
-        header h1 {
-            color: var(--primary);
-            font-size: 28px;
-        }
+        .user-badge { background-color: #e9ecef; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 15px; }
+        ul { list-style: none; }
+        .item-lista { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
+        .item-lista:hover { background-color: #f1f3f5; }
+        
+        /* Tabela de Gerenciamento de Usuários (Admin) */
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+        .admin-table th, .admin-table td { border: 1px solid var(--border); padding: 10px; text-align: left; }
+        .admin-table th { background-color: #f1f3f5; font-weight: bold; }
 
-        header p {
-            color: #6c757d;
-        }
-
-        /* Sistema de Navegação por Abas */
-        .tabs {
-            display: none; /* Ocultado antes do login */
-            margin-bottom: 20px;
-            border-bottom: 2px solid var(--border);
-        }
-
-        .tab-btn {
-            padding: 12px 24px;
-            cursor: pointer;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: bold;
-            color: #6c757d;
-            transition: all 0.2s;
-        }
-
-        .tab-btn.active {
-            color: var(--primary);
-            border-bottom: 3px solid var(--primary);
-            margin-bottom: -2px;
-        }
-
-        .tab-content {
-            display: none;
-        }
-
-        .tab-content.active {
-            display: block;
-        }
-
-        /* Layout Estruturado */
-        .main-table {
-            display: table;
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 20px 0;
-        }
-
-        .main-cell {
-            display: table-cell;
-            width: 50%;
-            vertical-align: top;
-        }
-
-        .card {
-            background: var(--surface);
-            padding: 25px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
-        }
-
-        .card h2 {
-            font-size: 18px;
-            margin-bottom: 20px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid var(--border);
-            color: #495057;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        label {
-            display: block;
-            margin-bottom: 6px;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        input, select {
-            width: 100%;
-            padding: 10px;
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 14px;
-            background: #fdfdfd;
-        }
-
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            background: #fff;
-        }
-
-        .btn {
-            display: inline-block;
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 4px;
-            font-size: 15px;
-            font-weight: bold;
-            cursor: pointer;
-            text-align: center;
-            transition: background 0.2s;
-            margin-bottom: 10px;
-        }
-
-        .btn-primary {
-            background-color: var(--primary);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--primary-hover);
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary);
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background-color: var(--secondary-hover);
-        }
-
-        .btn-danger {
-            background-color: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            font-size: 12px;
-            width: auto;
-            margin: 0;
-        }
-
-        .user-badge {
-            background-color: #e9ecef;
-            padding: 5px 15px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            display: inline-block;
-            margin-bottom: 15px;
-        }
-
-        ul {
-            list-style: none;
-        }
-
-        .item-lista {
-            padding: 12px;
-            border-bottom: 1px solid var(--border);
-            font-size: 14px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .item-lista:hover {
-            background-color: #f1f3f5;
-        }
-
-        .item-lista strong {
-            color: var(--primary);
-        }
-
-        .flex-btn-group {
-            margin-top: 10px;
-        }
-
-        .flex-btn-group button {
-            width: 48%;
-            float: left;
-        }
-        .flex-btn-group button:last-child {
-            float: right;
-        }
-        .clear {
-            clear: both;
-        }
-
-        /* Tela de autenticação centralizada */
-        #aba-auth {
-            max-width: 400px;
-            margin: 40px auto;
-        }
+        #aba-auth { max-width: 400px; margin: 40px auto; }
+        .flex-btn-group { margin-top: 10px; }
+        .flex-btn-group button { width: 48%; float: left; }
+        .flex-btn-group button:last-child { float: right; }
+        .clear { clear: both; }
     </style>
 </head>
 <body>
 
     <div class="container">
         <header>
-            <h1>Painel de Controle Verk3D Print</h1>
-            <p>Precificação inteligente, controle de filamentos e gestão individual de dados</p>
+            <h1>Painel Cloud Verk3D Print</h1>
+            <p>Gerenciamento profissional com autenticação em nuvem e controle administrativo</p>
         </header>
 
         <div id="userInfoBar" style="display: none; text-align: right; margin-bottom: 10px;">
-            <span class="user-badge" id="usernameDisplay">Usuário: ...</span>
+            <span class="user-badge" id="usernameDisplay">Buscando usuário...</span>
             <button class="btn btn-danger" style="padding: 5px 12px; font-size: 13px;" onclick="efetuarLogout()">Sair</button>
         </div>
 
         <div class="tabs" id="mainTabs">
             <button class="tab-btn active" onclick="mudarAba('orcamentos')">Calculadora de Orçamentos</button>
             <button class="tab-btn" onclick="mudarAba('materiais')">Entrada de Materiais (Estoque)</button>
+            <button class="tab-btn" id="abaAdminBtn" style="display: none; color: #7f5600;" onclick="mudarAba('admin')">🛡️ Gerenciar Usuários</button>
         </div>
 
         <div id="aba-auth" class="tab-content active">
             <div class="card">
                 <h2 id="authTitle">Acesse sua Conta</h2>
                 <div class="form-group">
-                    <label for="authLogin">Nome de Usuário (Login):</label>
-                    <input type="text" id="authLogin" placeholder="Ex: joao3d">
+                    <label for="authEmail">E-mail Corporativo:</label>
+                    <input type="email" id="authEmail" placeholder="Ex: seuemail@provedor.com">
                 </div>
                 <div class="form-group">
-                    <label for="authSenha">Senha:</label>
+                    <label for="authSenha">Senha (mínimo 6 caracteres):</label>
                     <input type="password" id="authSenha" placeholder="Digite sua senha">
                 </div>
-                <button class="btn btn-primary" id="btnAuthPrincipal" onclick="efetuarLogin()">Entrar</button>
+                <button class="btn btn-primary" id="btnAuthPrincipal" onclick="efetuarAutenticacao()">Entrar</button>
                 <p style="text-align: center; font-size: 13px; cursor: pointer; color: var(--secondary); margin-top: 10px;" id="toggleAuthMode" onclick="alternarModoAuth()">
                     Não tem uma conta? Cadastre-se aqui
                 </p>
@@ -303,7 +136,6 @@
                             <label for="tempo">Tempo de Impressão (Horas):</label>
                             <input type="number" id="tempo" placeholder="Ex: 21" step="any">
                         </div>
-                        
                         <div class="flex-btn-group">
                             <button class="btn btn-primary" onclick="gerarEsalvar()">Gerar PDF</button>
                             <button class="btn btn-secondary" style="background-color: #495057;" onclick="limparCampos()">Limpar</button>
@@ -321,12 +153,9 @@
                             <label>Margem de Lucro (Markup): 50%</label>
                         </div>
                     </div>
-
                     <div class="card">
                         <h2>Histórico de Orçamentos Salvos</h2>
-                        <ul id="listaHistorico">
-                            <li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum orçamento gerado ainda.</li>
-                        </ul>
+                        <ul id="listaHistorico"></ul>
                     </div>
                 </div>
             </div>
@@ -352,168 +181,229 @@
                         <button class="btn btn-primary" onclick="adicionarMaterial()">Adicionar ao Estoque</button>
                     </div>
                 </div>
-
                 <div class="main-cell">
                     <div class="card">
                         <h2>Média Ponderada de Custos</h2>
                         <div style="font-size: 20px; font-weight: bold; color: var(--secondary); margin-bottom: 15px;" id="mediaDisplay">
                             R$ 0,1000 /g (R$ 100,00 /kg)
                         </div>
-                        <p style="font-size: 13px; color: #6c757d; margin-bottom: 20px;">
-                            Este valor médio é calculado exclusivamente com base nos materiais cadastrados na sua conta.
-                        </p>
                         <h2>Filamentos Cadastrados</h2>
-                        <ul id="listaMateriais">
-                            <li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum filamento cadastrado.</li>
-                        </ul>
+                        <ul id="listaMateriais"></ul>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="aba-admin" class="tab-content">
+            <div class="card">
+                <h2>Controle Geral de Acessos e Usuários</h2>
+                <p style="font-size: 13px; color:#6c757d; margin-bottom: 15px;">Como Administrador, você pode liberar ou suspender contas em tempo real.</p>
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>E-mail do Usuário</th>
+                            <th>Data de Cadastro</th>
+                            <th>Status da Conta</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAdminUsuarios">
+                        <tr><td colspan="4" style="text-align: center;">Buscando dados no servidor...</td></tr>
+                    </tbody>
+                </table>
             </div>
         </div>
 
     </div>
 
     <script>
-        // --- VARIÁVEIS DE CONTROLE GLOBAL ---
-        let USUARIO_LOGADO = null;
+        // --- CONFIGURAÇÃO DAS CREDENCIAIS DO SEU SUPABASE ---
+        const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
+        const SUPABASE_KEY = "SUA_CHAVE_ANON_PUBLIC"; 
+        
+        // Inicializa o cliente do banco de dados
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Parâmetros operacionais locais de cálculo
         let CUSTO_POR_GRAMA_MEDIO = 0.10; 
         const VALOR_HORA_MAQUINA = 5.00; 
         const MARGEM_LUCRO = 0.50;       
         let MODO_CADASTRO = false;
+        let DADOS_PERFIL_USUARIO = null;
 
-        // --- SISTEMA DE AUTENTICAÇÃO (LOGIN / REGISTRO) ---
+        // Verifica se já existe uma sessão de usuário ativa ao carregar a página
+        window.onload = async function() {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+                verificarPerfilESessao(session.user);
+            }
+        };
+
         function alternarModoAuth() {
             MODO_CADASTRO = !MODO_CADASTRO;
-            const title = document.getElementById('authTitle');
-            const btn = document.getElementById('btnAuthPrincipal');
-            const toggleText = document.getElementById('toggleAuthMode');
-            
+            document.getElementById('authTitle').textContent = MODO_CADASTRO ? "Criar Nova Conta" : "Acesse sua Conta";
+            document.getElementById('btnAuthPrincipal').textContent = MODO_CADASTRO ? "Registrar e Ativar por E-mail" : "Entrar";
+            document.getElementById('toggleAuthMode').textContent = MODO_CADASTRO ? "Já tem uma conta? Acesse o Login" : "Não tem uma conta? Cadastre-se aqui";
+        }
+
+        async function efetuarAutenticacao() {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authSenha').value.trim();
+
+            if (!email || !password) { alert("Preencha todos os campos."); return; }
+
             if (MODO_CADASTRO) {
-                title.textContent = "Criar Nova Conta";
-                btn.textContent = "Registrar e Entrar";
-                toggleText.textContent = "Já tem uma conta? Acesse o Login";
+                // Cadastro nativo com envio automático de e-mail de verificação
+                const { data, error } = await supabase.auth.signUp({ email, password });
+                if (error) { alert("Erro ao cadastrar: " + error.message); return; }
+                alert("Cadastro realizado! Um e-mail de ativação foi enviado. Você precisa clicar no link recebido para poder ativar e acessar o sistema.");
+                alternarModoAuth();
             } else {
-                title.textContent = "Acesse sua Conta";
-                btn.textContent = "Entrar";
-                toggleText.textContent = "Não tem uma conta? Cadastre-se aqui";
+                // Login
+                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                if (error) {
+                    if(error.message.includes("Email not confirmed")) {
+                        alert("Sua conta ainda não foi ativada. Verifique sua caixa de entrada e clique no link de e-mail enviado.");
+                    } else {
+                        alert("Falha no login: " + error.message);
+                    }
+                    return;
+                }
+                verificarPerfilESessao(data.user);
             }
         }
 
-        function efetuarLogin() {
-            const user = document.getElementById('authLogin').value.trim().toLowerCase();
-            const senha = document.getElementById('authSenha').value.trim();
-
-            if (!user || !senha) {
-                alert("Preencha todos os campos de acesso.");
+        async function verificarPerfilESessao(authUser) {
+            // Consulta nossa tabela de perfis customizados no banco
+            const { data: perfil, error } = await supabase.from('perfis').select('*').eq('id', authUser.id).single();
+            
+            if (error || !perfil) {
+                alert("Erro ao validar perfil de segurança.");
+                await supabase.auth.signOut();
                 return;
             }
 
-            const usuariosCadastrados = JSON.parse(localStorage.getItem('verk3d_usuarios') || '{}');
-
-            if (MODO_CADASTRO) {
-                // Modo Registro
-                if (usuariosCadastrados[user]) {
-                    alert("Este nome de usuário já está sendo utilizado.");
-                    return;
-                }
-                usuariosCadastrados[user] = senha;
-                localStorage.setItem('verk3d_usuarios', JSON.stringify(usuariosCadastrados));
-                alert("Conta registrada com sucesso!");
-            } else {
-                // Modo Login
-                if (!usuariosCadastrados[user] || usuariosCadastrados[user] !== senha) {
-                    alert("Usuário ou senha incorretos.");
-                    return;
-                }
+            if (perfil.is_revogado) {
+                alert("Acesso negado: Esta conta foi revogada pelo administrador do sistema.");
+                await supabase.auth.signOut();
+                return;
             }
 
-            // Ativa sessão do usuário
-            USUARIO_LOGADO = user;
-            document.getElementById('authLogin').value = "";
-            document.getElementById('authSenha').value = "";
+            DADOS_PERFIL_USUARIO = perfil;
             
-            inicializarPainelUsuario();
-        }
-
-        function inicializarPainelUsuario() {
-            // Ajustes de Interface
+            // Renderiza as telas conforme permissões
             document.getElementById('aba-auth').classList.remove('active');
             document.getElementById('mainTabs').style.display = 'flex';
             document.getElementById('userInfoBar').style.display = 'block';
-            document.getElementById('usernameDisplay').textContent = `Usuário: ${USUARIO_LOGADO.toUpperCase()}`;
+            document.getElementById('usernameDisplay').textContent = `Usuário: ${perfil.email}`;
             
-            document.getElementById('aba-orcamentos').classList.add('active');
+            if (perfil.is_admin) {
+                document.getElementById('abaAdminBtn').style.display = 'inline-block';
+            }
 
-            // Carrega e atualiza as listagens usando as chaves exclusivas do usuário logado
+            document.getElementById('aba-orcamentos').classList.add('active');
+            
+            // Carrega as preferências locais salvas para o escopo deste usuário específico
             atualizarSelectModelos();
             exibirHistorico();
             atualizarMateriaisEEstatistícas();
         }
 
-        function efetuarLogout() {
-            USUARIO_LOGADO = null;
+        async function efetuarLogout() {
+            await supabase.auth.signOut();
+            DADOS_PERFIL_USUARIO = null;
             document.getElementById('mainTabs').style.display = 'none';
             document.getElementById('userInfoBar').style.display = 'none';
+            document.getElementById('abaAdminBtn').style.display = 'none';
             document.getElementById('aba-orcamentos').classList.remove('active');
             document.getElementById('aba-materiais').classList.remove('active');
-            
-            // Retorna à tela de login
-            MODO_CADASTRO = false;
-            const title = document.getElementById('authTitle');
-            const btn = document.getElementById('btnAuthPrincipal');
-            const toggleText = document.getElementById('toggleAuthMode');
-            title.textContent = "Acesse sua Conta";
-            btn.textContent = "Entrar";
-            toggleText.textContent = "Não tem uma conta? Cadastre-se aqui";
-            
+            document.getElementById('aba-admin').classList.remove('active');
             document.getElementById('aba-auth').classList.add('active');
             limparCampos();
         }
 
-        // --- ALTERNADOR DE ABAS ---
         function mudarAba(aba) {
-            if (!USUARIO_LOGADO) return;
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             
             if(aba === 'orcamentos') {
                 document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('aba-orcamentos').classList.add('active');
-            } else {
+            } else if (aba === 'materiais') {
                 document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('aba-materiais').classList.add('active');
+            } else if (aba === 'admin' && DADOS_PERFIL_USUARIO?.is_admin) {
+                document.getElementById('abaAdminBtn').classList.add('active');
+                document.getElementById('aba-admin').classList.add('active');
+                carregarUsuariosPainelAdmin();
             }
         }
 
-        // --- AUXILIARES DE CORES E DATA ISOLADA POR USUÁRIO ---
-        function obterChaveLocal(nomeChave) {
-            return `verk3d_${USUARIO_LOGADO}_${nomeChave}`;
+        // --- FUNÇÕES EXCLUSIVAS DA ABA ADMINISTRATIVA (GERENCIAR USUÁRIOS) ---
+        async function carregarUsuariosPainelAdmin() {
+            if (!DADOS_PERFIL_USUARIO?.is_admin) return;
+            const tbody = document.getElementById('tabelaAdminUsuarios');
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Atualizando lista...</td></tr>';
+
+            // Puxa todos os perfis cadastrados no banco de dados
+            const { data: listaPerfis, error } = await supabase.from('perfis').select('*').order('created_at', { ascending: false });
+            
+            if (error) { tbody.innerHTML = '<tr><td colspan="4">Erro ao buscar dados.</td></tr>'; return; }
+
+            tbody.innerHTML = '';
+            listaPerfis.forEach(p => {
+                if (p.id === DADOS_PERFIL_USUARIO.id) return; // Não mostra o próprio admin logado
+
+                const tr = document.createElement('tr');
+                const dataFormatada = new Date(p.created_at).toLocaleDateString();
+                const statusTexto = p.is_revogado ? "<span style='color:red; font-weight:bold;'>Revogado</span>" : "<span style='color:green; font-weight:bold;'>Ativo</span>";
+                
+                // Botão dinâmico baseado no estado atual da conta
+                const botaoAcao = p.is_revogado 
+                    ? `<button class="btn btn-secondary" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', false)">Liberar Acesso</button>`
+                    : `<button class="btn btn-danger" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', true)">Revogar Acesso</button>`;
+
+                tr.innerHTML = `
+                    <td>${p.email}</td>
+                    <td>${dataFormatada}</td>
+                    <td>${statusTexto}</td>
+                    <td>${botaoAcao}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        // --- CONTROLE DE MATERIAIS INDIVIDUALIZADO ---
+        async function alterarStatusUsuario(userId, statusBloqueio) {
+            if (!DADOS_PERFIL_USUARIO?.is_admin) return;
+            
+            const { error } = await supabase.from('perfis').update({ is_revogado: statusBloqueio }).eq('id', userId);
+            
+            if (error) { alert("Erro ao atualizar o status do usuário."); } 
+            else { carregarUsuariosPainelAdmin(); }
+        }
+
+        // --- AS LÓGICAS DA CALCULADORA (ISOLADAS VIA PREFIXO DA SESSÃO ATUAL) ---
+        function obterPrefixoEscopo() { return `verk3d_cloud_${DADOS_PERFIL_USUARIO.id}_`; }
+
         function adicionarMaterial() {
             const nome = document.getElementById('matNome').value.trim();
             const peso = parseFloat(document.getElementById('matPeso').value) || 0;
             const preco = parseFloat(document.getElementById('matPreco').value) || 0;
 
-            if (!nome || peso <= 0 || preco <= 0) {
-                alert("Por favor, preencha corretamente todos os campos do filamento.");
-                return;
-            }
+            if (!nome || peso <= 0 || preco <= 0) { alert("Campos inválidos."); return; }
 
-            const chave = obterChaveLocal('materiais');
+            const chave = obterPrefixoEscopo() + 'materiais';
             const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             materiais.push({ id: Date.now(), nome, peso, preco });
             localStorage.setItem(chave, JSON.stringify(materiais));
 
             document.getElementById('matNome').value = "";
             document.getElementById('matPreco').value = "";
-            
             atualizarMateriaisEEstatistícas();
         }
 
         function deletarMaterial(id) {
-            const chave = obterChaveLocal('materiais');
+            const chave = obterPrefixoEscopo() + 'materiais';
             let materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             materiais = materiais.filter(m => m.id !== id);
             localStorage.setItem(chave, JSON.stringify(materiais));
@@ -522,11 +412,11 @@
 
         function atualizarMateriaisEEstatistícas() {
             const listaUl = document.getElementById('listaMateriais');
-            const chave = obterChaveLocal('materiais');
+            const chave = obterPrefixoEscopo() + 'materiais';
             const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             
             if (materiais.length === 0) {
-                listaUl.innerHTML = '<li style="color:#6c757d; font-size:14px; padding: 10px;">Nenhum filamento cadastrado. Usando padrão (R$ 0,10/g).</li>';
+                listaUl.innerHTML = '<li>Nenhum filamento cadastrado.</li>';
                 CUSTO_POR_GRAMA_MEDIO = 0.10;
                 document.getElementById('mediaDisplay').textContent = "R$ 0,1000 /g (R$ 100,00 /kg)";
                 document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ 0,10 (Padrão)";
@@ -534,54 +424,34 @@
             }
 
             listaUl.innerHTML = '';
-            let pesoTotalAcumulado = 0;
-            let precoTotalAcumulado = 0;
-
+            let pesoTotal = 0, precoTotal = 0;
             materiais.forEach(m => {
-                pesoTotalAcumulado += m.peso;
-                precoTotalAcumulado += m.preco;
-                const custoGramaItem = m.preco / m.peso;
-
+                pesoTotal += m.peso; precoTotal += m.preco;
                 const li = document.createElement('li');
                 li.className = 'item-lista';
-                li.innerHTML = `
-                    <div>
-                        <strong>${m.nome}</strong> - ${m.peso}g por R$ ${m.preco.toFixed(2)} 
-                        <span style="color:#6c757d; font-size:12px;">(R$ ${custoGramaItem.toFixed(4)}/g)</span>
-                    </div>
-                    <button class="btn btn-danger" onclick="deletarMaterial(${m.id})">Remover</button>
-                `;
+                li.innerHTML = `<div><strong>${m.nome}</strong> - ${m.peso}g por R$ ${m.preco.toFixed(2)}</div><button class="btn btn-danger" onclick="deletarMaterial(${m.id})">Remover</button>`;
                 listaUl.appendChild(li);
             });
 
-            CUSTO_POR_GRAMA_MEDIO = precoTotalAcumulado / pesoTotalAcumulado;
-            const custoKgEquivalente = CUSTO_POR_GRAMA_MEDIO * 1000;
-
-            document.getElementById('mediaDisplay').textContent = `R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} /g (R$ ${custoKgEquivalente.toFixed(2)} /kg)`;
-            document.getElementById('labelCustoGrama').textContent = `Custo por Grama Médio: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} (Estoque Atualizado)`;
+            CUSTO_POR_GRAMA_MEDIO = precoTotal / pesoTotal;
+            document.getElementById('mediaDisplay').textContent = `R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} /g (R$ ${(CUSTO_POR_GRAMA_MEDIO*1000).toFixed(2)} /kg)`;
+            document.getElementById('labelCustoGrama').textContent = `Custo por Grama Médio: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}`;
         }
 
-        // --- CATALOGO DE MODELOS INDIVIDUALIZADO ---
         function salvarModeloNoCatalogo() {
             const nome = document.getElementById('nomeModeloNovo').value.trim();
             const peso = parseFloat(document.getElementById('peso').value) || 0;
             const tempo = parseFloat(document.getElementById('tempo').value) || 0;
 
-            if (!nome || peso <= 0 || tempo <= 0) {
-                alert("Preencha Nome, Peso e Tempo válidos para salvar no catálogo.");
-                return;
-            }
+            if (!nome || peso <= 0 || tempo <= 0) { alert("Preencha dados válidos."); return; }
 
-            const chave = obterChaveLocal('catalogo');
+            const chave = obterPrefixoEscopo() + 'catalogo';
             const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
-            const indexExistente = catalogo.findIndex(m => m.nome.toLowerCase() === nome.toLowerCase());
-            const novoModelo = { nome, peso, tempo };
-
-            if (indexExistente > -1) catalogo[indexExistente] = novoModelo;
-            else catalogo.push(novoModelo);
+            const idx = catalogo.findIndex(m => m.nome.toLowerCase() === nome.toLowerCase());
+            if (idx > -1) catalogo[idx] = { nome, peso, tempo }; else catalogo.push({ nome, peso, tempo });
 
             localStorage.setItem(chave, JSON.stringify(catalogo));
-            alert(`Modelo "${nome}" catalogado com sucesso!`);
+            alert("Modelo salvo!");
             document.getElementById('nomeModeloNovo').value = "";
             atualizarSelectModelos();
         }
@@ -589,31 +459,26 @@
         function atualizarSelectModelos() {
             const select = document.getElementById('modeloSelect');
             select.innerHTML = '<option value="">-- Selecione para autopreencher --</option>';
-            const chave = obterChaveLocal('catalogo');
+            const chave = obterPrefixoEscopo() + 'catalogo';
             const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
-            catalogo.forEach((modelo, index) => {
-                const opt = document.createElement('option');
-                opt.value = index;
-                opt.textContent = `${modelo.nome} (${modelo.peso}g | ${modelo.tempo}h)`;
-                select.appendChild(opt);
+            catalogo.forEach((m, index) => {
+                const opt = document.createElement('option'); opt.value = index;
+                opt.textContent = `${m.nome} (${m.peso}g | ${m.tempo}h)`; select.appendChild(opt);
             });
         }
 
         function carregarModelo() {
-            const select = document.getElementById('modeloSelect');
-            const index = select.value;
-            if (index === "") return;
-            const chave = obterChaveLocal('catalogo');
-            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
-            const modelo = catalogo[index];
-            if (modelo) {
-                document.getElementById('peso').value = modelo.peso;
-                document.getElementById('tempo').value = modelo.tempo;
-                document.getElementById('cliente').value = "Orçamento: " + modelo.nome;
+            const idx = document.getElementById('modeloSelect').value;
+            if (idx === "") return;
+            const catalogo = JSON.parse(localStorage.getItem(obterPrefixoEscopo() + 'catalogo') || '[]');
+            const m = catalogo[idx];
+            if (m) {
+                document.getElementById('peso').value = m.peso;
+                document.getElementById('tempo').value = m.tempo;
+                document.getElementById('cliente').value = "Orçamento: " + m.nome;
             }
         }
 
-        // --- ORÇAMENTOS E PRODUÇÃO DE PDF INDIVIDUALIZADO ---
         function gerarEsalvar() {
             try {
                 const clienteInput = document.getElementById('cliente').value;
@@ -621,94 +486,48 @@
                 const peso = parseFloat(document.getElementById('peso').value) || 0;
                 const tempo = parseFloat(document.getElementById('tempo').value) || 0;
 
-                if (peso <= 0 || tempo <= 0) {
-                    alert("Por favor, informe peso e tempo válidos.");
-                    return;
-                }
+                if (peso <= 0 || tempo <= 0) { alert("Informe dados válidos."); return; }
 
                 const custoMaterial = peso * CUSTO_POR_GRAMA_MEDIO;
                 const custoOperacao = tempo * VALOR_HORA_MAQUINA;
-                const custoTotal = custoMaterial + custoOperacao;
-                const valorFinal = custoTotal * (1 + MARGEM_LUCRO);
+                const valorFinal = (custoMaterial + custoOperacao) * (1 + MARGEM_LUCRO);
 
-                const orcamento = {
-                    cliente: cliente,
-                    valor: valorFinal.toFixed(2),
-                    data: new Date().toLocaleDateString()
-                };
-
-                const chave = obterChaveLocal('orcamentos');
+                const orcamento = { cliente, valor: valorFinal.toFixed(2), data: new Date().toLocaleDateString() };
+                const chave = obterPrefixoEscopo() + 'orcamentos';
                 const lista = JSON.parse(localStorage.getItem(chave) || '[]');
                 lista.push(orcamento);
                 localStorage.setItem(chave, JSON.stringify(lista));
 
-                if (window.jspdf && window.jspdf.jsPDF) {
+                if (window.jspdf?.jsPDF) {
                     const { jsPDF } = window.jspdf;
                     const doc = new jsPDF();
-                    
-                    doc.setFontSize(20);
-                    doc.setTextColor(211, 47, 47);
+                    doc.setFontSize(20); doc.setTextColor(211, 47, 47);
                     doc.text("VERK3D PRINT - ORÇAMENTO", 10, 20);
-                    
-                    doc.setDrawColor(200, 200, 200);
-                    doc.line(10, 25, 200, 25);
-
-                    doc.setFontSize(12);
-                    doc.setTextColor(33, 37, 41);
-                    doc.text(`Operador Técnico: ${USUARIO_LOGADO.toUpperCase()}`, 10, 35);
-                    doc.text(`Identificação do Cliente: ${cliente}`, 10, 43);
-                    doc.text(`Data de Geração: ${orcamento.data}`, 10, 51);
-                    
-                    doc.setFontSize(14);
-                    doc.text("Especificações Técnicas:", 10, 66);
-                    doc.setFontSize(12);
-                    doc.text(`- Peso de Material Aplicado: ${peso}g`, 15, 76);
-                    doc.text(`- Tempo de Operação Alocado: ${tempo} horas`, 15, 84);
-                    doc.text(`- Custo do Material Médio Calculado: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}/g`, 15, 92);
-                    
-                    doc.line(10, 100, 200, 100);
-                    doc.setFontSize(16);
-                    doc.text(`VALOR FINAL DE REVENDA: R$ ${valorFinal.toFixed(2)}`, 10, 113);
-
+                    doc.setFontSize(12); doc.setTextColor(33, 37, 41);
+                    doc.text(`Técnico Responsável: ${DADOS_PERFIL_USUARIO.email}`, 10, 35);
+                    doc.text(`Cliente: ${cliente}`, 10, 43);
+                    doc.text(`Valor Final: R$ ${valorFinal.toFixed(2)}`, 10, 55);
                     doc.save(`orcamento_${cliente.replace(/\s+/g, '_')}.pdf`);
-                } else {
-                    alert("Orçamento adicionado ao banco local. Gerador de PDF offline.");
                 }
-
                 exibirHistorico();
-
-            } catch (err) {
-                console.error(err);
-                alert("Erro ao executar os cálculos técnicos.");
-            }
+            } catch (err) { console.error(err); }
         }
 
         function exibirHistorico() {
-            const listaHistorico = document.getElementById('listaHistorico');
-            if (!listaHistorico) return;
-            const chave = obterChaveLocal('orcamentos');
-            const lista = JSON.parse(localStorage.getItem(chave) || '[]');
-            
-            if (lista.length === 0) {
-                listaHistorico.innerHTML = '<li style="color:#6c757d; font-size:14px; padding:10px;">Nenhum orçamento gerado ainda nesta conta.</li>';
-                return;
-            }
-
-            listaHistorico.innerHTML = '';
+            const listaUl = document.getElementById('listaHistorico');
+            if (!listaUl) return;
+            const lista = JSON.parse(localStorage.getItem(obterPrefixoEscopo() + 'orcamentos') || '[]');
+            listaUl.innerHTML = lista.length === 0 ? '<li>Nenhum orçamento ainda.</li>' : '';
             lista.slice().reverse().forEach(item => {
-                const li = document.createElement('li');
-                li.style.padding = "10px";
-                li.style.borderBottom = "1px solid var(--border)";
+                const li = document.createElement('li'); li.className = 'item-lista';
                 li.innerHTML = `📅 ${item.data} | <strong>${item.cliente}</strong>: R$ ${item.valor}`;
-                listaHistorico.appendChild(li);
+                listaUl.appendChild(li);
             });
         }
 
         function limparCampos() {
-            document.getElementById('cliente').value = "";
-            document.getElementById('peso').value = "";
-            document.getElementById('tempo').value = "";
-            document.getElementById('nomeModeloNovo').value = "";
+            document.getElementById('cliente').value = ""; document.getElementById('peso').value = "";
+            document.getElementById('tempo').value = ""; document.getElementById('nomeModeloNovo').value = "";
             document.getElementById('modeloSelect').value = "";
         }
     </script>
