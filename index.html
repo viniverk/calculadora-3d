@@ -55,7 +55,6 @@
         .item-lista { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
         .item-lista:hover { background-color: #f1f3f5; }
         
-        /* Tabela de Gerenciamento de Usuários (Admin) */
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
         .admin-table th, .admin-table td { border: 1px solid var(--border); padding: 10px; text-align: left; }
         .admin-table th { background-color: #f1f3f5; font-weight: bold; }
@@ -217,21 +216,18 @@
     </div>
 
     <script>
-        // --- CONFIGURAÇÃO DAS CREDENCIAIS DO SEU SUPABASE ---
-        const SUPABASE_URL = "https://SEU_PROJETO.supabase.co"; 
-        const SUPABASE_KEY = "SUA_CHAVE_ANON_PUBLIC"; 
+        // --- SUAS CREDENCIAIS REAIS DO SUPABASE CONFIGURADAS ---
+        const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_XEpRN-3R2RShh_uKLLlDmA_yrlCx_lG"; 
         
-        // Inicializa o cliente do banco de dados
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Parâmetros operacionais locais de cálculo
         let CUSTO_POR_GRAMA_MEDIO = 0.10; 
         const VALOR_HORA_MAQUINA = 5.00; 
         const MARGEM_LUCRO = 0.50;       
         let MODO_CADASTRO = false;
         let DADOS_PERFIL_USUARIO = null;
 
-        // Verifica se já existe uma sessão de usuário ativa ao carregar a página
         window.onload = async function() {
             const { data: { session } } = await supabase.auth.getSession();
             if (session) {
@@ -253,17 +249,15 @@
             if (!email || !password) { alert("Preencha todos os campos."); return; }
 
             if (MODO_CADASTRO) {
-                // Cadastro nativo com envio automático de e-mail de verificação
                 const { data, error } = await supabase.auth.signUp({ email, password });
                 if (error) { alert("Erro ao cadastrar: " + error.message); return; }
-                alert("Cadastro realizado! Um e-mail de ativação foi enviado. Você precisa clicar no link recebido para poder ativar e acessar o sistema.");
+                alert("Cadastro realizado! Um e-mail de ativação foi enviado para sua caixa de entrada. Você precisa confirmar o seu e-mail antes de fazer o login.");
                 alternarModoAuth();
             } else {
-                // Login
                 const { data, error } = await supabase.auth.signInWithPassword({ email, password });
                 if (error) {
                     if(error.message.includes("Email not confirmed")) {
-                        alert("Sua conta ainda não foi ativada. Verifique sua caixa de entrada e clique no link de e-mail enviado.");
+                        alert("Sua conta ainda não está ativada. Abra seu e-mail e clique no link de ativação enviado pelo Supabase.");
                     } else {
                         alert("Falha no login: " + error.message);
                     }
@@ -274,24 +268,22 @@
         }
 
         async function verificarPerfilESessao(authUser) {
-            // Consulta nossa tabela de perfis customizados no banco
             const { data: perfil, error } = await supabase.from('perfis').select('*').eq('id', authUser.id).single();
             
             if (error || !perfil) {
-                alert("Erro ao validar perfil de segurança.");
+                alert("Erro ao validar credenciais de segurança do perfil.");
                 await supabase.auth.signOut();
                 return;
             }
 
             if (perfil.is_revogado) {
-                alert("Acesso negado: Esta conta foi revogada pelo administrador do sistema.");
+                alert("Seu acesso foi revogado pelo administrador do sistema.");
                 await supabase.auth.signOut();
                 return;
             }
 
             DADOS_PERFIL_USUARIO = perfil;
             
-            // Renderiza as telas conforme permissões
             document.getElementById('aba-auth').classList.remove('active');
             document.getElementById('mainTabs').style.display = 'flex';
             document.getElementById('userInfoBar').style.display = 'block';
@@ -303,7 +295,6 @@
 
             document.getElementById('aba-orcamentos').classList.add('active');
             
-            // Carrega as preferências locais salvas para o escopo deste usuário específico
             atualizarSelectModelos();
             exibirHistorico();
             atualizarMateriaisEEstatistícas();
@@ -339,26 +330,23 @@
             }
         }
 
-        // --- FUNÇÕES EXCLUSIVAS DA ABA ADMINISTRATIVA (GERENCIAR USUÁRIOS) ---
         async function carregarUsuariosPainelAdmin() {
             if (!DADOS_PERFIL_USUARIO?.is_admin) return;
             const tbody = document.getElementById('tabelaAdminUsuarios');
             tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Atualizando lista...</td></tr>';
 
-            // Puxa todos os perfis cadastrados no banco de dados
             const { data: listaPerfis, error } = await supabase.from('perfis').select('*').order('created_at', { ascending: false });
             
             if (error) { tbody.innerHTML = '<tr><td colspan="4">Erro ao buscar dados.</td></tr>'; return; }
 
             tbody.innerHTML = '';
             listaPerfis.forEach(p => {
-                if (p.id === DADOS_PERFIL_USUARIO.id) return; // Não mostra o próprio admin logado
+                if (p.id === DADOS_PERFIL_USUARIO.id) return; 
 
                 const tr = document.createElement('tr');
                 const dataFormatada = new Date(p.created_at).toLocaleDateString();
                 const statusTexto = p.is_revogado ? "<span style='color:red; font-weight:bold;'>Revogado</span>" : "<span style='color:green; font-weight:bold;'>Ativo</span>";
                 
-                // Botão dinâmico baseado no estado atual da conta
                 const botaoAcao = p.is_revogado 
                     ? `<button class="btn btn-secondary" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', false)">Liberar Acesso</button>`
                     : `<button class="btn btn-danger" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', true)">Revogar Acesso</button>`;
@@ -382,7 +370,6 @@
             else { carregarUsuariosPainelAdmin(); }
         }
 
-        // --- AS LÓGICAS DA CALCULADORA (ISOLADAS VIA PREFIXO DA SESSÃO ATUAL) ---
         function obterPrefixoEscopo() { return `verk3d_cloud_${DADOS_PERFIL_USUARIO.id}_`; }
 
         function adicionarMaterial() {
