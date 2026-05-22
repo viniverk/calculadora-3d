@@ -1,39 +1,166 @@
-function gerarEsalvar() {
-    // Entradas do usuário
-    const cliente = document.getElementById('cliente').value;
-    const peso = parseFloat(document.getElementById('peso').value);
-    const tempo = parseFloat(document.getElementById('tempo').value);
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora de Orçamentos - Verk3D Print</title>
     
-    // Parâmetros do seu negócio (você pode deixar fixos ou criar inputs no HTML)
-    const custoPorGrama = 0.10; // R$ 100 por kg / 1000g
-    const valorHoraMaquina = 5.00; // Defina aqui o seu custo/hora (energia + desgaste)
-    const margemLucro = 0.50; // 50% de margem sobre o custo total
-
-    // Cálculos
-    const custoMaterial = peso * custoPorGrama;
-    const custoOperacao = tempo * valorHoraMaquina;
-    const custoTotal = custoMaterial + custoOperacao;
-    const valorFinal = custoTotal * (1 + margemLucro);
-
-    // Salvar no LocalStorage (Histórico)
-    const orcamento = { 
-        cliente, 
-        valor: valorFinal.toFixed(2), 
-        data: new Date().toLocaleDateString() 
-    };
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
-    const lista = JSON.parse(localStorage.getItem('orcamentos') || '[]');
-    lista.push(orcamento);
-    localStorage.setItem('orcamentos', JSON.stringify(lista));
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f9;
+            padding: 20px;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #d32f2f;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            width: 100%;
+        }
+        button:hover {
+            background-color: #b71c1c;
+        }
+        .historico {
+            margin-top: 30px;
+            background: white;
+            padding: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
 
-    // Gerar PDF
-    const { jsPDF } = window.jspdf;
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("Orcamento: " + cliente, 10, 20);
-    doc.setFontSize(14);
-    doc.text("Valor Final: R$ " + valorFinal.toFixed(2), 10, 40);
-    doc.save("orcamento_" + cliente + ".pdf");
+    <h2>Orçamento Verk3D Print</h2>
+    
+    <div class="form-group">
+        <label for="cliente">Nome do Cliente:</label>
+        <input type="text" id="cliente" placeholder="Ex: Urubu do Flamengo">
+    </div>
+    
+    <div class="form-group">
+        <label for="peso">Peso Total do Material (g):</label>
+        <input type="number" id="peso" placeholder="Ex: 393">
+    </div>
+    
+    <div class="form-group">
+        <label for="tempo">Tempo de Impressão (Horas):</label>
+        <input type="number" id="tempo" placeholder="Ex: 21">
+    </div>
+    
+    <button onclick="gerarEsalvar()">Gerar Orçamento e PDF</button>
 
-    exibirHistorico();
-}
+    <div class="historico">
+        <h3>Histórico Recente</h3>
+        <ul id="listaHistorico"></ul>
+    </div>
+
+    <script>
+        function gerarEsalvar() {
+            try {
+                // Captura e validação das entradas do usuário
+                const clienteInput = document.getElementById('cliente').value;
+                const cliente = clienteInput ? clienteInput.trim() : "Cliente_Oculto";
+                const peso = parseFloat(document.getElementById('peso').value) || 0;
+                const tempo = parseFloat(document.getElementById('tempo').value) || 0;
+                
+                // Parâmetros do seu negócio
+                const custoPorGrama = 0.10; // R$ 100 por kg / 1000g [cite: 113, 114]
+                const valorHoraMaquina = 5.00; // Custo por hora de máquina calibrado [cite: 114, 115]
+                const margemLucro = 0.50; // 50% de margem (Markup) [cite: 115, 116]
+
+                // Realização dos cálculos lógicos
+                const custoMaterial = peso * custoPorGrama; [cite: 117]
+                const custoOperacao = tempo * valorHoraMaquina; [cite: 117]
+                const custoTotal = custoMaterial + custoOperacao; [cite: 117]
+                const valorFinal = custoTotal * (1 + margemLucro); [cite: 118]
+
+                // Estrutura do objeto para armazenamento local
+                const orcamento = { 
+                    cliente: cliente, 
+                    valor: valorFinal.toFixed(2), 
+                    data: new Date().toLocaleDateString() 
+                };
+                
+                // Persistência de dados no LocalStorage
+                const lista = JSON.parse(localStorage.getItem('orcamentos') || '[]'); [cite: 119]
+                lista.push(orcamento); [cite: 119]
+                localStorage.setItem('orcamentos', JSON.stringify(lista)); [cite: 119]
+
+                // Verificação de segurança da biblioteca externa jsPDF
+                if (window.jspdf) {
+                    const { jsPDF } = window.jspdf; [cite: 120]
+                    const doc = new jsPDF(); [cite: 120]
+                    
+                    // Configuração estética do documento PDF
+                    doc.setFontSize(18); [cite: 120]
+                    doc.text("Orçamento Verk3D Print", 10, 20);
+                    
+                    doc.setFontSize(12);
+                    doc.text("Cliente: " + cliente, 10, 35); [cite: 121]
+                    doc.text("Especificações Técnicas da Peça:", 10, 45);
+                    doc.text("- Peso estimado: " + peso + "g", 15, 55);
+                    doc.text("- Tempo de processamento: " + tempo + " horas", 15, 65);
+                    
+                    doc.text("--------------------------------------------------", 10, 75);
+                    doc.setFontSize(14); [cite: 121]
+                    doc.text("Valor Final de Revenda: R$ " + valorFinal.toFixed(2), 10, 85); [cite: 121]
+                    
+                    // Dispara o download automático do arquivo gerado
+                    doc.save("orcamento_" + cliente + ".pdf"); [cite: 121]
+                } else {
+                    alert("Atenção: A biblioteca jsPDF não pôde ser carregada do servidor.");
+                }
+
+                exibirHistorico(); [cite: 121]
+                
+            } catch (error) {
+                console.error("Erro interno no processamento:", error);
+                alert("Ocorreu um erro ao calcular os dados inseridos.");
+            }
+        }
+
+        // Função responsável por ler o LocalStorage e listar na tela
+        function exibirHistorico() {
+            const listaHistorico = document.getElementById('listaHistorico');
+            if (!listaHistorico) return;
+            
+            listaHistorico.innerHTML = '';
+            const lista = JSON.parse(localStorage.getItem('orcamentos') || '[]');
+            
+            // Exibe os últimos itens adicionados primeiro
+            lista.reverse().forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = `${item.data} - ${item.cliente}: R$ ${item.valor}`;
+                listaHistorico.appendChild(li);
+            });
+        }
+
+        // Executa a listagem assim que a interface gráfica é carregada
+        window.onload = exibirHistorico;
+    </script>
+</body>
+</html>
