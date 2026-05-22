@@ -159,7 +159,7 @@
                 </div>
             </div>
         </div>
-        
+
         <div id="aba-materiais" class="tab-content">
             <div class="main-table">
                 <div class="main-cell">
@@ -216,7 +216,6 @@
     </div>
 
     <script>
-        // --- SUAS CREDENCIAIS REAIS DO SUPABASE CONFIGURADAS ---
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_XEpRN-3R2RShh_uKLLlDmA_yrlCx_lG"; 
         
@@ -287,7 +286,7 @@
             document.getElementById('aba-auth').classList.remove('active');
             document.getElementById('mainTabs').style.display = 'flex';
             document.getElementById('userInfoBar').style.display = 'block';
-            document.getElementById('usernameDisplay').textContent = `Usuário: ${perfil.email}`;
+            document.getElementById('usernameDisplay').textContent = "Usuário: " + perfil.email;
             
             if (perfil.is_admin) {
                 document.getElementById('abaAdminBtn').style.display = 'inline-block';
@@ -345,18 +344,13 @@
 
                 const tr = document.createElement('tr');
                 const dataFormatada = new Date(p.created_at).toLocaleDateString();
-                const statusTexto = p.is_revogado ? "<span style='color:red; font-weight:bold;'>Revogado</span>" : "<span style='color:green; font-weight:bold;'>Ativo</span>";
+                const statusTexto = p.is_revogado ? "Revogado" : "Ativo";
                 
                 const botaoAcao = p.is_revogado 
                     ? `<button class="btn btn-secondary" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', false)">Liberar Acesso</button>`
                     : `<button class="btn btn-danger" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', true)">Revogar Acesso</button>`;
 
-                tr.innerHTML = `
-                    <td>${p.email}</td>
-                    <td>${dataFormatada}</td>
-                    <td>${statusTexto}</td>
-                    <td>${botaoAcao}</td>
-                `;
+                tr.innerHTML = "<td>" + p.email + "</td><td>" + dataFormatada + "</td><td>" + statusTexto + "</td><td>" + botaoAcao + "</td>";
                 tbody.appendChild(tr);
             });
         }
@@ -370,7 +364,7 @@
             else { carregarUsuariosPainelAdmin(); }
         }
 
-        function obterPrefixoEscopo() { return `verk3d_cloud_${DADOS_PERFIL_USUARIO.id}_`; }
+        function obterPrefixoEscopo() { return "verk3d_cloud_" + DADOS_PERFIL_USUARIO.id + "_"; }
 
         function adicionarMaterial() {
             const nome = document.getElementById('matNome').value.trim();
@@ -398,31 +392,35 @@
         }
 
         function atualizarMateriaisEEstatistícas() {
-            const listaUl = document.getElementById('listaMateriais');
+            const listaUl = document.getElementById('listaMaterials');
+            const listaUlAlternativa = document.getElementById('listaMateriais');
+            const alvo = listaUlAlternativa || listaUl;
+            if (!alvo) return;
+            
             const chave = obterPrefixoEscopo() + 'materiais';
             const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
             
             if (materiais.length === 0) {
-                listaUl.innerHTML = '<li>Nenhum filamento cadastrado.</li>';
+                alvo.innerHTML = '<li>Nenhum filamento cadastrado.</li>';
                 CUSTO_POR_GRAMA_MEDIO = 0.10;
                 document.getElementById('mediaDisplay').textContent = "R$ 0,1000 /g (R$ 100,00 /kg)";
                 document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ 0,10 (Padrão)";
                 return;
             }
 
-            listaUl.innerHTML = '';
+            alvo.innerHTML = '';
             let pesoTotal = 0, precoTotal = 0;
             materiais.forEach(m => {
                 pesoTotal += m.peso; precoTotal += m.preco;
                 const li = document.createElement('li');
                 li.className = 'item-lista';
-                li.innerHTML = `<div><strong>${m.nome}</strong> - ${m.peso}g por R$ ${m.preco.toFixed(2)}</div><button class="btn btn-danger" onclick="deletarMaterial(${m.id})">Remover</button>`;
-                listaUl.appendChild(li);
+                li.innerHTML = "<div><strong>" + m.nome + "</strong> - " + m.peso + "g por R$ " + m.preco.toFixed(2) + "</div><button class=\"btn btn-danger\" onclick=\"deletarMaterial(" + m.id + ")\">Remover</button>";
+                alvo.appendChild(li);
             });
 
             CUSTO_POR_GRAMA_MEDIO = precoTotal / pesoTotal;
-            document.getElementById('mediaDisplay').textContent = `R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)} /g (R$ ${(CUSTO_POR_GRAMA_MEDIO*1000).toFixed(2)} /kg)`;
-            document.getElementById('labelCustoGrama').textContent = `Custo por Grama Médio: R$ ${CUSTO_POR_GRAMA_MEDIO.toFixed(4)}`;
+            document.getElementById('mediaDisplay').textContent = "R$ " + CUSTO_POR_GRAMA_MEDIO.toFixed(4) + " /g (R$ " + (CUSTO_POR_GRAMA_MEDIO*1000).toFixed(2) + " /kg)";
+            document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ " + CUSTO_POR_GRAMA_MEDIO.toFixed(4);
         }
 
         function salvarModeloNoCatalogo() {
@@ -450,7 +448,7 @@
             const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
             catalogo.forEach((m, index) => {
                 const opt = document.createElement('option'); opt.value = index;
-                opt.textContent = `${m.nome} (${m.peso}g | ${m.tempo}h)`; select.appendChild(opt);
+                opt.textContent = m.nome + " (" + m.peso + "g | " + m.tempo + "h)"; select.appendChild(opt);
             });
         }
 
@@ -491,10 +489,10 @@
                     doc.setFontSize(20); doc.setTextColor(211, 47, 47);
                     doc.text("VERK3D PRINT - ORÇAMENTO", 10, 20);
                     doc.setFontSize(12); doc.setTextColor(33, 37, 41);
-                    doc.text(`Técnico Responsável: ${DADOS_PERFIL_USUARIO.email}`, 10, 35);
-                    doc.text(`Cliente: ${cliente}`, 10, 43);
-                    doc.text(`Valor Final: R$ ${valorFinal.toFixed(2)}`, 10, 55);
-                    doc.save(`orcamento_${cliente.replace(/\s+/g, '_')}.pdf`);
+                    doc.text("Técnico Responsável: " + DADOS_PERFIL_USUARIO.email, 10, 35);
+                    doc.text("Cliente: " + cliente, 10, 43);
+                    doc.text("Valor Final: R$ " + valorFinal.toFixed(2), 10, 55);
+                    doc.save("orcamento_" + cliente.replace(/\s+/g, '_') + ".pdf");
                 }
                 exibirHistorico();
             } catch (err) { console.error(err); }
@@ -507,7 +505,7 @@
             listaUl.innerHTML = lista.length === 0 ? '<li>Nenhum orçamento ainda.</li>' : '';
             lista.slice().reverse().forEach(item => {
                 const li = document.createElement('li'); li.className = 'item-lista';
-                li.innerHTML = `📅 ${item.data} | <strong>${item.cliente}</strong>: R$ ${item.valor}`;
+                li.innerHTML = "📅 " + item.data + " | <strong>" + item.cliente + "</strong>: R$ " + item.value || item.valor;
                 listaUl.appendChild(li);
             });
         }
