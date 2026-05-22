@@ -392,9 +392,7 @@
         }
 
         function atualizarMateriaisEEstatistícas() {
-            const listaUl = document.getElementById('listaMaterials');
-            const listaUlAlternativa = document.getElementById('listaMateriais');
-            const alvo = listaUlAlternativa || listaUl;
+            const alvo = document.getElementById('listaMateriais');
             if (!alvo) return;
             
             const chave = obterPrefixoEscopo() + 'materiais';
@@ -411,7 +409,7 @@
             alvo.innerHTML = '';
             let pesoTotal = 0, precoTotal = 0;
             materiais.forEach(m => {
-                pesoTotal += m.peso; precoTotal += m.preco;
+                pesoTotal += m.weight || m.peso; precoTotal += m.price || m.preco;
                 const li = document.createElement('li');
                 li.className = 'item-lista';
                 li.innerHTML = "<div><strong>" + m.nome + "</strong> - " + m.peso + "g por R$ " + m.preco.toFixed(2) + "</div><button class=\"btn btn-danger\" onclick=\"deletarMaterial(" + m.id + ")\">Remover</button>";
@@ -505,7 +503,7 @@
             listaUl.innerHTML = lista.length === 0 ? '<li>Nenhum orçamento ainda.</li>' : '';
             lista.slice().reverse().forEach(item => {
                 const li = document.createElement('li'); li.className = 'item-lista';
-                li.innerHTML = "📅 " + item.data + " | <strong>" + item.cliente + "</strong>: R$ " + item.value || item.valor;
+                li.innerHTML = "📅 " + item.data + " | <strong>" + item.cliente + "</strong>: R$ " + item.valor;
                 listaUl.appendChild(li);
             });
         }
