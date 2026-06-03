@@ -104,16 +104,18 @@
         
         // Monitora se o usuário está logado ou não
         _supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                telaAuth.classList.add('hidden');
-                painelPrincipal.classList.remove('hidden');
-                usuarioLogadoText.innerText = `Painel de: ${session.user.email}`;
-                carregarDados();
-            } else {
-                painelPrincipal.classList.add('hidden');
-                telaAuth.classList.remove('hidden');
-            }
-        });
+    if (session) {
+        usuarioAtual = session.user; // <--- ADICIONE ESTA LINHA AQUI
+        telaAuth.classList.add('hidden');
+        painelPrincipal.classList.remove('hidden');
+        usuarioLogadoText.innerText = `Painel de: ${session.user.email}`;
+        carregarDados();
+    } else {
+        usuarioAtual = null; // <--- ADICIONE ESTA LINHA AQUI
+        painelPrincipal.classList.add('hidden');
+        telaAuth.classList.remove('hidden');
+    }
+});
 
         // Alternar interface entre Login e Cadastro
         btnAlternarAuth.addEventListener('click', () => {
