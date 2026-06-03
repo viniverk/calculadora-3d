@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor 3D - Controle de Impressão</title>
+    <!-- Tailwind CSS para design responsivo e moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script oficial do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
@@ -12,6 +14,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
+    <!-- 1. TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO / RECUPERAÇÃO) -->
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
@@ -63,6 +66,7 @@
         </div>
     </div>
 
+    <!-- 2. ESTRUTURA DO MENU LATERAL (SIDEBAR) -->
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
@@ -109,8 +113,10 @@
         </div>
     </aside>
 
+    <!-- 3. ÁREA DE CONTEÚDO PRINCIPAL -->
     <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
         
+        <!-- ABA: CALCULADORA BASE -->
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
@@ -153,8 +159,8 @@
             </div>
         </div>
 
+        <!-- ABA: INSERIR IMPRESSÃO -->
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6 hidden">
-            
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">1. Capa do Projeto</h2>
                 <div>
@@ -243,12 +249,11 @@
 
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-3">
                 <h2 class="text-xl font-semibold mb-4 text-teal-400 border-b border-gray-700 pb-2">Projetos em Portfólio</h2>
-                <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <p class="text-gray-500 text-sm italic">Carregando carteira de projetos...</p>
-                </div>
+                <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
 
+        <!-- ABA: CADASTRO DE FILAMENTOS -->
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
@@ -334,6 +339,7 @@
             </div>
         </div>
 
+        <!-- ABA: ADMINISTRAÇÃO -->
         <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
             <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <div class="overflow-x-auto">
@@ -350,22 +356,21 @@
         </div>
     </main>
 
+    <!-- 4. LOGICA DO GESTOR 3D COM TRATAMENTO DE ERROS -->
     <script>
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCIOiMjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let modoAbas = 'login'; 
         let usuarioAtual = null;
         let sidebarExpandido = true;
         let filamentosCache = []; 
 
-        // Vetor temporário em memória para o projeto que está sendo montado na tela
         let pecasProjetoAtual = []; 
         let imagemBase64Projeto = null; 
         let nomeDo3mfProjeto = null;
 
-        // Componentes do Menu e Tela
+        // Elementos da Interface
         const telaAuth = document.getElementById('telaAutenticacao');
         const sidebarApp = document.getElementById('sidebarApp');
         const conteudoPainel = document.getElementById('conteudoPainel');
@@ -373,7 +378,6 @@
         const iconeSeta = document.getElementById('iconeSeta');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
-        // Seleção de Componentes da Nova Lógica Operacional
         const projNome = document.getElementById('projNome');
         const projImagem = document.getElementById('projImagem');
         const imgPreview = document.getElementById('imgPreview');
@@ -395,7 +399,6 @@
         const btnSalvarProjetoCompleto = document.getElementById('btnSalvarProjetoCompleto');
         const listaProjetosSalvos = document.getElementById('listaProjetosSalvos');
 
-        // Mapeamentos Legados mantidos para consistência
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
@@ -420,8 +423,6 @@
         const filtroCor = document.getElementById('filtroCor');
         const filtroAno = document.getElementById('filtroAno');
 
-        document.getElementById('filDataCompra').valueAsDate = new Date();
-
         // --- MANIPULAÇÃO DA SIDEBAR RETRÁTIL ---
         btnToggleSidebar.addEventListener('click', () => {
             sidebarExpandido = !sidebarExpandido;
@@ -432,13 +433,13 @@
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
             } else {
                 sidebarApp.classList.replace('w-64', 'w-20');
-                conteudoPainel.classList.replace('ml-64', 'ml-20');
+                conteudoPainel.classList.replace('ml-20', 'ml-64');
                 iconeSeta.innerText = '▶';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
             }
         });
 
-        // --- CONTROLE DE SISTEMA DE NAVEGAÇÃO ---
+        // --- NAVEGAÇÃO DE ABAS ---
         function mudarAba(abaDestino) {
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
@@ -458,7 +459,7 @@
             if (abaDestino === 'filamentos') carregarFilamentos();
         }
 
-        // --- CONTROLE DA SESSÃO ---
+        // --- SESSÃO E INICIALIZAÇÃO ---
         _supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 usuarioAtual = session.user;
@@ -482,7 +483,7 @@
         });
         document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- TRATAMENTO DOS INPUTS DE ARQUIVOS (IMAGEM E 3MF) ---
+        // --- ARQUIVOS E IMAGENS ---
         projImagem.addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
@@ -500,7 +501,7 @@
             nomeDo3mfProjeto = file ? file.name : null;
         });
 
-        // --- CONSTRUÇÃO DO PROJETO MULTI-PEÇAS (PROCESSO EM MEMÓRIA) ---
+        // --- FLUXO DE COMPONENTES MULTI-PEÇAS ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
             const peso = parseFloat(pecaPeso.value) || 0;
@@ -510,7 +511,6 @@
 
             if (!nome || peso <= 0 || tempo <= 0) return alert('Informe os parâmetros da peça corretamente.');
 
-            // Cálculo unitário do componente: (peso * filamento) + (horas * taxa máquina)
             const custoComponente = (peso * custoPorGrama) + (tempo * 1.50);
 
             pecasProjetoAtual.push({
@@ -536,11 +536,11 @@
                 <div class="bg-gray-800 p-2 rounded border border-gray-700 flex justify-between items-center">
                     <div>
                         <span class="font-bold text-sky-300 block">${p.nome_peca}</span>
-                        <span class="text-[10px] text-gray-400">${p.peso_g}g | ${p.tempo_h}h | Insumo: ${p.filamento_label.split('(')[0]}</span>
+                        <span class="text-[10px] text-gray-400">${p.peso_g}g | ${p.tempo_h}h | ${p.filamento_label.split('-')[0]}</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <span class="text-amber-500 font-medium">R$ ${p.custo_calculado.toFixed(2)}</span>
-                        <button onclick="removerPecaDoEscopo(${index})" class="text-red-400 hover:text-red-300 font-bold text-sm">✕</button>
+                        <button onclick="removerPecaDoEscopo(${index})" class="text-red-400 font-bold">✕</button>
                     </div>
                 </div>
             `).join('');
@@ -554,14 +554,9 @@
         };
 
         function atualizarAcumuladoresMaster() {
-            let tempoTotal = 0;
-            let pesoTotal = 0;
-            let custoTotal = 0;
-
+            let tempoTotal = 0; let pesoTotal = 0; let custoTotal = 0;
             pecasProjetoAtual.forEach(p => {
-                tempoTotal += p.tempo_h;
-                pesoTotal += p.peso_g;
-                custoTotal += p.custo_calculado;
+                tempoTotal += p.tempo_h; pesoTotal += p.peso_g; custoTotal += p.custo_calculado;
             });
 
             const margemPorcentagem = parseFloat(projMargemPorcentagem.value) || 0;
@@ -572,32 +567,24 @@
             resumoCusto.innerText = `R$ ${custoTotal.toFixed(2)}`;
             resumoPrecoVenda.innerText = `R$ ${precoVendaFinal.toFixed(2)}`;
         }
-
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
-        // --- ENVIAR PROJETO CONSOLIDADO PARA O SUPABASE ---
+        // --- SALVAR PROJETO INTEGRO NO SUPABASE ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim();
             const margem = parseFloat(projMargemPorcentagem.value) || 0;
 
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
-            if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça para consolidar o projeto.');
+            if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça ao escopo.');
 
-            let tempoTotalMin = 0;
-            let pesoTotalG = 0;
-            let custoTotalAcumulado = 0;
-
+            let tempoTotalMin = 0; let pesoTotalG = 0; let custoTotalAcumulado = 0;
             pecasProjetoAtual.forEach(p => {
-                tempoTotalMin += Math.round(p.tempo_h * 60);
-                pesoTotalG += p.peso_g;
-                custoTotalAcumulado += p.custo_calculado;
+                tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoTotalAcumulado += p.custo_calculado;
             });
 
             const precoVendaFinal = custoTotalAcumulado * (1 + (margem / 100));
 
             btnSalvarProjetoCompleto.disabled = true;
-            btnSalvarProjetoCompleto.innerText = 'Gravando Estrutura...';
-
             const { error } = await _supabase.from('projetos_3d').insert([{
                 nome_projeto: nomeProjeto,
                 imagem_base64: imagemBase64Projeto,
@@ -610,19 +597,13 @@
                 peso_total_g: pesoTotalG,
                 user_id: usuarioAtual.id
             }]);
-
             btnSalvarProjetoCompleto.disabled = false;
-            btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo';
 
             if (error) {
-                alert('Erro ao gravar projeto: ' + error.message);
+                alert('Erro do Servidor Supabase ao salvar projeto:\n' + error.message);
             } else {
-                // Reset de formulário completo
-                projNome.value = '';
-                projImagem.value = '';
-                projArquivo3mf.value = '';
-                imagemBase64Projeto = null;
-                nomeDo3mfProjeto = null;
+                projNome.value = ''; projImagem.value = ''; projArquivo3mf.value = '';
+                imagemBase64Projeto = null; nomeDo3mfProjeto = null;
                 previewContainer.classList.add('hidden');
                 pecasProjetoAtual = [];
                 renderizarPecasDoEscopo();
@@ -631,10 +612,12 @@
         });
 
         async function carregarProjetos3d() {
-            listaProjetosSalvos.innerHTML = '<p class="text-gray-500 text-sm">Processando carteira...</p>';
+            listaProjetosSalvos.innerHTML = '<p class="text-gray-500 text-sm">Carregando portfólio...</p>';
             const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
-            
-            if (error) return;
+            if (error) {
+                alert('Erro ao carregar lista de projetos:\n' + error.message);
+                return;
+            }
 
             if (!data || data.length === 0) {
                 listaProjetosSalvos.innerHTML = '<p class="text-gray-500 text-sm italic py-2">Nenhum projeto multipart gravado no portfólio.</p>';
@@ -644,17 +627,13 @@
             listaProjetosSalvos.innerHTML = data.map(proj => {
                 const imgTag = proj.imagem_base64 
                     ? `<img src="${proj.imagem_base64}" class="w-full h-28 object-cover rounded-t-lg border-b border-gray-700">`
-                    : `<div class="w-full h-28 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Foto Cadastrada</div>`;
+                    : `<div class="w-full h-28 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
                 
-                const tag3mf = proj.nome_arquivo_3mf 
-                    ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 File: ${proj.nome_arquivo_3mf}</p>` 
-                    : '';
-
-                // Listagem interna simplificada das sub-peças dentro do Card
+                const tag3mf = proj.nome_arquivo_3mf ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 Arquivo: ${proj.nome_arquivo_3mf}</p>` : '';
                 const subPecasHtml = proj.pecas.map(p => `
                     <div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded">
                         <span class="truncate max-w-[140px]">${p.nome_peca}</span>
-                        <span>R$ ${parseFloat(p.custo_calculado).toFixed(1)}</span>
+                        <span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span>
                     </div>
                 `).join('');
 
@@ -670,12 +649,10 @@
                                 <p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${(proj.tempo_total_min / 60).toFixed(1)}h totais</p>
                                 ${tag3mf}
                             </div>
-                            
                             <div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2">
-                                <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Peças (${proj.pecas.length}):</span>
+                                <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>
                                 ${subPecasHtml}
                             </div>
-
                             <div class="text-right pt-2 mt-2 border-t border-gray-600/60">
                                 <button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir Projeto</button>
                             </div>
@@ -686,31 +663,46 @@
         }
 
         window.deletarProjeto3d = async function(id) {
-            if (confirm('Deseja excluir este projeto completo junto com todas as suas peças vinculadas?')) {
-                await _supabase.from('projetos_3d').delete().eq('id', id);
-                carregarProjetos3d();
+            if (confirm('Deseja excluir este projeto completo?')) {
+                const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
+                if (error) alert('Erro ao deletar: ' + error.message);
+                else carregarProjetos3d();
             }
         };
 
-        // --- LÓGICA LEGADA DE ORÇAMENTOS (CALCULADORA BASE) ---
-        function calcularAbaBase() {
-            const peso = parseFloat(pesoInput.value) || 0;
-            const tempo = parseFloat(tempoInput.value) || 0;
-            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
-            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50);
-            const vendaSugerida = custoTotal * 3;
-            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`;
-            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
-            return vendaSugerida;
-        }
-        pesoInput.addEventListener('input', calcularAbaBase);
-        tempoInput.addEventListener('input', calcularAbaBase);
-        selectFilamento.addEventListener('change', calcularAbaBase);
+        // --- ABA: GERENCIAMENTO DE FILAMENTOS COM AVISOS DE ERRO ---
+        btnSalvarFilamento.addEventListener('click', async () => {
+            const nome = filNome.value.trim();
+            const fab = filFabricante.value.trim() || 'Desconhecido';
+            const cor = filCor.value.trim() || 'Incolor';
+            const tipo = filTipo.value;
+            const dataCompra = filDataCompra.value;
+            const preco = parseFloat(filPreco.value) || 0;
+            const pTotal = parseFloat(filPesoTotal.value) || 0;
+            const pAtual = parseFloat(filPesoAtual.value) || 0;
 
-        // --- ALIMENTAÇÃO DOS GATILHOS DE DROPDOWNS ---
+            if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios corretamente.');
+
+            btnSalvarFilamento.disabled = true;
+            const { error } = await _supabase.from('estoque_materiais').insert([{
+                nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
+            }]);
+            btnSalvarFilamento.disabled = false;
+
+            if (error) {
+                alert('Erro do Servidor Supabase ao salvar filamento:\n' + error.message);
+            } else {
+                filNome.value = ''; filFabricante.value = ''; filCor.value = '';
+                carregarFilamentos();
+            }
+        });
+
         async function carregarFilamentos() {
             const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
-            if (error) return;
+            if (error) {
+                alert('Erro ao carregar filamentos do banco:\n' + error.message);
+                return;
+            }
             filamentosCache = data || [];
             atualizarDropdownsDeUso();
             atualizarDropdownsFiltros();
@@ -729,13 +721,11 @@
                     const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
                     
                     const opt1 = document.createElement('option');
-                    opt1.value = custoPorGramaItem;
-                    opt1.textContent = `${item.fabricante} - ${item.tipo} (${item.cor})`;
+                    opt1.value = custoPorGramaItem; opt1.textContent = `${item.fabricante} - ${item.tipo} (${item.cor})`;
                     selectFilamento.appendChild(opt1);
 
                     const opt2 = document.createElement('option');
-                    opt2.value = custoPorGramaItem;
-                    opt2.textContent = `${item.cor} (${item.fabricante} ${item.tipo})`;
+                    opt2.value = custoPorGramaItem; opt2.textContent = `${item.cor} (${item.fabricante} ${item.tipo})`;
                     pecaSelectFilamento.appendChild(opt2);
                 }
             });
@@ -765,9 +755,9 @@
                 const bateFornecedor = (fFiltro === "Todos" || item.fabricante.trim() === fFiltro);
                 const bateCor = (cFiltro === "Todos" || item.cor.trim() === cFiltro);
                 const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
-                const bateAno = (anoFiltro === "Todos" || anoItem === anoFiltro);
-                return bateTipo && bateFornecedor && bateCor && bateAno;
+                return bateTipo && bateFornecedor && bateCor && (anoFiltro === "Todos" || anoItem === anoFiltro);
             });
+
             listaFilamentos.innerHTML = dadosFiltrados.map(item => {
                 const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
                 return `
@@ -786,28 +776,34 @@
             }).join('');
         }
 
-        filtroTipo.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroFornecedor.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroCor.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroAno.addEventListener('change', filtrarERenderizarFilamentos);
-
         async function deletarFilamento(id) {
-            if (confirm('Deseja remover esta compra?')) { await _supabase.from('estoque_materiais').delete().eq('id', id); carregarFilamentos(); }
+            if (confirm('Deseja remover esta compra?')) {
+                const { error } = await _supabase.from('estoque_materiais').delete().eq('id', id);
+                if (error) alert('Erro ao deletar filamento: ' + error.message);
+                else carregarFilamentos();
+            }
         }
+
+        // --- LÓGICA DO CATÁLOGO DE ORÇAMENTOS BASE ---
+        function calcularAbaBase() {
+            const peso = parseFloat(pesoInput.value) || 0; const tempo = parseFloat(tempoInput.value) || 0;
+            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
+            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50);
+            const vendaSugerida = custoTotal * 3;
+            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`;
+            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
+            return vendaSugerida;
+        }
+        pesoInput.addEventListener('input', calcularAbaBase); tempoInput.addEventListener('input', calcularAbaBase);
+        selectFilamento.addEventListener('change', calcularAbaBase);
 
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
             if (error) return;
             listaContainer.innerHTML = data.map(item => `
                 <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
-                    <div>
-                        <h3 class="font-bold text-white">${item.nome_modelo}</h3>
-                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${(item.tempo_estimado_min / 60).toFixed(1)}h</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-green-400 font-bold text-sm block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span>
-                        <button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button>
-                    </div>
+                    <div><h3 class="font-bold text-white">${item.nome_modelo}</h3><p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${(item.tempo_estimado_min / 60).toFixed(1)}h</p></div>
+                    <div class="text-right"><span class="text-green-400 font-bold text-sm block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span><button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div>
                 </div>
             `).join('');
         }
@@ -816,9 +812,7 @@
             const nome = nomeInput.value.trim(); const peso = parseFloat(pesoInput.value) || 0; const tempoHoras = parseFloat(tempoInput.value) || 0;
             const precoVenda = calcularAbaBase();
             if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados.');
-            await _supabase.from('catalogo_modelos').insert([{
-                nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.id
-            }]);
+            await _supabase.from('catalogo_modelos').insert([{ nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.id }]);
             nomeInput.value = ''; carregarModelos();
         });
 
