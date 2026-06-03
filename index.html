@@ -162,14 +162,20 @@
                     <input type="text" id="projNome" placeholder="Ex: Aerofólio Civic EJ8 Multipart" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium mb-1">Status do Projeto</label>
-                    <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
-                        <option value="Aguardando Impressão">Aguardando Impressão</option>
-                        <option value="Imprimindo">Imprimindo</option>
-                        <option value="Projeto Finalizado">Projeto Finalizado</option>
-                        <option value="Vendido">Vendido</option>
-                    </select>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Status do Projeto</label>
+                        <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
+                            <option value="Aguardando Impressão">Aguardando Impressão</option>
+                            <option value="Imprimindo">Imprimindo</option>
+                            <option value="Projeto Finalizado">Projeto Finalizado</option>
+                            <option value="Vendido">Vendido</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Data de Conclusão</label>
+                        <input type="date" id="projDataConclusao" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
+                    </div>
                 </div>
 
                 <div>
@@ -380,7 +386,7 @@
         let imagemBase64Projeto = null; 
         let nomeDo3mfProjeto = null;
 
-        // Elementos DOM
+        // Elementos DOM Mapeados
         const telaAuth = document.getElementById('telaAutenticacao');
         const sidebarApp = document.getElementById('sidebarApp');
         const conteudoPainel = document.getElementById('conteudoPainel');
@@ -390,6 +396,7 @@
 
         const projNome = document.getElementById('projNome');
         const projStatus = document.getElementById('projStatus'); 
+        const projDataConclusao = document.getElementById('projDataConclusao'); // Novo elemento
         const projImagem = document.getElementById('projImagem');
         const imgPreview = document.getElementById('imgPreview');
         const previewContainer = document.getElementById('previewContainer');
@@ -588,6 +595,7 @@
             const nomeProjeto = projNome.value.trim();
             const margem = parseFloat(projMargemPorcentagem.value) || 0;
             const statusAtual = projStatus.value;
+            const dataConclusao = projDataConclusao.value || null; // Coleta da nova data
 
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
             if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça para poder salvar.');
@@ -613,7 +621,8 @@
                     preco_venda_total: precoVendaFinal,
                     tempo_total_min: tempoTotalMin,
                     peso_total_g: pesoTotalG,
-                    status: statusAtual
+                    status: statusAtual,
+                    data_conclusao: dataConclusao
                 }]).eq('id', idProjetoEmEdicao);
             } else {
                 query = _supabase.from('projetos_3d').insert([{
@@ -627,6 +636,7 @@
                     tempo_total_min: tempoTotalMin,
                     peso_total_g: pesoTotalG,
                     status: statusAtual,
+                    data_conclusao: dataConclusao,
                     user_id: usuarioAtual.id
                 }]);
             }
@@ -637,7 +647,7 @@
             if (error) {
                 alert('Falha crítica ao persistir no banco:\n' + error.message);
             } else {
-                alert(idProjetoEmEdicao ? 'Projeto updated com sucesso!' : 'Novo projeto registrado!');
+                alert(idProjetoEmEdicao ? 'Projeto atualizado com sucesso!' : 'Novo projeto registrado!');
                 limparFormularioProjeto();
                 carregarProjetos3d();
             }
@@ -647,6 +657,7 @@
             idProjetoEmEdicao = null;
             projNome.value = '';
             projStatus.value = 'Aguardando Impressão';
+            projDataConclusao.value = ''; // Limpa data de conclusão
             projImagem.value = '';
             projArquivo3mf.value = '';
             imagemBase64Projeto = null;
@@ -668,6 +679,7 @@
             idProjetoEmEdicao = proj.id;
             projNome.value = proj.nome_projeto;
             projStatus.value = proj.status || 'Aguardando Impressão';
+            projDataConclusao.value = proj.data_conclusao || ''; // Alimenta nova data
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem;
             
             imagemBase64Projeto = proj.imagem_base64;
@@ -689,6 +701,39 @@
             projNome.scrollIntoView({ behavior: 'smooth' });
         };
 
+        // --- NOVA FUNÇÃO: DUPLICAR PROJETO ---
+        window.duplicarProjeto3d = async function(id) {
+            const proj = projetosCacheLocal.find(p => p.id === id);
+            if (!proj) return alert('Projeto original não localizado.');
+
+            if (confirm(`Deseja duplicar a estrutura do projeto "${proj.nome_projeto}"?`)) {
+                // Clona as sub-peças por cópia profunda profunda
+                const pecasClonadas = JSON.parse(JSON.stringify(proj.pecas));
+
+                const { error } = await _supabase.from('projetos_3d').insert([{
+                    nome_projeto: `${proj.nome_projeto} (Cópia)`,
+                    imagem_base64: proj.imagem_base64,
+                    nome_arquivo_3mf: proj.nome_arquivo_3mf,
+                    pecas: pecasClonadas,
+                    margem_lucro_porcentagem: proj.margem_lucro_porcentagem,
+                    custo_total: proj.custo_total,
+                    preco_venda_total: proj.preco_venda_total,
+                    tempo_total_min: proj.tempo_total_min,
+                    peso_total_g: proj.peso_total_g,
+                    status: 'Aguardando Impressão', // Reseta status na cópia
+                    data_conclusao: null,           // Reseta a conclusão na cópia
+                    user_id: usuarioAtual.id
+                }]);
+
+                if (error) {
+                    alert('Erro ao duplicar registro no Supabase: ' + error.message);
+                } else {
+                    alert('Projeto clonado e duplicado com sucesso!');
+                    carregarProjetos3d();
+                }
+            }
+        };
+
         async function carregarProjetos3d() {
             listaProjetosSalvos.innerHTML = '<p class="text-gray-500 text-sm">Carregando carteira...</p>';
             const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
@@ -708,6 +753,9 @@
                 
                 const tag3mf = proj.nome_arquivo_3mf ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 Arquivo: ${proj.nome_arquivo_3mf}</p>` : '';
                 
+                // Formatação amigável da nova data de conclusão para o padrão brasileiro
+                const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
+
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                                     proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                                     proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
@@ -733,6 +781,7 @@
                                     <p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${(proj.tempo_total_min / 60).toFixed(1)}h</p>
                                     <span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span>
                                 </div>
+                                <p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>
                                 ${tag3mf}
                             </div>
                             <div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2">
@@ -740,7 +789,10 @@
                                 ${subPecasHtml}
                             </div>
                             <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60">
-                                <button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button>
+                                <div class="flex gap-2">
+                                    <button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button>
+                                    <button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button>
+                                </div>
                                 <button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button>
                             </div>
                         </div>
@@ -757,23 +809,27 @@
             }
         };
 
-        // --- ABA: GERENCIAMENTO DE FILAMENTOS COM VALIDAÇÕES DEFENSIVAS ---
+        // --- LÓGICA DO CATÁLOGO DE ORÇAMENTOS BASE ---
+        function calcularAbaBase() {
+            const peso = parseFloat(pesoInput.value) || 0; const tempo = parseFloat(tempoInput.value) || 0;
+            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
+            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50);
+            const vendaSugerida = custoTotal * 3;
+            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`;
+            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
+            return vendaSugerida;
+        }
+        pesoInput.addEventListener('input', calcularAbaBase); tempoInput.addEventListener('input', calcularAbaBase);
+        selectFilamento.addEventListener('change', calcularAbaBase);
+
         btnSalvarFilamento.addEventListener('click', async () => {
-            const nome = filNome.value.trim(); 
-            const fab = filFabricante.value.trim() || 'Desconhecido';
-            const cor = filCor.value.trim() || 'Incolor'; 
-            const tipo = filTipo.value; 
-            const dataCompra = filDataCompra.value;
-            const preco = parseFloat(filPreco.value) || 0; 
-            const pTotal = parseFloat(filPesoTotal.value) || 0; 
-            const pAtual = parseFloat(filPesoAtual.value) || 0;
-            
+            const nome = filNome.value.trim(); const fab = filFabricante.value.trim() || 'Desconhecido';
+            const cor = filCor.value.trim() || 'Incolor'; const tipo = filTipo.value; const dataCompra = filDataCompra.value;
+            const preco = parseFloat(filPreco.value) || 0; const pTotal = parseFloat(filPesoTotal.value) || 0; const pAtual = parseFloat(filPesoAtual.value) || 0;
             if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios corretamente.');
-            
             btnSalvarFilamento.disabled = true;
             const { error } = await _supabase.from('estoque_materiais').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
             btnSalvarFilamento.disabled = false;
-            
             if (error) alert('Erro: ' + error.message);
             else { filNome.value = ''; filCor.value = ''; filFabricante.value = ''; carregarFilamentos(); }
         });
@@ -781,11 +837,8 @@
         async function carregarFilamentos() {
             const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
             if (error) return; 
-            
             filamentosCache = data || [];
-            atualizarDropdownsDeUso(); 
-            atualizarDropdownsFiltros(); 
-            filtrarERenderizarFilamentos();
+            atualizarDropdownsDeUso(); atualizarDropdownsFiltros(); filtrarERenderizarFilamentos();
         }
 
         function atualizarDropdownsDeUso() {
@@ -808,19 +861,13 @@
             calcularAbaBase(); atualizarAcumuladoresMaster();
         }
 
-        // FIX DROPDOWNS FILTROS: Garantia de dados limpos contra nulos ao montar as listas suspensas
         function atualizarDropdownsFiltros() {
             const fornecedores = new Set(); const cores = new Set(); const anos = new Set();
-            
             filamentosCache.forEach(item => {
                 const fab = (item.fabricante || 'Desconhecido').trim();
                 const cor = (item.cor || 'Incolor').trim();
-                fornecedores.add(fab);
-                cores.add(cor);
-                if (item.data_compra) { 
-                    const ano = item.data_compra.split('-')[0]; 
-                    if (ano) anos.add(ano); 
-                }
+                fornecedores.add(fab); cores.add(cor);
+                if (item.data_compra) { const ano = item.data_compra.split('-')[0]; if (ano) anos.add(ano); }
             });
             
             const selFornecedor = filtroFornecedor.value || "Todos";
@@ -829,10 +876,8 @@
 
             filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(fornecedores).sort().forEach(f => { filtroFornecedor.innerHTML += `<option value="${f}">${f}</option>`; });
-            
             filtroCor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(cores).sort().forEach(c => { filtroCor.innerHTML += `<option value="${c}">${c}</option>`; });
-            
             filtroAno.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(anos).sort((a, b) => b - a).forEach(a => { filtroAno.innerHTML += `<option value="${a}">${a}</option>`; });
 
@@ -841,76 +886,27 @@
             if (anos.has(selAno)) filtroAno.value = selAno;
         }
 
-        // FIX ENGINE FILTRO CONSOLIDADO: Validação defensiva completa contra valores em branco/nulos
         function filtrarERenderizarFilamentos() {
-            const tFiltro = filtroTipo.value; 
-            const fFiltro = filtroFornecedor.value; 
-            const cFiltro = filtroCor.value; 
-            const anoFiltro = filtroAno.value;
-
+            const tFiltro = filtroTipo.value; const fFiltro = filtroFornecedor.value; const cFiltro = filtroCor.value; const anoFiltro = filtroAno.value;
             const dadosFiltrados = filamentosCache.filter(item => {
                 const fabItem = (item.fabricante || 'Desconhecido').trim();
                 const corItem = (item.cor || 'Incolor').trim();
                 const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
-
-                const bateTipo = (tFiltro === "Todos" || item.tipo === tFiltro);
-                const bateFornecedor = (fFiltro === "Todos" || fabItem === fFiltro);
-                const bateCor = (cFiltro === "Todos" || corItem === cFiltro);
-                const bateAno = (anoFiltro === "Todos" || anoItem === anoFiltro);
-                
-                return bateTipo && bateFornecedor && bateCor && bateAno;
+                return (tFiltro === "Todos" || item.tipo === tFiltro) && (fFiltro === "Todos" || fabItem === fFiltro) && (cFiltro === "Todos" || corItem === cFiltro) && (anoFiltro === "Todos" || anoItem === anoFiltro);
             });
-
-            if (dadosFiltrados.length === 0) {
-                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic text-center p-4">Nenhum lote corresponde aos filtros selecionados.</p>';
-                return;
-            }
 
             listaFilamentos.innerHTML = dadosFiltrados.map(item => {
                 const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
-                const fab = (item.fabricante || 'Desconhecido').trim();
-                const cor = (item.cor || 'Incolor').trim();
-                return `
-                    <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
-                        <div>
-                            <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400 font-normal">[${item.tipo}]</span></h3>
-                            <p class="text-xs text-gray-300">Marca: ${fab} | Cor: ${cor}</p>
-                            <p class="text-[11px] text-gray-400">Data: ${dataFormatada} | Saldo: ${item.peso_atual_g}g</p>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
-                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button>
-                        </div>
-                    </div>
-                `;
+                return `<div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400 font-normal">[${item.tipo}]</span></h3><p class="text-xs text-gray-300">Marca: ${(item.fabricante||'Desconhecido').trim()} | Cor: ${(item.cor||'Incolor').trim()}</p><p class="text-[11px] text-gray-400">Data: ${dataFormatada} | Saldo: ${item.peso_atual_g}g</p></div><div class="text-right"><span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span><button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div></div>`;
             }).join('');
         }
-
-        filtroTipo.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroFornecedor.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroCor.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroAno.addEventListener('change', filtrarERenderizarFilamentos);
 
         async function deletarFilamento(id) {
             if (confirm('Deseja remover esta compra?')) {
                 const { error } = await _supabase.from('estoque_materiais').delete().eq('id', id);
-                if (error) alert('Erro ao deletar filamento: ' + error.message);
-                else carregarFilamentos();
+                if (error) alert('Erro ao deletar filamento: ' + error.message); else carregarFilamentos();
             }
         }
-
-        // --- LÓGICA DO CATÁLOGO DE ORÇAMENTOS BASE ---
-        function calcularAbaBase() {
-            const peso = parseFloat(pesoInput.value) || 0; const tempo = parseFloat(tempoInput.value) || 0;
-            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
-            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50);
-            const vendaSugerida = custoTotal * 3;
-            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`;
-            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
-            return vendaSugerida;
-        }
-        pesoInput.addEventListener('input', calcularAbaBase); tempoInput.addEventListener('input', calcularAbaBase);
-        selectFilamento.addEventListener('change', calcularAbaBase);
 
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
