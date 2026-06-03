@@ -3,76 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestor de Impressão 3D</title>
-    <!-- Tailwind CSS para deixar o visual bonito -->
+    <title>Gestor de Impressão 3D - Autenticado</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Script oficial do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
 
-    <div class="max-w-4xl mx-auto">
-        <header class="mb-8 text-center md:text-left">
-            <h1 class="text-3xl font-bold text-blue-400">🖨️ PrintCost 3D</h1>
-            <p class="text-gray-400 text-sm">Cálculo de custos e estoque integrado ao Supabase</p>
+    <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 hidden">
+        <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
+        
+        <div class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium mb-1">E-mail</label>
+                <input type="email" id="authEmail" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+            </div>
+            <div>
+                <label class="block text-sm font-medium mb-1">Senha</label>
+                <input type="password" id="authSenha" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+            </div>
+            
+            <button id="btnAuthPrincipal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Entrar</button>
+            
+            <div class="text-center mt-4">
+                <button id="btnAlternarAuth" class="text-sm text-gray-400 hover:underline">Não tem conta? Cadastre-se</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="painelPrincipal" class="max-w-4xl mx-auto hidden">
+        <header class="mb-8 flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
+            <div>
+                <h1 class="text-2xl font-bold text-blue-400">🖨️ PrintCost 3D</h1>
+                <p id="usuarioLogado" class="text-gray-400 text-xs"></p>
+            </div>
+            <button id="btnSair" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-1 px-3 rounded transition">Sair</button>
         </header>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- ABA 1: CALCULADORA -->
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
                 <h2 class="text-xl font-semibold mb-4 text-blue-300">Nova Impressão / Calculadora</h2>
-                
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
-                        <input type="text" id="nomeModelo" placeholder="Ex: Articulado Octo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="nomeModelo" placeholder="Ex: Articulado Octo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Peso Utilizado (g)</label>
-                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <label class="block text-sm font-medium mb-1">Peso (g)</label>
+                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Tempo (Horas)</label>
-                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                     </div>
-
                     <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                        <p class="text-sm text-gray-400">Preço do Rolo PLA (1kg): <span class="text-white font-bold">R$ 120,00</span></p>
-                        <p class="text-sm text-gray-400 mt-1">Custo Estimado da Máquina/Hora: <span class="text-white font-bold">R$ 1,50</span></p>
-                        <hr class="my-2 border-gray-600">
                         <div class="flex justify-between items-center">
-                            <span class="font-bold text-lg">Custo Total:</span>
-                            <span id="custoTotal" class="text-xl font-black text-green-400">R$ 10,50</span>
+                            <span class="font-bold">Preço de Venda Sugerido:</span>
+                            <span id="custoTotal" class="text-xl font-black text-green-400">R$ 0,00</span>
                         </div>
                     </div>
-
-                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                        Salvar no Catálogo e Estoque
-                    </button>
+                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no meu Catálogo</button>
                 </div>
             </div>
 
-            <!-- ABA 2: LOGS / ESTOQUE -->
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
-                <h2 class="text-xl font-semibold mb-4 text-purple-300">Últimos Registros Salvos</h2>
-                <div id="listaModelos" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
-                    <p class="text-gray-500 text-sm italic">Carregando dados do Supabase...</p>
-                </div>
+                <h2 class="text-xl font-semibold mb-4 text-purple-300">Seu Catálogo de Preços</h2>
+                <div id="listaModelos" class="space-y-3 max-h-[350px] overflow-y-auto pr-2"></div>
             </div>
         </div>
     </div>
 
     <script>
-        // Suas credenciais do Supabase integradas diretamente
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
-        
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Elementos da tela
+        let modoAbas = 'login'; // 'login' ou 'cadastro'
+
+        // Elementos de Autenticação
+        const telaAuth = document.getElementById('telaAutenticacao');
+        const painelPrincipal = document.getElementById('painelPrincipal');
+        const tituloAuth = document.getElementById('tituloAuth');
+        const authEmail = document.getElementById('authEmail');
+        const authSenha = document.getElementById('authSenha');
+        const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
+        const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+        const usuarioLogadoText = document.getElementById('usuarioLogado');
+        const btnSair = document.getElementById('btnSair');
+
+        // Elementos do App
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
@@ -80,40 +100,87 @@
         const btnSalvar = document.getElementById('btnSalvar');
         const listaContainer = document.getElementById('listaModelos');
 
-        // Função simples para calcular custos na tela
+        // --- GERENCIAMENTO DE SESSÃO E AUTH ---
+        
+        // Monitora se o usuário está logado ou não
+        _supabase.auth.onAuthStateChange((event, session) => {
+            if (session) {
+                telaAuth.classList.add('hidden');
+                painelPrincipal.classList.remove('hidden');
+                usuarioLogadoText.innerText = `Painel de: ${session.user.email}`;
+                carregarDados();
+            } else {
+                painelPrincipal.classList.add('hidden');
+                telaAuth.classList.remove('hidden');
+            }
+        });
+
+        // Alternar interface entre Login e Cadastro
+        btnAlternarAuth.addEventListener('click', () => {
+            if (modoAbas === 'login') {
+                modoAbas = 'cadastro';
+                tituloAuth.innerText = 'Criar Nova Conta';
+                btnAuthPrincipal.innerText = 'Cadastrar';
+                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+            } else {
+                modoAbas = 'login';
+                tituloAuth.innerText = 'Entrar no Sistema';
+                btnAuthPrincipal.innerText = 'Entrar';
+                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+            }
+        });
+
+        // Executar Ação de Login ou Cadastro
+        btnAuthPrincipal.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authSenha.value;
+
+            if(!email || !password) return alert('Preencha todos os campos.');
+
+            if (modoAbas === 'login') {
+                const { error } = await _supabase.auth.signInWithPassword({ email, password });
+                if (error) alert('Erro ao entrar: ' + error.message);
+            } else {
+                const { error } = await _supabase.auth.signUp({ email, password });
+                if (error) alert('Erro ao cadastrar: ' + error.message);
+                else alert('Cadastro realizado com sucesso! Conectando...');
+            }
+        });
+
+        btnSair.addEventListener('click', () => _supabase.auth.signOut());
+
+        // --- LÓGICA DO APP (ISOLADA POR USER AUTOMATICAMENTE PELO RLS) ---
+
         function calcular() {
             const peso = parseFloat(pesoInput.value) || 0;
             const tempo = parseFloat(tempoInput.value) || 0;
-            
-            const custoMaterial = (120 / 1000) * peso; // R$120 por 1kg (1000g)
-            const custoMaquina = 1.50 * tempo; // R$1,50 por hora de energia/depreciação
-            const total = custoMaterial + custoMaquina;
+            const custoMaterial = (120 / 1000) * peso; 
+            const custoMaquina = 1.50 * tempo; 
+            const totalSugerido = (custoMaterial + custoMaquina) * 3; // Margem de 3x
 
-            custoTexto.innerText = `R$ ${total.toFixed(2)}`;
-            return total;
+            custoTexto.innerText = `R$ ${totalSugerido.toFixed(2)}`;
+            return totalSugerido;
         }
 
-        // Ouvir mudanças nos inputs para atualizar o preço em tempo real
         pesoInput.addEventListener('input', calcular);
         tempoInput.addEventListener('input', calcular);
 
-        // Função para buscar dados do Supabase
         async function carregarDados() {
-            listaContainer.innerHTML = '<p class="text-gray-500 text-sm">Buscando...</p>';
+            listaContainer.innerHTML = '<p class="text-gray-500 text-sm">Carregando seus dados...</p>';
             
-            // Busca da tabela 'catalogo_modelos' (Certifique-se de ter criado a tabela no Supabase)
+            // Graças ao RLS, o Supabase filtra automaticamente trazendo apenas os dados do usuário logado
             const { data, error } = await _supabase
                 .from('catalogo_modelos')
                 .select('*')
                 .order('created_at', { ascending: false });
 
             if (error) {
-                listaContainer.innerHTML = `<p class="text-red-400 text-sm">Erro ao carregar: ${error.message}</p>`;
+                listaContainer.innerHTML = `<p class="text-red-400 text-sm">Erro: ${error.message}</p>`;
                 return;
             }
 
             if (data.length === 0) {
-                listaContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum modelo salvo ainda.</p>';
+                listaContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Você não salvou nenhuma impressão ainda.</p>';
                 return;
             }
 
@@ -123,27 +190,22 @@
                         <h3 class="font-bold text-white">${item.nome_modelo}</h3>
                         <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${item.tempo_estimado_min} min</p>
                     </div>
-                    <span class="text-green-400 font-bold text-sm">Venda: R$ ${item.preco_venda_sugerido.toFixed(2)}</span>
+                    <span class="text-green-400 font-bold text-sm">R$ ${item.preco_venda_sugerido.toFixed(2)}</span>
                 </div>
             `).join('');
         }
 
-        // Função para salvar no Supabase ao clicar no botão
         btnSalvar.addEventListener('click', async () => {
             const nome = nomeInput.value.trim();
             const peso = parseFloat(pesoInput.value);
             const tempoHoras = parseFloat(tempoInput.value);
-            const custo = calcular();
-            const precoVenda = custo * 3; // Sugestão simples: cobrar 3x o custo
+            const precoVenda = calcular();
 
-            if (!nome) {
-                alert('Por favor, insira o nome do modelo.');
-                return;
-            }
+            if (!nome) return alert('Insira o nome do modelo.');
 
             btnSalvar.disabled = true;
-            btnSalvar.innerText = 'Salvando...';
 
+            // O user_id é preenchido automaticamente no banco via 'DEFAULT auth.uid()'
             const { error } = await _supabase
                 .from('catalogo_modelos')
                 .insert([{
@@ -154,7 +216,6 @@
                 }]);
 
             btnSalvar.disabled = false;
-            btnSalvar.innerText = 'Salvar no Catálogo e Estoque';
 
             if (error) {
                 alert('Erro ao salvar: ' + error.message);
@@ -164,9 +225,7 @@
             }
         });
 
-        // Inicializar dados na tela
         calcular();
-        carregarDados();
     </script>
 </body>
 </html>
