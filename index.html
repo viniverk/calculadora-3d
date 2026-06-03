@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zweck 3D - Gestor de Impressão</title>
+    <title>Gestor 3D - Controle de Impressão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -32,7 +32,7 @@
                     <p class="font-semibold text-blue-300 mb-1">A senha precisa ter obrigatoriamente:</p>
                     <ul class="list-disc list-inside space-y-0.5 text-gray-300">
                         <li>No mínimo 6 caracteres</li>
-                        <li>Pelo menos uma letra MAIÚSCULA</li>
+                        <li>Pelo menos uma letter MAIÚSCULA</li>
                         <li>Pelo menos uma letra minúscula</li>
                         <li>Pelo menos um número</li>
                     </ul>
@@ -68,7 +68,7 @@
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
                 <div class="flex items-center gap-2 overflow-hidden">
                     <span class="text-2xl">🖨️</span>
-                    <h1 class="font-bold text-lg text-blue-400 tracking-wider whitespace-nowrap label-texto">Zweck 3D</h1>
+                    <h1 class="font-bold text-lg text-blue-400 tracking-wider whitespace-nowrap label-texto">Gestor 3D</h1>
                 </div>
                 <button id="btnToggleSidebar" class="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 focus:outline-none">
                     <span id="iconeSeta">◀</span>
@@ -269,7 +269,6 @@
         let usuarioAtual = null;
         let sidebarExpandido = true;
         
-        // Cache local de dados para funcionamento rápido dos filtros
         let filamentosCache = []; 
         let custoPorGramaSelecionado = 0.12; 
 
@@ -311,13 +310,11 @@
         const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
         const listaFilamentos = document.getElementById('listaFilamentos');
 
-        // Mapeamento dos Novos Filtros Suspensos
         const filtroTipo = document.getElementById('filtroTipo');
         const filtroFornecedor = document.getElementById('filtroFornecedor');
         const filtroCor = document.getElementById('filtroCor');
         const filtroAno = document.getElementById('filtroAno');
 
-        // Definir data padrão de compra como hoje
         document.getElementById('filDataCompra').valueAsDate = new Date();
 
         // --- MANIPULAÇÃO DO MENU LATERAL (SIDEBAR) ---
@@ -514,13 +511,11 @@
 
             filamentosCache = data || [];
             
-            // Popula os novos menus suspensos antes de processar as listas
             atualizarDropdownsFiltros();
             filtrarERenderizarFilamentos();
             atualizarDropdownCalculadora();
         }
 
-        // Função para alimentar os Menus Suspensos com os dados salvos do Banco de Dados
         function atualizarDropdownsFiltros() {
             const fornecedores = new Set();
             const cores = new Set();
@@ -535,12 +530,10 @@
                 }
             });
 
-            // Resguarda as seleções vigentes para não resetar a navegação do usuário
             const selFornecedor = filtroFornecedor.value;
             const selCor = filtroCor.value;
             const selAno = filtroAno.value;
 
-            // Alimenta Menu Suspenso de Fornecedores
             filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(fornecedores).sort().forEach(f => {
                 const opt = document.createElement('option');
@@ -549,7 +542,6 @@
             });
             if (fornecedores.has(selFornecedor)) filtroFornecedor.value = selFornecedor;
 
-            // Alimenta Menu Suspenso de Cores
             filtroCor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(cores).sort().forEach(c => {
                 const opt = document.createElement('option');
@@ -558,7 +550,6 @@
             });
             if (cores.has(selCor)) filtroCor.value = selCor;
 
-            // Alimenta Menu Suspenso de Anos
             filtroAno.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(anos).sort((a, b) => b - a).forEach(a => {
                 const opt = document.createElement('option');
@@ -568,7 +559,6 @@
             if (anos.has(selAno)) filtroAno.value = selAno;
         }
 
-        // Nova Lógica de Filtragem Baseada em Menus Suspensos Estritos
         function filtrarERenderizarFilamentos() {
             const tFiltro = filtroTipo.value;
             const fFiltro = filtroFornecedor.value;
@@ -611,13 +601,11 @@
             }).join('');
         }
 
-        // Eventos dos Seletores de Filtros
         filtroTipo.addEventListener('change', filtrarERenderizarFilamentos);
         filtroFornecedor.addEventListener('change', filtrarERenderizarFilamentos);
         filtroCor.addEventListener('change', filtrarERenderizarFilamentos);
         filtroAno.addEventListener('change', filtrarERenderizarFilamentos);
 
-        // Agrupamento Inteligente: Vincula o Cálculo ao Preço do Lote Mais Recente
         function atualizarDropdownCalculadora() {
             selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
             const chavesRegistradas = new Set();
