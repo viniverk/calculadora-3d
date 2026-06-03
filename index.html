@@ -6,10 +6,14 @@
     <title>Zweck 3D - Gestor de Impressão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        /* Ajuste fino para transições suaves do menu lateral */
+        .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
+    </style>
 </head>
-<body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
+<body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
-    <div id="telaAutenticacao" class="max-w-md mx-auto mt-16 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700">
+    <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
         <div class="space-y-4">
@@ -60,258 +64,428 @@
         </div>
     </div>
 
-    <div id="painelPrincipal" class="max-w-4xl mx-auto hidden">
-        
-        <header class="mb-8 flex justify-between items-center bg-gray-800 p-4 rounded-xl border border-gray-700">
-            <div>
-                <h1 class="text-2xl font-bold text-blue-400">🖨️ Zweck 3D</h1>
-                <p id="usuarioLogado" class="text-gray-400 text-xs"></p>
+    <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
+        <div>
+            <div class="p-4 flex items-center justify-between border-b border-gray-700">
+                <div class="flex items-center gap-2 overflow-hidden project-title">
+                    <span class="text-2xl">🖨️</span>
+                    <h1 class="font-bold text-lg text-blue-400 tracking-wider whitespace-nowrap label-texto">Zweck 3D</h1>
+                </div>
+                <button id="btnToggleSidebar" class="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 focus:outline-none">
+                    <span id="iconeSeta">◀</span>
+                </button>
             </div>
-            <button id="btnSair" class="bg-red-600 hover:bg-red-700 text-white text-sm font-bold py-1 px-3 rounded transition">Sair</button>
-        </header>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            
-            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
-                <h2 class="text-xl font-semibold mb-4 text-blue-300">Nova Impressão / Calculadora</h2>
+            <nav class="p-3 space-y-2">
+                <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition bg-blue-600 font-medium text-white item-menu-btn" data-aba="calculadora">
+                    <span class="text-lg">🧮</span>
+                    <span class="whitespace-nowrap label-texto">Calculadora</span>
+                </button>
                 
+                <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="filamentos">
+                    <span class="text-lg">🧵</span>
+                    <span class="whitespace-nowrap label-texto">Filamentos PLA</span>
+                </button>
+
+                <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-amber-900/40 text-amber-400 border border-amber-800/30 font-medium hidden item-menu-btn" data-aba="admin">
+                    <span class="text-lg">🛡️</span>
+                    <span class="whitespace-nowrap label-texto">Gerenciar Users</span>
+                </button>
+            </nav>
+        </div>
+
+        <div class="p-4 border-t border-gray-700 bg-gray-800/50">
+            <div class="overflow-hidden mb-2 label-texto">
+                <p class="text-xs text-gray-400 truncate" id="usuarioLogado">...</p>
+            </div>
+            <button id="btnSair" class="w-full bg-red-600/20 hover:bg-red-600 border border-red-700 text-red-200 hover:text-white text-sm font-bold py-2 rounded transition flex items-center justify-center gap-2">
+                <span>🚪</span>
+                <span class="label-texto whitespace-nowrap">Sair do Sistema</span>
+            </button>
+        </div>
+    </aside>
+
+    <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
+        
+        <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Nova Impressão</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
-                        <input type="text" id="nomeModelo" placeholder="Ex: Miniatura Civic VTEC" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="nomeModelo" placeholder="Ex: Miniatura Articulada" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
                     </div>
-                    
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Peso Utilizado (g)</label>
-                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Tempo (Horas)</label>
-                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                     </div>
-
                     <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                        <p class="text-sm text-gray-400">Base: R$ 120/kg PLA | R$ 1,50/h máquina</p>
-                        <hr class="my-2 border-gray-600">
+                        <p id="labelCustoInsumo" class="text-xs text-gray-400 mb-1">Base de Custo: Carregando preço médio...</p>
+                        <p class="text-xs text-gray-400 mb-2">Taxa operadora de máquina: R$ 1,50 / hora</p>
+                        <hr class="border-gray-600 my-2">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-sm">Preço Sugerido (Lucro 3x):</span>
                             <span id="custoTotal" class="text-xl font-black text-green-400">R$ 0,00</span>
                         </div>
                     </div>
-
-                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
-                        Salvar no Catálogo
-                    </button>
+                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no Catálogo</button>
                 </div>
             </div>
-
-            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
-                <h2 class="text-xl font-semibold mb-4 text-purple-300">Seu Catálogo de Preços</h2>
-                <div id="listaModelos" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-purple-300 border-b border-gray-700 pb-2">Seu Catálogo de Preços</h2>
+                <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
                     <p class="text-gray-500 text-sm italic">Carregando dados...</p>
                 </div>
             </div>
-
         </div>
-    </div>
+
+        <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Rolo de PLA</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome / Descrição do Filamento</label>
+                        <input type="text" id="filNome" placeholder="Ex: PLA Pro Preto Clássico" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Fabricante / Marca</label>
+                        <input type="text" id="filFabricante" placeholder="Ex: 3D Fila" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Preço Pago (R$)</label>
+                            <input type="number" id="filPreco" placeholder="120.00" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Total (g)</label>
+                            <input type="number" id="filPesoTotal" value="1000" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Atual (g)</label>
+                            <input type="number" id="filPesoAtual" value="1000" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition">Registrar Entrada no Estoque</button>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-teal-400 border-b border-gray-700 pb-2">Estoque de Matéria-Prima</h2>
+                <div id="listaFilamentos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                    <p class="text-gray-500 text-sm italic">Nenhum filamento em estoque.</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-max text-sm text-left text-gray-300">
+                    <thead class="bg-gray-700 text-gray-200 uppercase text-xs">
+                        <tr>
+                            <th class="p-3">E-mail</th>
+                            <th class="p-3">Acesso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAdminUsuarios" class="divide-y divide-gray-700">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
 
     <script>
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let modoAbas = 'login'; // 'login', 'cadastro', ou 'recuperar'
-        let usuarioAtual = null; 
+        let modoAbas = 'login'; 
+        let usuarioAtual = null;
+        let sidebarExpandido = true;
+        let custoPorGramaMedioGlobal = 0.12; // Valor base padrão caso não haja filamentos
 
-        // Captura de Elementos
+        // Seleção de Componentes DOM
         const telaAuth = document.getElementById('telaAutenticacao');
-        const painelPrincipal = document.getElementById('painelPrincipal');
-        const tituloAuth = document.getElementById('tituloAuth');
+        const sidebarApp = document.getElementById('sidebarApp');
+        const conteudoPainel = document.getElementById('conteudoPainel');
+        const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+        const iconeSeta = document.getElementById('iconeSeta');
+
+        // Mapeamento dos Inputs
         const authEmail = document.getElementById('authEmail');
-        const containerSenha = document.getElementById('containerSenha');
         const authSenha = document.getElementById('authSenha');
-        const dicaSenha = document.getElementById('dicaSenha');
         const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
         const btnGoogleAuth = document.getElementById('btnGoogleAuth');
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
         const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+        const containerSenha = document.getElementById('containerSenha');
         const divisorSocial = document.getElementById('divisorSocial');
+        const dicaSenha = document.getElementById('dicaSenha');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
-        const btnSair = document.getElementById('btnSair');
 
+        // Inputs das Operações
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
         const custoTexto = document.getElementById('custoTotal');
-        const btnSalvar = document.getElementById('btnSalvar'); 
+        const btnSalvar = document.getElementById('btnSalvar');
         const listaContainer = document.getElementById('listaModelos');
+        const labelCustoInsumo = document.getElementById('labelCustoInsumo');
 
-        // --- GERENCIADOR DE ESTADOS DA INTERFACE (AUTH) ---
+        // Inputs de Filamentos
+        const filNome = document.getElementById('filNome');
+        const filFabricante = document.getElementById('filFabricante');
+        const filPreco = document.getElementById('filPreco');
+        const filPesoTotal = document.getElementById('filPesoTotal');
+        const filPesoAtual = document.getElementById('filPesoAtual');
+        const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
+        const listaFilamentos = document.getElementById('listaFilamentos');
 
-        function atualizarLayoutAuth() {
-            if (modoAbas === 'login') {
-                tituloAuth.innerText = 'Entrar no Sistema';
-                btnAuthPrincipal.innerText = 'Entrar';
-                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
-                containerSenha.classList.remove('hidden');
-                btnGoogleAuth.classList.remove('hidden');
-                divisorSocial.classList.remove('hidden');
-                dicaSenha.classList.add('hidden');
-            } else if (modoAbas === 'cadastro') {
-                tituloAuth.innerText = 'Criar Nova Conta';
-                btnAuthPrincipal.innerText = 'Cadastrar';
-                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
-                containerSenha.classList.remove('hidden');
-                btnGoogleAuth.classList.remove('hidden');
-                divisorSocial.classList.remove('hidden');
-                dicaSenha.classList.remove('hidden'); // Exibe dicas de senha apenas no cadastro
-            } else if (modoAbas === 'recuperar') {
-                tituloAuth.innerText = 'Recuperar Minha Senha';
-                btnAuthPrincipal.innerText = 'Enviar E-mail de Redefinição';
-                btnAlternarAuth.innerText = 'Voltar para o Login';
-                containerSenha.classList.add('hidden'); // Oculta campo de senha
-                btnGoogleAuth.classList.add('hidden');   // Oculta login social
-                divisorSocial.classList.add('hidden');
+        // --- MANIPULAÇÃO DO MENU RETRÁTIL (SIDEBAR) ---
+        btnToggleSidebar.addEventListener('click', () => {
+            sidebarExpandido = !sidebarExpandido;
+            if (sidebarExpandido) {
+                sidebarApp.classList.remove('w-20');
+                sidebarApp.classList.add('w-64');
+                conteudoPainel.classList.remove('ml-20');
+                conteudoPainel.classList.add('ml-64');
+                iconeSeta.innerText = '◀';
+                document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
+            } else {
+                sidebarApp.classList.remove('w-64');
+                sidebarApp.classList.add('w-20');
+                conteudoPainel.classList.remove('ml-64');
+                conteudoPainel.classList.add('ml-20');
+                iconeSeta.innerText = '▶';
+                document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
             }
+        });
+
+        // --- SISTEMA DE FLUXO DE NAVEGAÇÃO DE ABAS ---
+        function mudarAba(abaDestino) {
+            document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
+            document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
+
+            document.querySelectorAll('.item-menu-btn').forEach(btn => {
+                if (btn.getAttribute('data-aba') === abaDestino) {
+                    btn.classList.add('bg-blue-600', 'text-white');
+                    btn.classList.remove('hover:bg-gray-700', 'text-gray-300');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('hover:bg-gray-700', 'text-gray-300');
+                }
+            });
+
+            if (abaDestino === 'calculadora') carregarModelos();
+            if (abaDestino === 'filamentos') carregarFilamentos();
+            if (abaDestino === 'admin') carregarPainelAdmin();
         }
 
-        btnAlternarAuth.addEventListener('click', () => {
-            if (modoAbas === 'login') modoAbas = 'cadastro';
-            else modoAbas = 'login';
-            atualizarLayoutAuth();
-        });
-
-        btnEsqueciSenha.addEventListener('click', () => {
-            modoAbas = 'recuperar';
-            atualizarLayoutAuth();
-        });
-
-        // --- CONTROLE DE SESSÃO E EVENTOS ---
-        
+        // --- FLUXO DE INFRAESTRUTURA E AUTHENTICATION ---
         _supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
-                usuarioAtual = session.user; 
+                usuarioAtual = session.user;
                 telaAuth.classList.add('hidden');
-                painelPrincipal.classList.remove('hidden');
-                usuarioLogadoText.innerText = `Painel de: ${session.user.email}`;
-                carregarDados();
+                sidebarApp.classList.remove('hidden');
+                conteudoPainel.classList.remove('hidden');
+                usuarioLogadoText.innerText = session.user.email;
+                verificarStatusAdminESessao();
             } else {
                 usuarioAtual = null;
-                painelPrincipal.classList.add('hidden');
+                sidebarApp.classList.add('hidden');
+                conteudoPainel.classList.add('hidden');
                 telaAuth.classList.remove('hidden');
             }
         });
 
-        // Clique no botão principal de Auth (Entrar / Cadastrar / Recuperar)
+        async function verificarStatusAdminESessao() {
+            const { data, error } = await _supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
+            if (!error && data) {
+                if (data.is_revogado) {
+                    alert('Seu acesso foi revogado pelo administrador.');
+                    _supabase.auth.signOut();
+                    return;
+                }
+                if (data.is_admin) {
+                    document.getElementById('abaAdminBtn').classList.remove('hidden');
+                }
+            }
+            // Sincronizar dados iniciais
+            carregarFilamentos();
+            carregarModelos();
+        }
+
+        btnAlternarAuth.addEventListener('click', () => {
+            if (modoAbas === 'login') {
+                modoAbas = 'cadastro';
+                document.getElementById('tituloAuth').innerText = 'Criar Nova Conta';
+                btnAuthPrincipal.innerText = 'Cadastrar';
+                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+                dicaSenha.classList.remove('hidden');
+            } else {
+                modoAbas = 'login';
+                document.getElementById('tituloAuth').innerText = 'Entrar no Sistema';
+                btnAuthPrincipal.innerText = 'Entrar';
+                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+                dicaSenha.classList.add('hidden');
+            }
+            containerSenha.classList.remove('hidden');
+            btnGoogleAuth.classList.remove('hidden');
+            divisorSocial.classList.remove('hidden');
+        });
+
+        btnEsqueciSenha.addEventListener('click', () => {
+            modoAbas = 'recuperar';
+            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+            btnAuthPrincipal.innerText = 'Enviar Código';
+            btnAlternarAuth.innerText = 'Voltar ao Login';
+            containerSenha.classList.add('hidden');
+            btnGoogleAuth.classList.add('hidden');
+            divisorSocial.classList.add('hidden');
+            dicaSenha.classList.add('hidden');
+        });
+
         btnAuthPrincipal.addEventListener('click', async () => {
             const email = authEmail.value.trim();
             const password = authSenha.value;
-
-            if (!email) return alert('Por favor, informe seu e-mail.');
+            if (!email) return alert('Insira seu e-mail.');
 
             if (modoAbas === 'login') {
-                if (!password) return alert('Por favor, digite sua senha.');
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
-                if (error) alert('Erro ao entrar: ' + error.message);
-
+                if (error) alert('Erro: ' + error.message);
             } else if (modoAbas === 'cadastro') {
-                if (!password) return alert('Por favor, defina uma senha.');
-                
-                // Validação estrita local em PORTUGUÊS casando com a política do Supabase
                 const temMaiuscula = /[A-Z]/.test(password);
                 const temMinuscula = /[a-z]/.test(password);
                 const temNumero = /[0-9]/.test(password);
 
                 if (password.length < 6 || !temMaiuscula || !temMinuscula || !temNumero) {
-                    alert('A sua senha não atende aos requisitos!\n\nCertifique-se de usar:\n• Pelo menos 6 caracteres\n• Pelo menos 1 letra MAIÚSCULA\n• Pelo menos 1 letra minúscula\n• Pelo menos 1 número');
-                    return;
+                    return alert('Sua senha não cumpre as regras exigidas.');
                 }
-
                 const { error } = await _supabase.auth.signUp({ email, password });
-                if (error) {
-                    alert('Erro ao cadastrar: ' + error.message);
-                } else {
-                    alert('Cadastro efetuado! Se você desativou a confirmação por e-mail no painel, o acesso já está liberado. Caso contrário, verifique sua caixa de entrada.');
-                }
-
+                if (error) alert(error.message);
+                else alert('Cadastro efetuado com sucesso!');
             } else if (modoAbas === 'recuperar') {
-                btnAuthPrincipal.disabled = true;
-                btnAuthPrincipal.innerText = 'Enviando...';
-
-                const { error } = await _supabase.auth.resetPasswordForEmail(email, {
-                    redirectTo: window.location.origin + window.location.pathname
-                });
-
-                btnAuthPrincipal.disabled = false;
-                btnAuthPrincipal.innerText = 'Enviar E-mail de Redefinição';
-
-                if (error) {
-                    alert('Erro ao solicitar redefinição: ' + error.message);
-                } else {
-                    alert('E-mail de redefinição enviado! Verifique sua caixa de entrada e spam.');
-                    modoAbas = 'login';
-                    atualizarLayoutAuth();
-                }
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                if (error) alert(error.message);
+                else alert('E-mail enviado!');
             }
         });
 
-        // Autenticação com o Google
         btnGoogleAuth.addEventListener('click', async () => {
-            const { error } = await _supabase.auth.signInWithOAuth({
-                provider: 'google',
-                options: {
-                    redirectTo: window.location.origin + window.location.pathname
-                }
-            });
-            if (error) alert('Erro ao conectar com Google: ' + error.message);
+            await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
         });
 
-        btnSair.addEventListener('click', () => _supabase.auth.signOut());
+        document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- GESTÃO DA CALCULADORA E DADOS ---
-
+        // --- MOTOR DE CÁLCULO DE CUSTO ---
         function calcular() {
             const peso = parseFloat(pesoInput.value) || 0;
             const tempo = parseFloat(tempoInput.value) || 0;
-            
-            const custoMaterial = (120 / 1000) * peso; 
-            const custoMaquina = 1.50 * tempo; 
-            const totalVendaSugerido = (custoMaterial + custoMaquina) * 3; 
 
-            custoTexto.innerText = `R$ ${totalVendaSugerido.toFixed(2)}`;
-            return totalVendaSugerido;
+            const custoMaterial = peso * custoPorGramaMedioGlobal;
+            const custoMaquina = tempo * 1.50;
+            const totalSugerido = (custoMaterial + custoMaquina) * 3;
+
+            custoTexto.innerText = `R$ ${totalSugerido.toFixed(2)}`;
+            return totalSugerido;
         }
-
         pesoInput.addEventListener('input', calcular);
         tempoInput.addEventListener('input', calcular);
 
-        async function carregarDados() {
-            listaContainer.innerHTML = '<p class="text-gray-500 text-sm">Atualizando catálogo...</p>';
-            
-            const { data, error } = await _supabase
-                .from('catalogo_modelos')
-                .select('*')
-                .order('created_at', { ascending: false });
+        // --- GERENCIAMENTO DE FILAMENTOS ---
+        btnSalvarFilamento.addEventListener('click', async () => {
+            const nome = filNome.value.trim();
+            const fab = filFabricante.value.trim();
+            const preco = parseFloat(filPreco.value) || 0;
+            const pTotal = parseFloat(filPesoTotal.value) || 0;
+            const pAtual = parseFloat(filPesoAtual.value) || 0;
 
-            if (error) {
-                listaContainer.innerHTML = `<p class="text-red-400 text-sm">Erro: ${error.message}</p>`;
+            if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os dados do filamento corretamente.');
+
+            btnSalvarFilamento.disabled = true;
+            const { error } = await _supabase.from('estoque_materiais').insert([{
+                nome, fabricante: fab, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
+            }]);
+            btnSalvarFilamento.disabled = false;
+
+            if (error) alert('Erro ao salvar filamento: ' + error.message);
+            else {
+                filNome.value = ''; filFabricante.value = ''; filPreco.value = '';
+                carregarFilamentos();
+            }
+        });
+
+        async function carregarFilamentos() {
+            const { data, error } = await _supabase.from('estoque_materials').select('*').order('created_at', { ascending: false });
+            if (error) return;
+
+            if (!data || data.length === 0) {
+                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum filamento em estoque.</p>';
+                custoPorGramaMedioGlobal = 0.12; 
+                labelCustoInsumo.innerText = "Base de Custo: R$ 0,12 /g (Padrão)";
+                calcular();
                 return;
             }
 
-            if (data.length === 0) {
+            let acumPreco = 0;
+            let acumPeso = 0;
+
+            listaFilamentos.innerHTML = data.map(item => {
+                acumPreco += parseFloat(item.preco_pago);
+                acumPeso += parseFloat(item.peso_total_g);
+                return `
+                    <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
+                        <div>
+                            <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-gray-400">(${item.fabricante || 'Geral'})</span></h3>
+                            <p class="text-xs text-emerald-400">Restam ${item.peso_atual_g}g de ${item.peso_total_g}g</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-200 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
+                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline hover:text-red-300">Excluir</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            if (acumPeso > 0) {
+                custoPorGramaMedioGlobal = acumPreco / acumPeso;
+                labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGramaMedioGlobal.toFixed(4)} /g (Média Ponderada)`;
+            }
+            calcular();
+        }
+
+        async function deletarFilamento(id) {
+            if (confirm('Deseja mesmo remover este filamento do estoque?')) {
+                await _supabase.from('estoque_materiais').delete().eq('id', id);
+                carregarFilamentos();
+            }
+        }
+
+        // --- GERENCIAMENTO DE MODELOS / PRODUTOS ---
+        async function carregarModelos() {
+            const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
+            if (error) return;
+
+            if (!data || data.length === 0) {
                 listaContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum modelo salvo neste usuário.</p>';
                 return;
             }
 
             listaContainer.innerHTML = data.map(item => `
-                <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center">
+                <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
                     <div>
                         <h3 class="font-bold text-white">${item.nome_modelo}</h3>
-                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${item.tempo_estimado_min} min</p>
+                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${item.tempo_estimado_min} min (${(item.tempo_estimado_min / 60).toFixed(1)}h)</p>
                     </div>
-                    <span class="text-green-400 font-bold text-sm">R$ ${item.preco_venda_sugerido.toFixed(2)}</span>
+                    <div class="text-right">
+                        <span class="text-green-400 font-bold text-sm block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span>
+                        <button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline hover:text-red-300">Excluir</button>
+                    </div>
                 </div>
             `).join('');
         }
@@ -322,34 +496,61 @@
             const tempoHoras = parseFloat(tempoInput.value);
             const precoVenda = calcular();
 
-            if (!nome) return alert('Por favor, informe o nome do modelo.');
-            if (!usuarioAtual) return alert('Sessão expirada. Faça login novamente.');
+            if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados do modelo.');
 
             btnSalvar.disabled = true;
-            btnSalvar.innerText = 'Salvando...';
-
-            const { error } = await _supabase
-                .from('catalogo_modelos')
-                .insert([{
-                    nome_modelo: nome,
-                    tempo_estimado_min: Math.round(tempoHoras * 60),
-                    peso_estimado_g: peso,
-                    preco_venda_sugerido: precoVenda,
-                    user_id: usuarioAtual.id 
-                }]);
-
+            const { error } = await _supabase.from('catalogo_modelos').insert([{
+                nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.id
+            }]);
             btnSalvar.disabled = false;
-            btnSalvar.innerText = 'Salvar no Catálogo';
 
-            if (error) {
-                alert('Erro ao salvar: ' + error.message);
-            } else {
+            if (error) alert('Erro ao salvar: ' + error.message);
+            else {
                 nomeInput.value = '';
-                carregarDados();
+                carregarModelos();
             }
         });
 
-        // Inicialização
+        async function deletarModelo(id) {
+            if (confirm('Deseja excluir este item do catálogo?')) {
+                await _supabase.from('catalogo_modelos').delete().eq('id', id);
+                carregarModelos();
+            }
+        }
+
+        // --- PAINEL ADMINISTRATIVO (ADMIN) ---
+        async function carregarPainelAdmin() {
+            const { data: listaPerfis, error } = await _supabase.from('perfis').select('*').order('created_at', { ascending: false });
+            if (error) return;
+
+            const tbody = document.getElementById('tabelaAdminUsuarios');
+            tbody.innerHTML = listaPerfis.map(p => {
+                if (p.id === usuarioAtual.id) return ''; // Esconder o próprio usuário admin logado
+                const statusTexto = p.is_revogado ? 'Acesso Revogado' : 'Acesso Liberado';
+                const classeStatus = p.is_revogado ? 'text-red-400' : 'text-green-400';
+                const botaoAcao = p.is_revogado 
+                    ? `<button onclick="alterarStatus('${p.id}', false)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2 rounded text-xs transition">Liberar</button>`
+                    : `<button onclick="alterarStatus('${p.id}', true)" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition">Revogar</button>`;
+
+                return `
+                    <tr class="border-b border-gray-700 hover:bg-gray-750">
+                        <td class="p-3 font-medium text-white">${p.email}</td>
+                        <td class="p-3 flex items-center justify-between gap-4">
+                            <span class="${classeStatus} font-semibold">${statusTexto}</span>
+                            ${botaoAcao}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function alterarStatus(id, revogarStatus) {
+            const { error } = await _supabase.from('perfis').update({ is_revogado: revogarStatus }).eq('id', id);
+            if (error) alert('Falha ao atualizar perfil: ' + error.message);
+            else carregarPainelAdmin();
+        }
+
+        // Inicialização secundária automática
         calcular();
     </script>
 </body>
