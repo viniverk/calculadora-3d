@@ -20,10 +20,27 @@
             <div>
                 <label class="block text-sm font-medium mb-1">Senha</label>
                 <input type="password" id="authSenha" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                <p class="text-xs text-gray-400 mt-1">A senha deve conter no mínimo 6 caracteres, incluindo **letras** e **números**.</p>
             </div>
             
             <button id="btnAuthPrincipal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Entrar</button>
             
+            <div class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">ou</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+
+            <button id="btnGoogleAuth" class="w-full bg-white hover:bg-gray-100 text-gray-900 font-bold py-2 px-4 rounded flex items-center justify-center gap-2 transition duration-200">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.3 1.56-1.17 2.88-2.48 3.76v3.13h3.99c2.34-2.16 3.685-5.32 3.685-8.74z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.99-3.13c-1.11.75-2.53 1.19-3.97 1.19-3.07 0-5.67-2.08-6.6-4.88H1.31v3.23A11.996 11.996 0 0 0 12 24z"/>
+                    <path fill="#FBBC05" d="M5.4 14.28a7.16 7.16 0 0 1 0-4.56V6.49H1.31a11.99 11.99 0 0 0 0 11.02L5.4 14.28z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.92 11.92 0 0 0 12 0 11.996 11.996 0 0 0 1.31 6.49l4.09 3.23c.93-2.8 3.53-4.97 6.6-4.97z"/>
+                </svg>
+                Continuar com o Google
+            </button>
+
             <div class="text-center mt-4">
                 <button id="btnAlternarAuth" class="text-sm text-gray-400 hover:underline">Não tem conta? Cadastre-se</button>
             </div>
@@ -88,7 +105,6 @@
     </div>
 
     <script>
-        // Configuração de acesso ao Supabase
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -103,6 +119,7 @@
         const authEmail = document.getElementById('authEmail');
         const authSenha = document.getElementById('authSenha');
         const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
+        const btnGoogleAuth = document.getElementById('btnGoogleAuth'); // Botão Google mapeado
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
         const btnSair = document.getElementById('btnSair');
@@ -145,7 +162,7 @@
             }
         });
 
-        // Executar Login ou Cadastro
+        // Executar Login ou Cadastro Clássico via E-mail
         btnAuthPrincipal.addEventListener('click', async () => {
             const email = authEmail.value.trim();
             const password = authSenha.value;
@@ -156,10 +173,29 @@
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
                 if (error) alert('Erro ao entrar: ' + error.message);
             } else {
+                // Validação lógica de senha forte (letras e números + min 6 caracteres)
+                const regexLetras = /[a-zA-Z]/;
+                const regexNumeros = /[0-9]/;
+
+                if (password.length < 6 || !regexLetras.test(password) || !regexNumeros.test(password)) {
+                    return alert('A senha não cumpre os requisitos: ela precisa ter no mínimo 6 dígitos, contendo pelo menos uma letra e pelo menos um número.');
+                }
+
                 const { error } = await _supabase.auth.signUp({ email, password });
                 if (error) alert('Erro ao cadastrar: ' + error.message);
                 else alert('Cadastro realizado com sucesso!');
             }
+        });
+
+        // Executar a Autenticação do Google
+        btnGoogleAuth.addEventListener('click', async () => {
+            const { error } = await _supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname // Retorna automático para o seu GitHub Pages
+                }
+            });
+            if (error) alert('Erro ao conectar com Google: ' + error.message);
         });
 
         btnSair.addEventListener('click', () => _supabase.auth.signOut());
@@ -181,7 +217,6 @@
         pesoInput.addEventListener('input', calcular);
         tempoInput.addEventListener('input', calcular);
 
-        // Carrega dados da tabela filtrando pelo RLS implicitamente
         async function carregarDados() {
             listaContainer.innerHTML = '<p class="text-gray-500 text-sm">Atualizando catálogo...</p>';
             
@@ -211,7 +246,6 @@
             `).join('');
         }
 
-        // Envio corrigido enviando explicitamente o user_id para a Policy do Supabase
         btnSalvar.addEventListener('click', async () => {
             const nome = nomeInput.value.trim();
             const peso = parseFloat(pesoInput.value);
@@ -245,7 +279,6 @@
             }
         });
 
-        // Inicialização primária do cálculo na tela
         calcular();
     </script>
 </body>
