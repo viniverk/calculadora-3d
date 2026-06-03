@@ -9,7 +9,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
 
-    <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 hidden">
+    <div id="telaAutenticacao" class="max-w-md mx-auto mt-16 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
         <div class="space-y-4">
@@ -17,15 +17,28 @@
                 <label class="block text-sm font-medium mb-1">E-mail</label>
                 <input type="email" id="authEmail" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500" placeholder="seu@email.com">
             </div>
-            <div>
-                <label class="block text-sm font-medium mb-1">Senha</label>
+            
+            <div id="containerSenha">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-sm font-medium">Senha</label>
+                    <button id="btnEsqueciSenha" class="text-xs text-blue-400 hover:underline">Esqueceu a senha?</button>
+                </div>
                 <input type="password" id="authSenha" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500" placeholder="••••••••">
-                <p class="text-xs text-gray-400 mt-1">A senha deve conter no mínimo 6 caracteres, incluindo **letras** e **números**.</p>
+                
+                <div id="dicaSenha" class="text-xs text-gray-400 mt-2 bg-gray-900/50 p-2 rounded border border-gray-700 hidden">
+                    <p class="font-semibold text-blue-300 mb-1">A senha precisa ter obrigatoriamente:</p>
+                    <ul class="list-disc list-inside space-y-0.5 text-gray-300">
+                        <li>No mínimo 6 caracteres</li>
+                        <li>Pelo menos uma letra MAIÚSCULA</li>
+                        <li>Pelo menos uma letra minúscula</li>
+                        <li>Pelo menos um número</li>
+                    </ul>
+                </div>
             </div>
             
             <button id="btnAuthPrincipal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Entrar</button>
             
-            <div class="relative flex py-2 items-center">
+            <div id="divisorSocial" class="relative flex py-2 items-center">
                 <div class="flex-grow border-t border-gray-600"></div>
                 <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">ou</span>
                 <div class="flex-grow border-t border-gray-600"></div>
@@ -109,18 +122,22 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let modoAbas = 'login'; 
+        let modoAbas = 'login'; // 'login', 'cadastro', ou 'recuperar'
         let usuarioAtual = null; 
 
-        // Captura de Elementos da Interface
+        // Captura de Elementos
         const telaAuth = document.getElementById('telaAutenticacao');
         const painelPrincipal = document.getElementById('painelPrincipal');
         const tituloAuth = document.getElementById('tituloAuth');
         const authEmail = document.getElementById('authEmail');
+        const containerSenha = document.getElementById('containerSenha');
         const authSenha = document.getElementById('authSenha');
+        const dicaSenha = document.getElementById('dicaSenha');
         const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
-        const btnGoogleAuth = document.getElementById('btnGoogleAuth'); // Botão Google mapeado
+        const btnGoogleAuth = document.getElementById('btnGoogleAuth');
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+        const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+        const divisorSocial = document.getElementById('divisorSocial');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
         const btnSair = document.getElementById('btnSair');
 
@@ -131,7 +148,47 @@
         const btnSalvar = document.getElementById('btnSalvar'); 
         const listaContainer = document.getElementById('listaModelos');
 
-        // --- CONTROLE DE SESSÃO (AUTH) ---
+        // --- GERENCIADOR DE ESTADOS DA INTERFACE (AUTH) ---
+
+        function atualizarLayoutAuth() {
+            if (modoAbas === 'login') {
+                tituloAuth.innerText = 'Entrar no Sistema';
+                btnAuthPrincipal.innerText = 'Entrar';
+                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+                containerSenha.classList.remove('hidden');
+                btnGoogleAuth.classList.remove('hidden');
+                divisorSocial.classList.remove('hidden');
+                dicaSenha.classList.add('hidden');
+            } else if (modoAbas === 'cadastro') {
+                tituloAuth.innerText = 'Criar Nova Conta';
+                btnAuthPrincipal.innerText = 'Cadastrar';
+                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+                containerSenha.classList.remove('hidden');
+                btnGoogleAuth.classList.remove('hidden');
+                divisorSocial.classList.remove('hidden');
+                dicaSenha.classList.remove('hidden'); // Exibe dicas de senha apenas no cadastro
+            } else if (modoAbas === 'recuperar') {
+                tituloAuth.innerText = 'Recuperar Minha Senha';
+                btnAuthPrincipal.innerText = 'Enviar E-mail de Redefinição';
+                btnAlternarAuth.innerText = 'Voltar para o Login';
+                containerSenha.classList.add('hidden'); // Oculta campo de senha
+                btnGoogleAuth.classList.add('hidden');   // Oculta login social
+                divisorSocial.classList.add('hidden');
+            }
+        }
+
+        btnAlternarAuth.addEventListener('click', () => {
+            if (modoAbas === 'login') modoAbas = 'cadastro';
+            else modoAbas = 'login';
+            atualizarLayoutAuth();
+        });
+
+        btnEsqueciSenha.addEventListener('click', () => {
+            modoAbas = 'recuperar';
+            atualizarLayoutAuth();
+        });
+
+        // --- CONTROLE DE SESSÃO E EVENTOS ---
         
         _supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
@@ -147,52 +204,65 @@
             }
         });
 
-        // Alternar visual entre Login e Cadastro
-        btnAlternarAuth.addEventListener('click', () => {
-            if (modoAbas === 'login') {
-                modoAbas = 'cadastro';
-                tituloAuth.innerText = 'Criar Nova Conta';
-                btnAuthPrincipal.innerText = 'Cadastrar';
-                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
-            } else {
-                modoAbas = 'login';
-                tituloAuth.innerText = 'Entrar no Sistema';
-                btnAuthPrincipal.innerText = 'Entrar';
-                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
-            }
-        });
-
-        // Executar Login ou Cadastro Clássico via E-mail
+        // Clique no botão principal de Auth (Entrar / Cadastrar / Recuperar)
         btnAuthPrincipal.addEventListener('click', async () => {
             const email = authEmail.value.trim();
             const password = authSenha.value;
 
-            if(!email || !password) return alert('Preencha todos os campos.');
+            if (!email) return alert('Por favor, informe seu e-mail.');
 
             if (modoAbas === 'login') {
+                if (!password) return alert('Por favor, digite sua senha.');
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
                 if (error) alert('Erro ao entrar: ' + error.message);
-            } else {
-                // Validação lógica de senha forte (letras e números + min 6 caracteres)
-                const regexLetras = /[a-zA-Z]/;
-                const regexNumeros = /[0-9]/;
 
-                if (password.length < 6 || !regexLetras.test(password) || !regexNumeros.test(password)) {
-                    return alert('A senha não cumpre os requisitos: ela precisa ter no mínimo 6 dígitos, contendo pelo menos uma letra e pelo menos um número.');
+            } else if (modoAbas === 'cadastro') {
+                if (!password) return alert('Por favor, defina uma senha.');
+                
+                // Validação estrita local em PORTUGUÊS casando com a política do Supabase
+                const temMaiuscula = /[A-Z]/.test(password);
+                const temMinuscula = /[a-z]/.test(password);
+                const temNumero = /[0-9]/.test(password);
+
+                if (password.length < 6 || !temMaiuscula || !temMinuscula || !temNumero) {
+                    alert('A sua senha não atende aos requisitos!\n\nCertifique-se de usar:\n• Pelo menos 6 caracteres\n• Pelo menos 1 letra MAIÚSCULA\n• Pelo menos 1 letra minúscula\n• Pelo menos 1 número');
+                    return;
                 }
 
                 const { error } = await _supabase.auth.signUp({ email, password });
-                if (error) alert('Erro ao cadastrar: ' + error.message);
-                else alert('Cadastro realizado com sucesso!');
+                if (error) {
+                    alert('Erro ao cadastrar: ' + error.message);
+                } else {
+                    alert('Cadastro efetuado! Se você desativou a confirmação por e-mail no painel, o acesso já está liberado. Caso contrário, verifique sua caixa de entrada.');
+                }
+
+            } else if (modoAbas === 'recuperar') {
+                btnAuthPrincipal.disabled = true;
+                btnAuthPrincipal.innerText = 'Enviando...';
+
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + window.location.pathname
+                });
+
+                btnAuthPrincipal.disabled = false;
+                btnAuthPrincipal.innerText = 'Enviar E-mail de Redefinição';
+
+                if (error) {
+                    alert('Erro ao solicitar redefinição: ' + error.message);
+                } else {
+                    alert('E-mail de redefinição enviado! Verifique sua caixa de entrada e spam.');
+                    modoAbas = 'login';
+                    atualizarLayoutAuth();
+                }
             }
         });
 
-        // Executar a Autenticação do Google
+        // Autenticação com o Google
         btnGoogleAuth.addEventListener('click', async () => {
             const { error } = await _supabase.auth.signInWithOAuth({
                 provider: 'google',
                 options: {
-                    redirectTo: window.location.origin + window.location.pathname // Retorna automático para o seu GitHub Pages
+                    redirectTo: window.location.origin + window.location.pathname
                 }
             });
             if (error) alert('Erro ao conectar com Google: ' + error.message);
@@ -200,7 +270,7 @@
 
         btnSair.addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- MOTOR DE CÁLCULO E OPERAÇÕES DO BANCO ---
+        // --- GESTÃO DA CALCULADORA E DADOS ---
 
         function calcular() {
             const peso = parseFloat(pesoInput.value) || 0;
@@ -279,6 +349,7 @@
             }
         });
 
+        // Inicialização
         calcular();
     </script>
 </body>
