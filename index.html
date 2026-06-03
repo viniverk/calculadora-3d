@@ -208,10 +208,10 @@
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-3 text-teal-400 border-b border-gray-700 pb-2">Histórico de Compras e Estoque</h2>
                 
-                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 mb-4 grid grid-cols-3 gap-2">
+                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Tipo</label>
-                        <select id="filtroTipo" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white">
+                        <select id="filtroTipo" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
                             <option value="Todos">Todos</option>
                             <option value="PLA">PLA</option>
                             <option value="ABS">ABS</option>
@@ -220,11 +220,21 @@
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Fornecedor</label>
-                        <input type="text" id="filtroFornecedor" placeholder="Buscar..." class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 placeholder-gray-500">
+                        <select id="filtroFornecedor" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Cor</label>
-                        <input type="text" id="filtroCor" placeholder="Buscar..." class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 placeholder-gray-500">
+                        <select id="filtroCor" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Ano Compra</label>
+                        <select id="filtroAno" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
                     </div>
                 </div>
 
@@ -301,15 +311,16 @@
         const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
         const listaFilamentos = document.getElementById('listaFilamentos');
 
-        // Inputs de Filtros
+        // Mapeamento dos Novos Filtros Suspensos
         const filtroTipo = document.getElementById('filtroTipo');
         const filtroFornecedor = document.getElementById('filtroFornecedor');
         const filtroCor = document.getElementById('filtroCor');
+        const filtroAno = document.getElementById('filtroAno');
 
         // Definir data padrão de compra como hoje
         document.getElementById('filDataCompra').valueAsDate = new Date();
 
-        // --- MANIPULAÇÃO DO MENU RETRÁTIL (SIDEBAR) ---
+        // --- MANIPULAÇÃO DO MENU LATERAL (SIDEBAR) ---
         btnToggleSidebar.addEventListener('click', () => {
             sidebarExpandido = !sidebarExpandido;
             if (sidebarExpandido) {
@@ -329,7 +340,7 @@
             }
         });
 
-        // --- SISTEMA DE FLUXO DE NAVEGAÇÃO DE ABAS ---
+        // --- NAVEGAÇÃO DE ABAS ---
         function mudarAba(abaDestino) {
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
@@ -396,9 +407,6 @@
                 btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
                 dicaSenha.classList.add('hidden');
             }
-            containerSenha.classList.remove('hidden');
-            btnGoogleAuth.classList.remove('hidden');
-            divisorSocial.classList.remove('hidden');
         });
 
         btnEsqueciSenha.addEventListener('click', () => {
@@ -444,12 +452,11 @@
 
         document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- ENGINE DE CÁLCULO INTELIGENTE (ÚLTIMA COMPRA) ---
+        // --- ENGINE DE CÁLCULO DE CUSTO ---
         function calcular() {
             const peso = parseFloat(pesoInput.value) || 0;
             const tempo = parseFloat(tempoInput.value) || 0;
 
-            // Define o custo por grama baseado no elemento selecionado no dropdown
             if (selectFilamento.value === "padrao") {
                 custoPorGramaSelecionado = 0.12;
                 labelCustoInsumo.innerText = "Base de Custo: R$ 0,1200 /g (Preço Padrão)";
@@ -486,7 +493,6 @@
 
             btnSalvarFilamento.disabled = true;
             
-            // Gravação correta na tabela 'estoque_materiais'
             const { error } = await _supabase.from('estoque_materiais').insert([{
                 nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
             }]);
@@ -508,31 +514,86 @@
 
             filamentosCache = data || [];
             
-            // Atualiza os filtros e monta o dropdown da calculadora simultaneamente
+            // Popula os novos menus suspensos antes de processar as listas
+            atualizarDropdownsFiltros();
             filtrarERenderizarFilamentos();
             atualizarDropdownCalculadora();
         }
 
-        // Função de Filtragem em Tempo Real (Tipo, Fornecedor e Cor)
+        // Função para alimentar os Menus Suspensos com os dados salvos do Banco de Dados
+        function atualizarDropdownsFiltros() {
+            const fornecedores = new Set();
+            const cores = new Set();
+            const anos = new Set();
+
+            filamentosCache.forEach(item => {
+                if (item.fabricante) fornecedores.add(item.fabricante.trim());
+                if (item.cor) cores.add(item.cor.trim());
+                if (item.data_compra) {
+                    const ano = item.data_compra.split('-')[0];
+                    if (ano) anos.add(ano);
+                }
+            });
+
+            // Resguarda as seleções vigentes para não resetar a navegação do usuário
+            const selFornecedor = filtroFornecedor.value;
+            const selCor = filtroCor.value;
+            const selAno = filtroAno.value;
+
+            // Alimenta Menu Suspenso de Fornecedores
+            filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>';
+            Array.from(fornecedores).sort().forEach(f => {
+                const opt = document.createElement('option');
+                opt.value = f; opt.textContent = f;
+                filtroFornecedor.appendChild(opt);
+            });
+            if (fornecedores.has(selFornecedor)) filtroFornecedor.value = selFornecedor;
+
+            // Alimenta Menu Suspenso de Cores
+            filtroCor.innerHTML = '<option value="Todos">Todos</option>';
+            Array.from(cores).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c; opt.textContent = c;
+                filtroCor.appendChild(opt);
+            });
+            if (cores.has(selCor)) filtroCor.value = selCor;
+
+            // Alimenta Menu Suspenso de Anos
+            filtroAno.innerHTML = '<option value="Todos">Todos</option>';
+            Array.from(anos).sort((a, b) => b - a).forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a; opt.textContent = a;
+                filtroAno.appendChild(opt);
+            });
+            if (anos.has(selAno)) filtroAno.value = selAno;
+        }
+
+        // Nova Lógica de Filtragem Baseada em Menus Suspensos Estritos
         function filtrarERenderizarFilamentos() {
             const tFiltro = filtroTipo.value;
-            const fFiltro = filtroFornecedor.value.toLowerCase().trim();
-            const cFiltro = filtroCor.value.toLowerCase().trim();
+            const fFiltro = filtroFornecedor.value;
+            const cFiltro = filtroCor.value;
+            const anoFiltro = filtroAno.value;
 
             const dadosFiltrados = filamentosCache.filter(item => {
                 const bateTipo = (tFiltro === "Todos" || item.tipo === tFiltro);
-                const bateFornecedor = (!fFiltro || item.fabricante.toLowerCase().includes(fFiltro));
-                const bateCor = (!cFiltro || item.cor.toLowerCase().includes(cFiltro));
-                return bateTipo && bateFornecedor && bateCor;
+                const bateFornecedor = (fFiltro === "Todos" || item.fabricante.trim() === fFiltro);
+                const bateCor = (cFiltro === "Todos" || item.cor.trim() === cFiltro);
+                
+                let bateAno = true;
+                if (anoFiltro !== "Todos") {
+                    const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
+                    bateAno = (anoItem === anoFiltro);
+                }
+                return bateTipo && bateFornecedor && bateCor && bateAno;
             });
 
             if (dadosFiltrados.length === 0) {
-                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum registro encontrado para este filtro.</p>';
+                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic text-center p-4">Nenhum lote corresponde aos filtros selecionados.</p>';
                 return;
             }
 
             listaFilamentos.innerHTML = dadosFiltrados.map(item => {
-                // Formatação amigável de data ISO para o padrão brasileiro
                 const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
                 return `
                     <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
@@ -550,21 +611,18 @@
             }).join('');
         }
 
-        // Ouvintes de evento para os inputs de filtros
+        // Eventos dos Seletores de Filtros
         filtroTipo.addEventListener('change', filtrarERenderizarFilamentos);
-        filtroFornecedor.addEventListener('input', filtrarERenderizarFilamentos);
-        filtroCor.addEventListener('input', filtrarERenderizarFilamentos);
+        filtroFornecedor.addEventListener('change', filtrarERenderizarFilamentos);
+        filtroCor.addEventListener('change', filtrarERenderizarFilamentos);
+        filtroAno.addEventListener('change', filtrarERenderizarFilamentos);
 
-        // Algoritmo para agrupar e selecionar a ULTIMA COMPRA para a calculadora
+        // Agrupamento Inteligente: Vincula o Cálculo ao Preço do Lote Mais Recente
         function atualizarDropdownCalculadora() {
-            // Reinicia o select com a opção padrão
             selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
-
-            // Como o fetch já veio ordenado por 'data_compra' DESC, o primeiro item encontrado de cada grupo é o mais recente!
             const chavesRegistradas = new Set();
 
             filamentosCache.forEach(item => {
-                // Monta a chave única do insumo: Fornecedor + Tipo + Cor
                 const chaveUnica = `${item.fabricante} | ${item.tipo} | ${item.cor}`.toLowerCase();
 
                 if (!chavesRegistradas.has(chaveUnica)) {
@@ -575,11 +633,10 @@
 
                     const opt = document.createElement('option');
                     opt.value = custoPorGramaItem;
-                    opt.textContent = `${item.fabricante} - ${item.tipo} (${item.cor}) - R$ ${parseFloat(item.preco_pago).toFixed(2)} [Lote: ${dataFormatada}]`;
+                    opt.textContent = `${item.fabricante} - ${item.tipo} (${item.cor}) - R$ ${parseFloat(item.preco_pago).toFixed(2)} [Último Lote: ${dataFormatada}]`;
                     selectFilamento.appendChild(opt);
                 }
             });
-
             calcular();
         }
 
