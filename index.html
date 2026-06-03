@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor 3D - Controle de Impressão</title>
+    <!-- Tailwind CSS para design responsivo e moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script oficial do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
@@ -12,6 +14,7 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
+    <!-- 1. TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO / RECUPERAÇÃO) -->
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
@@ -32,7 +35,7 @@
                     <p class="font-semibold text-blue-300 mb-1">A senha precisa ter obrigatoriamente:</p>
                     <ul class="list-disc list-inside space-y-0.5 text-gray-300">
                         <li>No mínimo 6 caracteres</li>
-                        <li>Pelo menos uma letter MAIÚSCULA</li>
+                        <li>Pelo menos uma letra MAIÚSCULA</li>
                         <li>Pelo menos uma letra minúscula</li>
                         <li>Pelo menos um número</li>
                     </ul>
@@ -63,6 +66,7 @@
         </div>
     </div>
 
+    <!-- 2. ESTRUTURA DO MENU LATERAL (SIDEBAR) -->
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
@@ -78,9 +82,15 @@
             <nav class="p-3 space-y-2">
                 <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition bg-blue-600 font-medium text-white item-menu-btn" data-aba="calculadora">
                     <span class="text-lg">🧮</span>
-                    <span class="whitespace-nowrap label-texto">Calculadora</span>
+                    <span class="whitespace-nowrap label-texto">Calculadora Base</span>
                 </button>
                 
+                <!-- ABA NOVA ADICIONADA AO MENU -->
+                <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="inserir-impressao">
+                    <span class="text-lg">🚀</span>
+                    <span class="whitespace-nowrap label-texto">Inserir Impressão</span>
+                </button>
+
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="filamentos">
                     <span class="text-lg">🧵</span>
                     <span class="whitespace-nowrap label-texto">Filamentos e Estoque</span>
@@ -104,36 +114,34 @@
         </div>
     </aside>
 
+    <!-- 3. ÁREA DE CONTEÚDO PRINCIPAL -->
     <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
         
+        <!-- ABA: CALCULADORA BASE -->
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Nova Impressão</h2>
+                <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
                 <div class="space-y-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
-                        <input type="text" id="nomeModelo" placeholder="Ex: Miniatura Articulada" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                        <input type="text" id="nomeModelo" placeholder="Ex: Protótipo de Engenharia" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
                     </div>
-                    
                     <div>
-                        <label class="block text-sm font-medium mb-1">Selecione o Filamento Utilizado</label>
+                        <label class="block text-sm font-medium mb-1">Selecione o Filamento Base</label>
                         <select id="selectFilamento" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-white">
                             <option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>
                         </select>
-                        <p class="text-[11px] text-amber-400 mt-1">💡 O sistema seleciona automaticamente o valor do lote mais recente comprado desse tipo/marca.</p>
                     </div>
-
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-sm font-medium mb-1">Peso Utilizado (g)</label>
+                            <label class="block text-sm font-medium mb-1">Peso Estimado (g)</label>
                             <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                         <div>
-                            <label class="block text-sm font-medium mb-1">Tempo (Horas)</label>
+                            <label class="block text-sm font-medium mb-1">Tempo Estimado (Horas)</label>
                             <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                     </div>
-                    
                     <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
                         <p id="labelCustoInsumo" class="text-xs text-gray-400 mb-1">Base de Custo: R$ 0,1200 /g</p>
                         <p class="text-xs text-gray-400 mb-2">Taxa operadora de máquina: R$ 1,50 / hora</p>
@@ -146,15 +154,68 @@
                     <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no Catálogo</button>
                 </div>
             </div>
-            
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-purple-300 border-b border-gray-700 pb-2">Seu Catálogo de Preços</h2>
-                <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                    <p class="text-gray-500 text-sm italic">Carregando dados...</p>
+                <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+
+        <!-- ABA NOVA: INSERIR IMPRESSÃO REAL (COM PORCENTAGEM DE LUCRO CUSTOMIZADA) -->
+        <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <!-- Formulário Operacional -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-sky-400 border-b border-gray-700 pb-2">Registrar Nova Peça Produzida</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome da Peça / Objeto</label>
+                        <input type="text" id="impNomePeca" placeholder="Ex: Action Figure Pokémon" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Selecione o Filamento / Cor do Estoque</label>
+                        <select id="impSelectFilamento" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
+                            <option value="0.12">Preço Padrão (R$ 0,12 /g)</option>
+                        </select>
+                    </div>
+
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso (g)</label>
+                            <input type="number" id="impPesoGrams" value="40" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tempo (Horas)</label>
+                            <input type="number" id="impTempoHoras" value="2" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Margem Lucro (%)</label>
+                            <input type="number" id="impMargemLucro" value="200" placeholder="200" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-900/60 p-4 rounded-lg border border-gray-700 space-y-1">
+                        <div class="flex justify-between text-sm text-gray-400">
+                            <span>Custo Real de Fabricação:</span>
+                            <span id="impTxtCustoReal" class="text-white font-medium">R$ 0,00</span>
+                        </div>
+                        <div class="flex justify-between items-center pt-2 border-t border-gray-700 mt-2">
+                            <span class="font-bold text-sm text-sky-300">Valor de Venda Sugerido:</span>
+                            <span id="impTxtValorSugerido" class="text-xl font-black text-emerald-400">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <button id="btnSalvarImpressao" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 rounded transition">Registrar e Salvar Trabalho</button>
+                </div>
+            </div>
+            <!-- Histórico Dinâmico de Peças Produzidas -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-teal-400 border-b border-gray-700 pb-2">Registro de Objetos Impressos</h2>
+                <div id="listaImpressoes" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
+                    <p class="text-gray-500 text-sm italic">Carregando histórico...</p>
                 </div>
             </div>
         </div>
 
+        <!-- ABA: CADASTRO DE FILAMENTOS -->
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
@@ -207,7 +268,6 @@
 
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-3 text-teal-400 border-b border-gray-700 pb-2">Histórico de Compras e Estoque</h2>
-                
                 <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Tipo</label>
@@ -237,13 +297,11 @@
                         </select>
                     </div>
                 </div>
-
-                <div id="listaFilamentos" class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
-                    <p class="text-gray-500 text-sm italic">Carregando estoque...</p>
-                </div>
+                <div id="listaFilamentos" class="space-y-3 max-h-[420px] overflow-y-auto pr-2"></div>
             </div>
         </div>
 
+        <!-- ABA: ADMINISTRAÇÃO -->
         <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
             <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <div class="overflow-x-auto">
@@ -260,6 +318,7 @@
         </div>
     </main>
 
+    <!-- 4. LÓGICA DO SISTEMA E INTEGRAÇÃO SUPABASE -->
     <script>
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
@@ -268,28 +327,17 @@
         let modoAbas = 'login'; 
         let usuarioAtual = null;
         let sidebarExpandido = true;
-        
         let filamentosCache = []; 
-        let custoPorGramaSelecionado = 0.12; 
 
-        // Componentes da Interface
+        // Componentes Gerais
         const telaAuth = document.getElementById('telaAutenticacao');
         const sidebarApp = document.getElementById('sidebarApp');
         const conteudoPainel = document.getElementById('conteudoPainel');
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
         const iconeSeta = document.getElementById('iconeSeta');
-
-        const authEmail = document.getElementById('authEmail');
-        const authSenha = document.getElementById('authSenha');
-        const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
-        const btnGoogleAuth = document.getElementById('btnGoogleAuth');
-        const btnAlternarAuth = document.getElementById('btnAlternarAuth');
-        const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
-        const containerSenha = document.getElementById('containerSenha');
-        const divisorSocial = document.getElementById('divisorSocial');
-        const dicaSenha = document.getElementById('dicaSenha');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
+        // Mapeamento Aba: Calculadora Base
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
@@ -299,6 +347,18 @@
         const labelCustoInsumo = document.getElementById('labelCustoInsumo');
         const selectFilamento = document.getElementById('selectFilamento');
 
+        // Mapeamento Aba Nova: Inserir Impressão
+        const impNomePeca = document.getElementById('impNomePeca');
+        const impSelectFilamento = document.getElementById('impSelectFilamento');
+        const impPesoGrams = document.getElementById('impPesoGrams');
+        const impTempoHoras = document.getElementById('impTempoHoras');
+        const impMargemLucro = document.getElementById('impMargemLucro');
+        const impTxtCustoReal = document.getElementById('impTxtCustoReal');
+        const impTxtValorSugerido = document.getElementById('impTxtValorSugerido');
+        const btnSalvarImpressao = document.getElementById('btnSalvarImpressao');
+        const listaImpressoes = document.getElementById('listaImpressoes');
+
+        // Mapeamento Aba: Filamentos
         const filNome = document.getElementById('filNome');
         const filFabricante = document.getElementById('filFabricante');
         const filCor = document.getElementById('filCor');
@@ -309,29 +369,22 @@
         const filPesoAtual = document.getElementById('filPesoAtual');
         const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
         const listaFilamentos = document.getElementById('listaFilamentos');
-
         const filtroTipo = document.getElementById('filtroTipo');
         const filtroFornecedor = document.getElementById('filtroFornecedor');
         const filtroCor = document.getElementById('filtroCor');
         const filtroAno = document.getElementById('filtroAno');
 
-        document.getElementById('filDataCompra').valueAsDate = new Date();
-
         // --- MANIPULAÇÃO DO MENU LATERAL (SIDEBAR) ---
         btnToggleSidebar.addEventListener('click', () => {
             sidebarExpandido = !sidebarExpandido;
             if (sidebarExpandido) {
-                sidebarApp.classList.remove('w-20');
-                sidebarApp.classList.add('w-64');
-                conteudoPainel.classList.remove('ml-20');
-                conteudoPainel.classList.add('ml-64');
+                sidebarApp.classList.replace('w-20', 'w-64');
+                conteudoPainel.classList.replace('ml-20', 'ml-64');
                 iconeSeta.innerText = '◀';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
             } else {
-                sidebarApp.classList.remove('w-64');
-                sidebarApp.classList.add('w-20');
-                conteudoPainel.classList.remove('ml-64');
-                conteudoPainel.classList.add('ml-20');
+                sidebarApp.classList.replace('w-64', 'w-20');
+                conteudoPainel.classList.replace('ml-64', 'ml-20');
                 iconeSeta.innerText = '▶';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
             }
@@ -353,6 +406,7 @@
             });
 
             if (abaDestino === 'calculadora') carregarModelos();
+            if (abaDestino === 'inserir-impressao') carregarImpressoesReal();
             if (abaDestino === 'filamentos') carregarFilamentos();
             if (abaDestino === 'admin') carregarPainelAdmin();
         }
@@ -365,7 +419,9 @@
                 sidebarApp.classList.remove('hidden');
                 conteudoPainel.classList.remove('hidden');
                 usuarioLogadoText.innerText = session.user.email;
-                verificarStatusAdminESessao();
+                carregarFilamentos();
+                carregarModelos();
+                carregarImpressoesReal();
             } else {
                 usuarioAtual = null;
                 sidebarApp.classList.add('hidden');
@@ -374,106 +430,113 @@
             }
         });
 
-        async function verificarStatusAdminESessao() {
-            const { data, error } = await _supabase.from('perfis').select('*').eq('id', usuarioAtual.id).single();
-            if (!error && data) {
-                if (data.is_revogado) {
-                    alert('Seu acesso foi revogado pelo administrador.');
-                    _supabase.auth.signOut();
-                    return;
-                }
-                if (data.is_admin) {
-                    document.getElementById('abaAdminBtn').classList.remove('hidden');
-                }
-            }
-            carregarFilamentos();
-            carregarModelos();
-        }
-
-        btnAlternarAuth.addEventListener('click', () => {
-            if (modoAbas === 'login') {
-                modoAbas = 'cadastro';
-                document.getElementById('tituloAuth').innerText = 'Criar Nova Conta';
-                btnAuthPrincipal.innerText = 'Cadastrar';
-                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
-                dicaSenha.classList.remove('hidden');
-            } else {
-                modoAbas = 'login';
-                document.getElementById('tituloAuth').innerText = 'Entrar no Sistema';
-                btnAuthPrincipal.innerText = 'Entrar';
-                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
-                dicaSenha.classList.add('hidden');
-            }
-        });
-
-        btnEsqueciSenha.addEventListener('click', () => {
-            modoAbas = 'recuperar';
-            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
-            btnAuthPrincipal.innerText = 'Enviar Código';
-            btnAlternarAuth.innerText = 'Voltar ao Login';
-            containerSenha.classList.add('hidden');
-            btnGoogleAuth.classList.add('hidden');
-            divisorSocial.classList.add('hidden');
-            dicaSenha.classList.add('hidden');
-        });
-
-        btnAuthPrincipal.addEventListener('click', async () => {
-            const email = authEmail.value.trim();
-            const password = authSenha.value;
-            if (!email) return alert('Insira seu e-mail.');
-
-            if (modoAbas === 'login') {
-                const { error } = await _supabase.auth.signInWithPassword({ email, password });
-                if (error) alert('Erro: ' + error.message);
-            } else if (modoAbas === 'cadastro') {
-                const temMaiuscula = /[A-Z]/.test(password);
-                const temMinuscula = /[a-z]/.test(password);
-                const temNumero = /[0-9]/.test(password);
-
-                if (password.length < 6 || !temMaiuscula || !temMinuscula || !temNumero) {
-                    return alert('Sua senha não cumpre as regras exigidas.');
-                }
-                const { error } = await _supabase.auth.signUp({ email, password });
-                if (error) alert(error.message);
-                else alert('Cadastro efetuado com sucesso!');
-            } else if (modoAbas === 'recuperar') {
-                const { error } = await _supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
-                if (error) alert(error.message);
-                else alert('E-mail enviado!');
-            }
-        });
-
         btnGoogleAuth.addEventListener('click', async () => {
             await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
         });
-
         document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- ENGINE DE CÁLCULO DE CUSTO ---
-        function calcular() {
+        // --- ENGINE 1: CALCULADORA BASE (3X FIXO) ---
+        function calcularAbaBase() {
             const peso = parseFloat(pesoInput.value) || 0;
             const tempo = parseFloat(tempoInput.value) || 0;
+            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
+            
+            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50);
+            const vendaSugerida = custoTotal * 3;
+            
+            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`;
+            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
+            return vendaSugerida;
+        }
+        pesoInput.addEventListener('input', calcularAbaBase);
+        tempoInput.addEventListener('input', calcularAbaBase);
+        selectFilamento.addEventListener('change', calcularAbaBase);
 
-            if (selectFilamento.value === "padrao") {
-                custoPorGramaSelecionado = 0.12;
-                labelCustoInsumo.innerText = "Base de Custo: R$ 0,1200 /g (Preço Padrão)";
-            } else {
-                custoPorGramaSelecionado = parseFloat(selectFilamento.value);
-                const selectedText = selectFilamento.options[selectFilamento.selectedIndex].text;
-                labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGramaSelecionado.toFixed(4)} /g (${selectedText.split('(')[0].trim()})`;
+        // --- ENGINE 2: INSERIR IMPRESSÃO REAL (LUCRO POR PORCENTAGEM CUSTOMIZADA) ---
+        function calcularAbaReal() {
+            const peso = parseFloat(impPesoGrams.value) || 0;
+            const tempo = parseFloat(impTempoHoras.value) || 0;
+            const margemPorcentagem = parseFloat(impMargemLucro.value) || 0;
+            const custoPorGrama = parseFloat(impSelectFilamento.value) || 0.12;
+
+            const custoFabricacao = (peso * custoPorGrama) + (tempo * 1.50);
+            // Cálculo da margem sobre o custo: Custo + % de Lucro
+            const valorVendaFinal = custoFabricacao * (1 + (margemPorcentagem / 100));
+
+            impTxtCustoReal.innerText = `R$ ${custoFabricacao.toFixed(2)}`;
+            impTxtValorSugerido.innerText = `R$ ${valorVendaFinal.toFixed(2)}`;
+            return { custoFabricacao, valorVendaFinal };
+        }
+        impPesoGrams.addEventListener('input', calcularAbaReal);
+        impTempoHoras.addEventListener('input', calcularAbaReal);
+        impMargemLucro.addEventListener('input', calcularAbaReal);
+        impSelectFilamento.addEventListener('change', calcularAbaReal);
+
+        // --- GESTÃO E CARREGAMENTO DE TRABALHOS (IMPRESSÃO REAL) ---
+        btnSalvarImpressao.addEventListener('click', async () => {
+            const nomePeca = impNomePeca.value.trim();
+            const peso = parseFloat(impPesoGrams.value) || 0;
+            const tempoHoras = parseFloat(impTempoHoras.value) || 0;
+            const margem = parseFloat(impMargemLucro.value) || 0;
+            
+            const selectedOpt = impSelectFilamento.options[impSelectFilamento.selectedIndex];
+            const materialId = selectedOpt.getAttribute('data-id');
+
+            if (!nomePeca || peso <= 0 || tempoHoras <= 0) return alert('Preencha os campos da impressão corretamente.');
+
+            const { custoFabricacao, valorVendaFinal } = calcularAbaReal();
+
+            btnSalvarImpressao.disabled = true;
+            const { error } = await _supabase.from('registro_impressoes').insert([{
+                nome_pe_ca: nomePeca,
+                material_id: materialId || null,
+                tempo_real_min: Math.round(tempoHoras * 60),
+                peso_real_g: peso,
+                custo_calculado: custoFabricacao,
+                preco_venda: valorVendaFinal,
+                margem_lucro_porcentagem: margem,
+                user_id: usuarioAtual.id
+            }]);
+            btnSalvarImpressao.disabled = false;
+
+            if (error) alert('Erro ao registrar impressão: ' + error.message);
+            else {
+                impNomePeca.value = '';
+                carregarImpressoesReal();
+            }
+        });
+
+        async function carregarImpressoesReal() {
+            listaImpressoes.innerHTML = '<p class="text-gray-500 text-sm">Atualizando...</p>';
+            const { data, error } = await _supabase.from('registro_impressoes').select('*').order('data_impressao', { ascending: false });
+            if (error) return;
+
+            if (!data || data.length === 0) {
+                listaImpressoes.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhuma peça produzida registrada.</p>';
+                return;
             }
 
-            const custoMaterial = peso * custoPorGramaSelecionado;
-            const custoMaquina = tempo * 1.50;
-            const totalSugerido = (custoMaterial + custoMaquina) * 3;
-
-            custoTexto.innerText = `R$ ${totalSugerido.toFixed(2)}`;
-            return totalSugerido;
+            listaImpressoes.innerHTML = data.map(item => `
+                <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
+                    <div>
+                        <h3 class="font-bold text-white">${item.nome_pe_ca || 'Objeto Sem Nome'}</h3>
+                        <p class="text-xs text-gray-300">${item.peso_real_g}g | ${(item.tempo_real_min / 60).toFixed(1)}h | Margem: ${parseFloat(item.margem_lucro_porcentagem)}%</p>
+                        <p class="text-[10px] text-gray-400">Custo Base: R$ ${parseFloat(item.custo_calculado).toFixed(2)}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-400 font-black text-sm block">R$ ${parseFloat(item.preco_venda || 0).toFixed(2)}</span>
+                        <button onclick="deletarImpressao('${item.id}')" class="text-xs text-red-400 hover:underline">Remover</button>
+                    </div>
+                </div>
+            `).join('');
         }
 
-        pesoInput.addEventListener('input', calcular);
-        tempoInput.addEventListener('input', calcular);
-        selectFilamento.addEventListener('change', calcular);
+        async function deletarImpressao(id) {
+            if (confirm('Deseja mesmo remover esta impressão do histórico?')) {
+                await _supabase.from('registro_impressoes').delete().eq('id', id);
+                carregarImpressoesReal();
+            }
+        }
 
         // --- GESTÃO DE FILAMENTOS ---
         btnSalvarFilamento.addEventListener('click', async () => {
@@ -486,23 +549,16 @@
             const pTotal = parseFloat(filPesoTotal.value) || 0;
             const pAtual = parseFloat(filPesoAtual.value) || 0;
 
-            if (!nome || preco <= 0 || pTotal <= 0 || !dataCompra) return alert('Preencha os dados do filamento corretamente.');
+            if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os dados corretamente.');
 
             btnSalvarFilamento.disabled = true;
-            
-            const { error } = await _supabase.from('estoque_materiais').insert([{
+            await _supabase.from('estoque_materiais').insert([{
                 nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
             }]);
-            
             btnSalvarFilamento.disabled = false;
-
-            if (error) alert('Erro ao salvar filamento: ' + error.message);
-            else {
-                filNome.value = ''; filFabricante.value = ''; filCor.value = '';
-                document.getElementById('filDataCompra').valueAsDate = new Date();
-                filPreco.value = '';
-                carregarFilamentos();
-            }
+            
+            filNome.value = ''; filCor.value = ''; filFabricante.value = '';
+            carregarFilamentos();
         });
 
         async function carregarFilamentos() {
@@ -513,7 +569,42 @@
             
             atualizarDropdownsFiltros();
             filtrarERenderizarFilamentos();
-            atualizarDropdownCalculadora();
+            atualizarDropdownsDeUso(); 
+        }
+
+        function atualizarDropdownsDeUso() {
+            // Limpa as opções e reinsere as matrizes padrões
+            selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
+            impSelectFilamento.innerHTML = '<option value="0.12">Preço Padrão (R$ 0,12 /g)</option>';
+
+            const chavesRegistradas = new Set();
+
+            filamentosCache.forEach(item => {
+                const chaveUnica = `${item.fabricante} | ${item.tipo} | ${item.cor}`.toLowerCase();
+
+                // Regra da última compra: pega apenas o lote mais recente
+                if (!chavesRegistradas.has(chaveUnica)) {
+                    chavesRegistradas.add(chaveUnica);
+
+                    const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
+                    
+                    // Alimenta o seletor da calculadora base
+                    const opt1 = document.createElement('option');
+                    opt1.value = custoPorGramaItem;
+                    opt1.textContent = `${item.fabricante} - ${item.tipo} (${item.cor})`;
+                    selectFilamento.appendChild(opt1);
+
+                    // Alimenta o seletor da nova aba Inserir Impressão
+                    const opt2 = document.createElement('option');
+                    opt2.value = custoPorGramaItem;
+                    opt2.setAttribute('data-id', item.id); // Vincula o ID real do rolo para o RLS
+                    opt2.textContent = `${item.cor} (${item.fabricante} ${item.tipo})`;
+                    impSelectFilamento.appendChild(opt2);
+                }
+            });
+
+            calcularAbaBase();
+            calcularAbaReal();
         }
 
         function atualizarDropdownsFiltros() {
@@ -530,33 +621,20 @@
                 }
             });
 
-            const selFornecedor = filtroFornecedor.value;
-            const selCor = filtroCor.value;
-            const selAno = filtroAno.value;
-
             filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(fornecedores).sort().forEach(f => {
-                const opt = document.createElement('option');
-                opt.value = f; opt.textContent = f;
-                filtroFornecedor.appendChild(opt);
+                filtroFornecedor.innerHTML += `<option value="${f}">${f}</option>`;
             });
-            if (fornecedores.has(selFornecedor)) filtroFornecedor.value = selFornecedor;
 
             filtroCor.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(cores).sort().forEach(c => {
-                const opt = document.createElement('option');
-                opt.value = c; opt.textContent = c;
-                filtroCor.appendChild(opt);
+                filtroCor.innerHTML += `<option value="${c}">${c}</option>`;
             });
-            if (cores.has(selCor)) filtroCor.value = selCor;
 
             filtroAno.innerHTML = '<option value="Todos">Todos</option>';
             Array.from(anos).sort((a, b) => b - a).forEach(a => {
-                const opt = document.createElement('option');
-                opt.value = a; opt.textContent = a;
-                filtroAno.appendChild(opt);
+                filtroAno.innerHTML += `<option value="${a}">${a}</option>`;
             });
-            if (anos.has(selAno)) filtroAno.value = selAno;
         }
 
         function filtrarERenderizarFilamentos() {
@@ -569,19 +647,10 @@
                 const bateTipo = (tFiltro === "Todos" || item.tipo === tFiltro);
                 const bateFornecedor = (fFiltro === "Todos" || item.fabricante.trim() === fFiltro);
                 const bateCor = (cFiltro === "Todos" || item.cor.trim() === cFiltro);
-                
-                let bateAno = true;
-                if (anoFiltro !== "Todos") {
-                    const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
-                    bateAno = (anoItem === anoFiltro);
-                }
+                const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
+                const bateAno = (anoFiltro === "Todos" || anoItem === anoFiltro);
                 return bateTipo && bateFornecedor && bateCor && bateAno;
             });
-
-            if (dadosFiltrados.length === 0) {
-                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic text-center p-4">Nenhum lote corresponde aos filtros selecionados.</p>';
-                return;
-            }
 
             listaFilamentos.innerHTML = dadosFiltrados.map(item => {
                 const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
@@ -590,11 +659,11 @@
                         <div>
                             <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400 font-normal">[${item.tipo}]</span></h3>
                             <p class="text-xs text-gray-300">Marca: ${item.fabricante} | Cor: ${item.cor}</p>
-                            <p class="text-[11px] text-gray-400">Comprado em: ${dataFormatada} | Restam: ${item.peso_atual_g}g</p>
+                            <p class="text-[11px] text-gray-400">Data: ${dataFormatada} | Saldo: ${item.peso_atual_g}g</p>
                         </div>
                         <div class="text-right">
                             <span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
-                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline hover:text-red-300">Excluir</button>
+                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button>
                         </div>
                     </div>
                 `;
@@ -606,54 +675,27 @@
         filtroCor.addEventListener('change', filtrarERenderizarFilamentos);
         filtroAno.addEventListener('change', filtrarERenderizarFilamentos);
 
-        function atualizarDropdownCalculadora() {
-            selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
-            const chavesRegistradas = new Set();
-
-            filamentosCache.forEach(item => {
-                const chaveUnica = `${item.fabricante} | ${item.tipo} | ${item.cor}`.toLowerCase();
-
-                if (!chavesRegistradas.has(chaveUnica)) {
-                    chavesRegistradas.add(chaveUnica);
-
-                    const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
-                    const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : '';
-
-                    const opt = document.createElement('option');
-                    opt.value = custoPorGramaItem;
-                    opt.textContent = `${item.fabricante} - ${item.tipo} (${item.cor}) - R$ ${parseFloat(item.preco_pago).toFixed(2)} [Último Lote: ${dataFormatada}]`;
-                    selectFilamento.appendChild(opt);
-                }
-            });
-            calcular();
-        }
-
         async function deletarFilamento(id) {
-            if (confirm('Deseja mesmo remover esta compra do histórico?')) {
+            if (confirm('Deseja remover esta compra?')) {
                 await _supabase.from('estoque_materiais').delete().eq('id', id);
                 carregarFilamentos();
             }
         }
 
-        // --- GESTÃO DE MODELOS / PRODUTOS ---
+        // --- GESTÃO DO CATÁLOGO DE PREÇOS ESTIMADOS ---
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
             if (error) return;
-
-            if (!data || data.length === 0) {
-                listaContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum modelo salvo neste usuário.</p>';
-                return;
-            }
 
             listaContainer.innerHTML = data.map(item => `
                 <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
                     <div>
                         <h3 class="font-bold text-white">${item.nome_modelo}</h3>
-                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${item.tempo_estimado_min} min (${(item.tempo_estimado_min / 60).toFixed(1)}h)</p>
+                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${(item.tempo_estimado_min / 60).toFixed(1)}h</p>
                     </div>
                     <div class="text-right">
                         <span class="text-green-400 font-bold text-sm block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span>
-                        <button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline hover:text-red-300">Excluir</button>
+                        <button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button>
                     </div>
                 </div>
             `).join('');
@@ -661,65 +703,29 @@
 
         btnSalvar.addEventListener('click', async () => {
             const nome = nomeInput.value.trim();
-            const peso = parseFloat(pesoInput.value);
-            const tempoHoras = parseFloat(tempoInput.value);
-            const precoVenda = calcular();
+            const peso = parseFloat(pesoInput.value) || 0;
+            const tempoHoras = parseFloat(tempoInput.value) || 0;
+            const precoVenda = calcularAbaBase();
 
-            if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados do modelo.');
+            if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados.');
 
-            btnSalvar.disabled = true;
-            const { error } = await _supabase.from('catalogo_modelos').insert([{
+            await _supabase.from('catalogo_modelos').insert([{
                 nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.id
             }]);
-            btnSalvar.disabled = false;
-
-            if (error) alert('Erro ao salvar: ' + error.message);
-            else {
-                nomeInput.value = '';
-                carregarModelos();
-            }
+            nomeInput.value = '';
+            carregarModelos();
         });
 
         async function deletarModelo(id) {
-            if (confirm('Deseja excluir este item do catálogo?')) {
+            if (confirm('Excluir este item?')) {
                 await _supabase.from('catalogo_modelos').delete().eq('id', id);
                 carregarModelos();
             }
         }
 
-        // --- PAINEL ADMINISTRATIVO (ADMIN) ---
-        async function carregarPainelAdmin() {
-            const { data: listaPerfis, error } = await _supabase.from('perfis').select('*').order('created_at', { ascending: false });
-            if (error) return;
-
-            const tbody = document.getElementById('tabelaAdminUsuarios');
-            tbody.innerHTML = listaPerfis.map(p => {
-                if (p.id === usuarioAtual.id) return ''; 
-                const statusTexto = p.is_revogado ? 'Acesso Revogado' : 'Acesso Liberado';
-                const classeStatus = p.is_revogado ? 'text-red-400' : 'text-green-400';
-                const botaoAcao = p.is_revogado 
-                    ? `<button onclick="alterarStatus('${p.id}', false)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-1 px-2 rounded text-xs transition">Liberar</button>`
-                    : `<button onclick="alterarStatus('${p.id}', true)" class="bg-red-600 hover:bg-red-700 text-white font-bold py-1 px-2 rounded text-xs transition">Revogar</button>`;
-
-                return `
-                    <tr class="border-b border-gray-700 hover:bg-gray-750">
-                        <td class="p-3 font-medium text-white">${p.email}</td>
-                        <td class="p-3 flex items-center justify-between gap-4">
-                            <span class="${classeStatus} font-semibold">${statusTexto}</span>
-                            ${botaoAcao}
-                        </td>
-                    </tr>
-                `;
-            }).join('');
-        }
-
-        async function alterarStatus(id, revogarStatus) {
-            const { error } = await _supabase.from('perfis').update({ is_revogado: revogarStatus }).eq('id', id);
-            if (error) alert('Falha ao atualizar perfil: ' + error.message);
-            else carregarPainelAdmin();
-        }
-
-        calcular();
+        // Inicialização secundária padrão
+        calcularAbaBase();
+        calcularAbaReal();
     </script>
 </body>
 </html>
