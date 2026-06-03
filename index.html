@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Ajuste fino para transições suaves do menu lateral */
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
     </style>
 </head>
@@ -67,7 +66,7 @@
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
-                <div class="flex items-center gap-2 overflow-hidden project-title">
+                <div class="flex items-center gap-2 overflow-hidden">
                     <span class="text-2xl">🖨️</span>
                     <h1 class="font-bold text-lg text-blue-400 tracking-wider whitespace-nowrap label-texto">Zweck 3D</h1>
                 </div>
@@ -84,7 +83,7 @@
                 
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="filamentos">
                     <span class="text-lg">🧵</span>
-                    <span class="whitespace-nowrap label-texto">Filamentos PLA</span>
+                    <span class="whitespace-nowrap label-texto">Filamentos e Estoque</span>
                 </button>
 
                 <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-amber-900/40 text-amber-400 border border-amber-800/30 font-medium hidden item-menu-btn" data-aba="admin">
@@ -115,6 +114,15 @@
                         <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
                         <input type="text" id="nomeModelo" placeholder="Ex: Miniatura Articulada" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
                     </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Selecione o Filamento Utilizado</label>
+                        <select id="selectFilamento" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-white">
+                            <option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>
+                        </select>
+                        <p class="text-[11px] text-amber-400 mt-1">💡 O sistema seleciona automaticamente o valor do lote mais recente comprado desse tipo/marca.</p>
+                    </div>
+
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium mb-1">Peso Utilizado (g)</label>
@@ -125,8 +133,9 @@
                             <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                     </div>
+                    
                     <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
-                        <p id="labelCustoInsumo" class="text-xs text-gray-400 mb-1">Base de Custo: Carregando preço médio...</p>
+                        <p id="labelCustoInsumo" class="text-xs text-gray-400 mb-1">Base de Custo: R$ 0,1200 /g</p>
                         <p class="text-xs text-gray-400 mb-2">Taxa operadora de máquina: R$ 1,50 / hora</p>
                         <hr class="border-gray-600 my-2">
                         <div class="flex justify-between items-center">
@@ -137,6 +146,7 @@
                     <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no Catálogo</button>
                 </div>
             </div>
+            
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-purple-300 border-b border-gray-700 pb-2">Seu Catálogo de Preços</h2>
                 <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
@@ -147,20 +157,40 @@
 
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Rolo de PLA</h2>
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
                 <div class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium mb-1">Nome / Descrição do Filamento</label>
-                        <input type="text" id="filNome" placeholder="Ex: PLA Pro Preto Clássico" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500">
+                        <label class="block text-sm font-medium mb-1">Nome / Identificação do Rolo</label>
+                        <input type="text" id="filNome" placeholder="Ex: PLA Premium Especial" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500">
                     </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Fabricante / Marca</label>
-                        <input type="text" id="filFabricante" placeholder="Ex: 3D Fila" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fabricante / Fornecedor</label>
+                            <input type="text" id="filFabricante" placeholder="Ex: Masterprint" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Cor do Filamento</label>
+                            <input type="text" id="filCor" placeholder="Ex: Azul Ciano" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tipo de Material</label>
+                            <select id="filTipo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                                <option value="PLA">PLA</option>
+                                <option value="ABS">ABS</option>
+                                <option value="PETG">PETG</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Data da Compra</label>
+                            <input type="date" id="filDataCompra" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                        </div>
                     </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="block text-sm font-medium mb-1">Preço Pago (R$)</label>
-                            <input type="number" id="filPreco" placeholder="120.00" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                            <input type="number" id="filPreco" placeholder="100.00" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                         <div>
                             <label class="block text-sm font-medium mb-1">Peso Total (g)</label>
@@ -171,13 +201,35 @@
                             <input type="number" id="filPesoAtual" value="1000" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
                         </div>
                     </div>
-                    <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition">Registrar Entrada no Estoque</button>
+                    <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition">Registrar Compra no Estoque</button>
                 </div>
             </div>
+
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
-                <h2 class="text-xl font-semibold mb-4 text-teal-400 border-b border-gray-700 pb-2">Estoque de Matéria-Prima</h2>
-                <div id="listaFilamentos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2">
-                    <p class="text-gray-500 text-sm italic">Nenhum filamento em estoque.</p>
+                <h2 class="text-xl font-semibold mb-3 text-teal-400 border-b border-gray-700 pb-2">Histórico de Compras e Estoque</h2>
+                
+                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 mb-4 grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Tipo</label>
+                        <select id="filtroTipo" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white">
+                            <option value="Todos">Todos</option>
+                            <option value="PLA">PLA</option>
+                            <option value="ABS">ABS</option>
+                            <option value="PETG">PETG</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Fornecedor</label>
+                        <input type="text" id="filtroFornecedor" placeholder="Buscar..." class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 placeholder-gray-500">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Cor</label>
+                        <input type="text" id="filtroCor" placeholder="Buscar..." class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 placeholder-gray-500">
+                    </div>
+                </div>
+
+                <div id="listaFilamentos" class="space-y-3 max-h-[420px] overflow-y-auto pr-2">
+                    <p class="text-gray-500 text-sm italic">Carregando estoque...</p>
                 </div>
             </div>
         </div>
@@ -192,8 +244,7 @@
                             <th class="p-3">Acesso</th>
                         </tr>
                     </thead>
-                    <tbody id="tabelaAdminUsuarios" class="divide-y divide-gray-700">
-                        </tbody>
+                    <tbody id="tabelaAdminUsuarios" class="divide-y divide-gray-700"></tbody>
                 </table>
             </div>
         </div>
@@ -207,16 +258,18 @@
         let modoAbas = 'login'; 
         let usuarioAtual = null;
         let sidebarExpandido = true;
-        let custoPorGramaMedioGlobal = 0.12; // Valor base padrão caso não haja filamentos
+        
+        // Cache local de dados para funcionamento rápido dos filtros
+        let filamentosCache = []; 
+        let custoPorGramaSelecionado = 0.12; 
 
-        // Seleção de Componentes DOM
+        // Componentes da Interface
         const telaAuth = document.getElementById('telaAutenticacao');
         const sidebarApp = document.getElementById('sidebarApp');
         const conteudoPainel = document.getElementById('conteudoPainel');
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
         const iconeSeta = document.getElementById('iconeSeta');
 
-        // Mapeamento dos Inputs
         const authEmail = document.getElementById('authEmail');
         const authSenha = document.getElementById('authSenha');
         const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
@@ -228,7 +281,6 @@
         const dicaSenha = document.getElementById('dicaSenha');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
-        // Inputs das Operações
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
@@ -236,15 +288,26 @@
         const btnSalvar = document.getElementById('btnSalvar');
         const listaContainer = document.getElementById('listaModelos');
         const labelCustoInsumo = document.getElementById('labelCustoInsumo');
+        const selectFilamento = document.getElementById('selectFilamento');
 
-        // Inputs de Filamentos
         const filNome = document.getElementById('filNome');
         const filFabricante = document.getElementById('filFabricante');
+        const filCor = document.getElementById('filCor');
+        const filTipo = document.getElementById('filTipo');
+        const filDataCompra = document.getElementById('filDataCompra');
         const filPreco = document.getElementById('filPreco');
         const filPesoTotal = document.getElementById('filPesoTotal');
         const filPesoAtual = document.getElementById('filPesoAtual');
         const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
         const listaFilamentos = document.getElementById('listaFilamentos');
+
+        // Inputs de Filtros
+        const filtroTipo = document.getElementById('filtroTipo');
+        const filtroFornecedor = document.getElementById('filtroFornecedor');
+        const filtroCor = document.getElementById('filtroCor');
+
+        // Definir data padrão de compra como hoje
+        document.getElementById('filDataCompra').valueAsDate = new Date();
 
         // --- MANIPULAÇÃO DO MENU RETRÁTIL (SIDEBAR) ---
         btnToggleSidebar.addEventListener('click', () => {
@@ -286,7 +349,7 @@
             if (abaDestino === 'admin') carregarPainelAdmin();
         }
 
-        // --- FLUXO DE INFRAESTRUTURA E AUTHENTICATION ---
+        // --- FLUXO DE AUTENTICAÇÃO ---
         _supabase.auth.onAuthStateChange((event, session) => {
             if (session) {
                 usuarioAtual = session.user;
@@ -315,7 +378,6 @@
                     document.getElementById('abaAdminBtn').classList.remove('hidden');
                 }
             }
-            // Sincronizar dados iniciais
             carregarFilamentos();
             carregarModelos();
         }
@@ -382,91 +444,153 @@
 
         document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
-        // --- MOTOR DE CÁLCULO DE CUSTO ---
+        // --- ENGINE DE CÁLCULO INTELIGENTE (ÚLTIMA COMPRA) ---
         function calcular() {
             const peso = parseFloat(pesoInput.value) || 0;
             const tempo = parseFloat(tempoInput.value) || 0;
 
-            const custoMaterial = peso * custoPorGramaMedioGlobal;
+            // Define o custo por grama baseado no elemento selecionado no dropdown
+            if (selectFilamento.value === "padrao") {
+                custoPorGramaSelecionado = 0.12;
+                labelCustoInsumo.innerText = "Base de Custo: R$ 0,1200 /g (Preço Padrão)";
+            } else {
+                custoPorGramaSelecionado = parseFloat(selectFilamento.value);
+                const selectedText = selectFilamento.options[selectFilamento.selectedIndex].text;
+                labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGramaSelecionado.toFixed(4)} /g (${selectedText.split('(')[0].trim()})`;
+            }
+
+            const custoMaterial = peso * custoPorGramaSelecionado;
             const custoMaquina = tempo * 1.50;
             const totalSugerido = (custoMaterial + custoMaquina) * 3;
 
             custoTexto.innerText = `R$ ${totalSugerido.toFixed(2)}`;
             return totalSugerido;
         }
+
         pesoInput.addEventListener('input', calcular);
         tempoInput.addEventListener('input', calcular);
+        selectFilamento.addEventListener('change', calcular);
 
-        // --- GERENCIAMENTO DE FILAMENTOS ---
+        // --- GESTÃO DE FILAMENTOS ---
         btnSalvarFilamento.addEventListener('click', async () => {
             const nome = filNome.value.trim();
-            const fab = filFabricante.value.trim();
+            const fab = filFabricante.value.trim() || 'Desconhecido';
+            const cor = filCor.value.trim() || 'Incolor';
+            const tipo = filTipo.value;
+            const dataCompra = filDataCompra.value;
             const preco = parseFloat(filPreco.value) || 0;
             const pTotal = parseFloat(filPesoTotal.value) || 0;
             const pAtual = parseFloat(filPesoAtual.value) || 0;
 
-            if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os dados do filamento corretamente.');
+            if (!nome || preco <= 0 || pTotal <= 0 || !dataCompra) return alert('Preencha os dados do filamento corretamente.');
 
             btnSalvarFilamento.disabled = true;
+            
+            // Gravação correta na tabela 'estoque_materiais'
             const { error } = await _supabase.from('estoque_materiais').insert([{
-                nome, fabricante: fab, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
+                nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id
             }]);
+            
             btnSalvarFilamento.disabled = false;
 
             if (error) alert('Erro ao salvar filamento: ' + error.message);
             else {
-                filNome.value = ''; filFabricante.value = ''; filPreco.value = '';
+                filNome.value = ''; filFabricante.value = ''; filCor.value = '';
+                document.getElementById('filDataCompra').valueAsDate = new Date();
+                filPreco.value = '';
                 carregarFilamentos();
             }
         });
 
         async function carregarFilamentos() {
-            const { data, error } = await _supabase.from('estoque_materials').select('*').order('created_at', { ascending: false });
+            const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
             if (error) return;
 
-            if (!data || data.length === 0) {
-                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum filamento em estoque.</p>';
-                custoPorGramaMedioGlobal = 0.12; 
-                labelCustoInsumo.innerText = "Base de Custo: R$ 0,12 /g (Padrão)";
-                calcular();
+            filamentosCache = data || [];
+            
+            // Atualiza os filtros e monta o dropdown da calculadora simultaneamente
+            filtrarERenderizarFilamentos();
+            atualizarDropdownCalculadora();
+        }
+
+        // Função de Filtragem em Tempo Real (Tipo, Fornecedor e Cor)
+        function filtrarERenderizarFilamentos() {
+            const tFiltro = filtroTipo.value;
+            const fFiltro = filtroFornecedor.value.toLowerCase().trim();
+            const cFiltro = filtroCor.value.toLowerCase().trim();
+
+            const dadosFiltrados = filamentosCache.filter(item => {
+                const bateTipo = (tFiltro === "Todos" || item.tipo === tFiltro);
+                const bateFornecedor = (!fFiltro || item.fabricante.toLowerCase().includes(fFiltro));
+                const bateCor = (!cFiltro || item.cor.toLowerCase().includes(cFiltro));
+                return bateTipo && bateFornecedor && bateCor;
+            });
+
+            if (dadosFiltrados.length === 0) {
+                listaFilamentos.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum registro encontrado para este filtro.</p>';
                 return;
             }
 
-            let acumPreco = 0;
-            let acumPeso = 0;
-
-            listaFilamentos.innerHTML = data.map(item => {
-                acumPreco += parseFloat(item.preco_pago);
-                acumPeso += parseFloat(item.peso_total_g);
+            listaFilamentos.innerHTML = dadosFiltrados.map(item => {
+                // Formatação amigável de data ISO para o padrão brasileiro
+                const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
                 return `
                     <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm">
                         <div>
-                            <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-gray-400">(${item.fabricante || 'Geral'})</span></h3>
-                            <p class="text-xs text-emerald-400">Restam ${item.peso_atual_g}g de ${item.peso_total_g}g</p>
+                            <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400 font-normal">[${item.tipo}]</span></h3>
+                            <p class="text-xs text-gray-300">Marca: ${item.fabricante} | Cor: ${item.cor}</p>
+                            <p class="text-[11px] text-gray-400">Comprado em: ${dataFormatada} | Restam: ${item.peso_atual_g}g</p>
                         </div>
                         <div class="text-right">
-                            <span class="text-gray-200 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
+                            <span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
                             <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline hover:text-red-300">Excluir</button>
                         </div>
                     </div>
                 `;
             }).join('');
+        }
 
-            if (acumPeso > 0) {
-                custoPorGramaMedioGlobal = acumPreco / acumPeso;
-                labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGramaMedioGlobal.toFixed(4)} /g (Média Ponderada)`;
-            }
+        // Ouvintes de evento para os inputs de filtros
+        filtroTipo.addEventListener('change', filtrarERenderizarFilamentos);
+        filtroFornecedor.addEventListener('input', filtrarERenderizarFilamentos);
+        filtroCor.addEventListener('input', filtrarERenderizarFilamentos);
+
+        // Algoritmo para agrupar e selecionar a ULTIMA COMPRA para a calculadora
+        function atualizarDropdownCalculadora() {
+            // Reinicia o select com a opção padrão
+            selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
+
+            // Como o fetch já veio ordenado por 'data_compra' DESC, o primeiro item encontrado de cada grupo é o mais recente!
+            const chavesRegistradas = new Set();
+
+            filamentosCache.forEach(item => {
+                // Monta a chave única do insumo: Fornecedor + Tipo + Cor
+                const chaveUnica = `${item.fabricante} | ${item.tipo} | ${item.cor}`.toLowerCase();
+
+                if (!chavesRegistradas.has(chaveUnica)) {
+                    chavesRegistradas.add(chaveUnica);
+
+                    const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
+                    const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : '';
+
+                    const opt = document.createElement('option');
+                    opt.value = custoPorGramaItem;
+                    opt.textContent = `${item.fabricante} - ${item.tipo} (${item.cor}) - R$ ${parseFloat(item.preco_pago).toFixed(2)} [Lote: ${dataFormatada}]`;
+                    selectFilamento.appendChild(opt);
+                }
+            });
+
             calcular();
         }
 
         async function deletarFilamento(id) {
-            if (confirm('Deseja mesmo remover este filamento do estoque?')) {
+            if (confirm('Deseja mesmo remover esta compra do histórico?')) {
                 await _supabase.from('estoque_materiais').delete().eq('id', id);
                 carregarFilamentos();
             }
         }
 
-        // --- GERENCIAMENTO DE MODELOS / PRODUTOS ---
+        // --- GESTÃO DE MODELOS / PRODUTOS ---
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
             if (error) return;
@@ -525,7 +649,7 @@
 
             const tbody = document.getElementById('tabelaAdminUsuarios');
             tbody.innerHTML = listaPerfis.map(p => {
-                if (p.id === usuarioAtual.id) return ''; // Esconder o próprio usuário admin logado
+                if (p.id === usuarioAtual.id) return ''; 
                 const statusTexto = p.is_revogado ? 'Acesso Revogado' : 'Acesso Liberado';
                 const classeStatus = p.is_revogado ? 'text-red-400' : 'text-green-400';
                 const botaoAcao = p.is_revogado 
@@ -550,7 +674,6 @@
             else carregarPainelAdmin();
         }
 
-        // Inicialização secundária automática
         calcular();
     </script>
 </body>
