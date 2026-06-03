@@ -3,516 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Painel Supabase - Verk3D Print</title>
-    
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <title>Gestor de Impressão 3D</title>
+    <!-- Tailwind CSS para deixar o visual bonito -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Script oficial do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-      
-    <style>
-        :root {
-            --primary: #d32f2f;
-            --primary-hover: #b71c1c;
-            --secondary: #2e7d32;
-            --secondary-hover: #1b5e20;
-            --bg: #f8f9fa;
-            --surface: #ffffff;
-            --text: #212529;
-            --border: #dee2e6;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background-color: var(--bg); color: var(--text); padding: 30px 15px; line-height: 1.5; }
-        .container { max-width: 1000px; margin: 0 auto; }
-        header { text-align: center; margin-bottom: 25px; }
-        header h1 { color: var(--primary); font-size: 28px; }
-        header p { color: #6c757d; }
-
-        .tabs { display: none; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
-        .tab-btn { padding: 12px 24px; cursor: pointer; background: none; border: none; font-size: 16px; font-weight: bold; color: #6c757d; transition: all 0.2s; }
-        .tab-btn.active { color: var(--primary); border-bottom: 3px solid var(--primary); margin-bottom: -2px; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        .main-table { display: table; width: 100%; border-collapse: separate; border-spacing: 20px 0; }
-        .main-cell { display: table-cell; width: 50%; vertical-align: top; }
-        .card { background: var(--surface); padding: 25px; border-radius: 8px; border: 1px solid var(--border); box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
-        .card h2 { font-size: 18px; margin-bottom: 20px; padding-bottom: 8px; border-bottom: 2px solid var(--border); color: #495057; }
-        
-        .form-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
-        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 4px; font-size: 14px; background: #fdfdfd; }
-        input:focus, select:focus { outline: none; border-color: var(--primary); background: #fff; }
-
-        .btn { display: inline-block; width: 100%; padding: 12px; border: none; border-radius: 4px; font-size: 15px; font-weight: bold; cursor: pointer; text-align: center; transition: background 0.2s; margin-bottom: 10px; }
-        .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--primary-hover); }
-        .btn-secondary { background-color: var(--secondary); color: white; }
-        .btn-secondary:hover { background-color: var(--secondary-hover); }
-        .btn-danger { background-color: #dc3545; color: white; padding: 5px 10px; font-size: 12px; width: auto; margin: 0; }
-
-        .user-badge { background-color: #e9ecef; padding: 5px 15px; border-radius: 20px; font-weight: bold; font-size: 14px; display: inline-block; margin-bottom: 15px; }
-        ul { list-style: none; }
-        .item-lista { padding: 12px; border-bottom: 1px solid var(--border); font-size: 14px; display: flex; justify-content: space-between; align-items: center; }
-        .item-lista:hover { background-color: #f1f3f5; }
-        
-        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
-        .admin-table th, .admin-table td { border: 1px solid var(--border); padding: 10px; text-align: left; }
-        .admin-table th { background-color: #f1f3f5; font-weight: bold; }
-
-        #aba-auth { max-width: 400px; margin: 40px auto; }
-        .flex-btn-group { margin-top: 10px; }
-        .flex-btn-group button { width: 48%; float: left; }
-        .flex-btn-group button:last-child { float: right; }
-        .clear { clear: both; }
-    </style>
 </head>
-<body>
+<body class="bg-gray-900 text-gray-100 min-h-screen p-4 md:p-8">
 
-    <div class="container">
-        <header>
-            <h1>Painel Cloud Verk3D Print</h1>
-            <p>Gerenciamento profissional com autenticação em nuvem e controle administrativo</p>
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8 text-center md:text-left">
+            <h1 class="text-3xl font-bold text-blue-400">🖨️ PrintCost 3D</h1>
+            <p class="text-gray-400 text-sm">Cálculo de custos e estoque integrado ao Supabase</p>
         </header>
 
-        <div id="userInfoBar" style="display: none; text-align: right; margin-bottom: 10px;">
-            <span class="user-badge" id="usernameDisplay">Buscando usuário...</span>
-            <button class="btn btn-danger" style="padding: 5px 12px; font-size: 13px;" onclick="efetuarLogout()">Sair</button>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- ABA 1: CALCULADORA -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-blue-300">Nova Impressão / Calculadora</h2>
+                
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
+                        <input type="text" id="nomeModelo" placeholder="Ex: Articulado Octo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Utilizado (g)</label>
+                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tempo (Horas)</label>
+                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                        </div>
+                    </div>
 
-        <div class="tabs" id="mainTabs">
-            <button class="tab-btn active" onclick="mudarAba('orcamentos')">Calculadora de Orçamentos</button>
-            <button class="tab-btn" onclick="mudarAba('materiais')">Entrada de Materiais (Estoque)</button>
-            <button class="tab-btn" id="abaAdminBtn" style="display: none; color: #7f5600;" onclick="mudarAba('admin')">🛡️ Gerenciar Usuários</button>
-        </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                        <p class="text-sm text-gray-400">Preço do Rolo PLA (1kg): <span class="text-white font-bold">R$ 120,00</span></p>
+                        <p class="text-sm text-gray-400 mt-1">Custo Estimado da Máquina/Hora: <span class="text-white font-bold">R$ 1,50</span></p>
+                        <hr class="my-2 border-gray-600">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-lg">Custo Total:</span>
+                            <span id="custoTotal" class="text-xl font-black text-green-400">R$ 10,50</span>
+                        </div>
+                    </div>
 
-        <div id="aba-auth" class="tab-content active">
-            <div class="card">
-                <h2 id="authTitle">Acesse sua Conta</h2>
-                <div class="form-group">
-                    <label for="authEmail">E-mail Corporativo:</label>
-                    <input type="email" id="authEmail" placeholder="Ex: seuemail@provedor.com">
+                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded transition duration-200">
+                        Salvar no Catálogo e Estoque
+                    </button>
                 </div>
-                <div class="form-group">
-                    <label for="authSenha">Senha (mínimo 6 caracteres):</label>
-                    <input type="password" id="authSenha" placeholder="Digite sua senha">
-                </div>
-                <button class="btn btn-primary" id="btnAuthPrincipal" onclick="efetuarAutenticacao()">Entrar</button>
-                <p style="text-align: center; font-size: 13px; cursor: pointer; color: var(--secondary); margin-top: 10px;" id="toggleAuthMode" onclick="alternarModoAuth()">
-                    Não tem uma conta? Cadastre-se aqui
-                </p>
             </div>
-        </div>
 
-        <div id="aba-orcamentos" class="tab-content">
-            <div class="main-table">
-                <div class="main-cell">
-                    <div class="card">
-                        <h2>1. Selecionar ou Cadastrar Modelo</h2>
-                        <div class="form-group">
-                            <label for="modeloSelect">Carregar Modelo Salvo:</label>
-                            <select id="modeloSelect" onchange="carregarModelo()">
-                                <option value="">-- Selecione para autopreencher --</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label for="nomeModeloNovo">Nome do Modelo (para Salvar Novo):</label>
-                            <input type="text" id="nomeModeloNovo" placeholder="Ex: Urubu do Flamengo">
-                        </div>
-                        <button class="btn btn-secondary" onclick="salvarModeloNoCatalogo()">Salvar Modelo no Catálogo</button>
-                    </div>
-
-                    <div class="card">
-                        <h2>2. Dados da Impressão</h2>
-                        <div class="form-group">
-                            <label for="cliente">Nome do Cliente:</label>
-                            <input type="text" id="cliente" placeholder="Ex: João Silva">
-                        </div>
-                        <div class="form-group">
-                            <label for="peso">Peso Estimado (g):</label>
-                            <input type="number" id="peso" placeholder="Ex: 393" step="any">
-                        </div>
-                        <div class="form-group">
-                            <label for="tempo">Tempo de Impressão (Horas):</label>
-                            <input type="number" id="tempo" placeholder="Ex: 21" step="any">
-                        </div>
-                        <div class="flex-btn-group">
-                            <button class="btn btn-primary" onclick="gerarEsalvar()">Gerar PDF</button>
-                            <button class="btn btn-secondary" style="background-color: #495057;" onclick="limparCampos()">Limpar</button>
-                        </div>
-                        <div class="clear"></div>
-                    </div>
-                </div>
-
-                <div class="main-cell">
-                    <div class="card">
-                        <h2>Configurações Atuais de Custo</h2>
-                        <div class="form-group">
-                            <label id="labelCustoGrama">Custo por Grama Médio: Calculando...</label>
-                            <label>Hora-Máquina Base: R$ 5,00/h</label>
-                            <label>Margem de Lucro (Markup): 50%</label>
-                        </div>
-                    </div>
-                    <div class="card">
-                        <h2>Histórico de Orçamentos Salvos</h2>
-                        <ul id="listaHistorico"></ul>
-                    </div>
+            <!-- ABA 2: LOGS / ESTOQUE -->
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
+                <h2 class="text-xl font-semibold mb-4 text-purple-300">Últimos Registros Salvos</h2>
+                <div id="listaModelos" class="space-y-3 max-h-[350px] overflow-y-auto pr-2">
+                    <p class="text-gray-500 text-sm italic">Carregando dados do Supabase...</p>
                 </div>
             </div>
         </div>
-
-        <div id="aba-materiais" class="tab-content">
-            <div class="main-table">
-                <div class="main-cell">
-                    <div class="card">
-                        <h2>Cadastrar Entrada de Filamento</h2>
-                        <div class="form-group">
-                            <label for="matNome">Marca/Cor do Filamento:</label>
-                            <input type="text" id="matNome" placeholder="Ex: PLA Preto Premium">
-                        </div>
-                        <div class="form-group">
-                            <label for="matPeso">Peso do Carretel (g):</label>
-                            <input type="number" id="matPeso" placeholder="Ex: 1000" value="1000">
-                        </div>
-                        <div class="form-group">
-                            <label for="matPreco">Preço Pago (R$):</label>
-                            <input type="number" id="matPreco" placeholder="Ex: 95.00" step="any">
-                        </div>
-                        <button class="btn btn-primary" onclick="adicionarMaterial()">Adicionar ao Estoque</button>
-                    </div>
-                </div>
-                <div class="main-cell">
-                    <div class="card">
-                        <h2>Média Ponderada de Custos</h2>
-                        <div style="font-size: 20px; font-weight: bold; color: var(--secondary); margin-bottom: 15px;" id="mediaDisplay">
-                            R$ 0,1000 /g (R$ 100,00 /kg)
-                        </div>
-                        <h2>Filamentos Cadastrados</h2>
-                        <ul id="listaMateriais"></ul>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div id="aba-admin" class="tab-content">
-            <div class="card">
-                <h2>Controle Geral de Acessos e Usuários</h2>
-                <p style="font-size: 13px; color:#6c757d; margin-bottom: 15px;">Como Administrador, você pode liberar ou suspender contas em tempo real.</p>
-                <table class="admin-table">
-                    <thead>
-                        <tr>
-                            <th>E-mail do Usuário</th>
-                            <th>Data de Cadastro</th>
-                            <th>Status da Conta</th>
-                            <th>Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabelaAdminUsuarios">
-                        <tr><td colspan="4" style="text-align: center;">Buscando dados no servidor...</td></tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
     </div>
 
     <script>
-        const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co"; 
-        const SUPABASE_KEY = "sb_publishable_XEpRN-3R2RShh_uKLLlDmA_yrlCx_lG"; 
+        // Suas credenciais do Supabase integradas diretamente
+        const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let CUSTO_POR_GRAMA_MEDIO = 0.10; 
-        const VALOR_HORA_MAQUINA = 5.00; 
-        const MARGEM_LUCRO = 0.50;       
-        let MODO_CADASTRO = false;
-        let DADOS_PERFIL_USUARIO = null;
+        // Elementos da tela
+        const nomeInput = document.getElementById('nomeModelo');
+        const pesoInput = document.getElementById('pesoGrams');
+        const tempoInput = document.getElementById('tempoHoras');
+        const custoTexto = document.getElementById('custoTotal');
+        const btnSalvar = document.getElementById('btnSalvar');
+        const listaContainer = document.getElementById('listaModelos');
 
-        window.onload = async function() {
-            const { data: { session } } = await supabase.auth.getSession();
-            if (session) {
-                verificarPerfilESessao(session.user);
-            }
-        };
+        // Função simples para calcular custos na tela
+        function calcular() {
+            const peso = parseFloat(pesoInput.value) || 0;
+            const tempo = parseFloat(tempoInput.value) || 0;
+            
+            const custoMaterial = (120 / 1000) * peso; // R$120 por 1kg (1000g)
+            const custoMaquina = 1.50 * tempo; // R$1,50 por hora de energia/depreciação
+            const total = custoMaterial + custoMaquina;
 
-        function alternarModoAuth() {
-            MODO_CADASTRO = !MODO_CADASTRO;
-            document.getElementById('authTitle').textContent = MODO_CADASTRO ? "Criar Nova Conta" : "Acesse sua Conta";
-            document.getElementById('btnAuthPrincipal').textContent = MODO_CADASTRO ? "Registrar e Ativar por E-mail" : "Entrar";
-            document.getElementById('toggleAuthMode').textContent = MODO_CADASTRO ? "Já tem uma conta? Acesse o Login" : "Não tem uma conta? Cadastre-se aqui";
+            custoTexto.innerText = `R$ ${total.toFixed(2)}`;
+            return total;
         }
 
-        async function efetuarAutenticacao() {
-            const email = document.getElementById('authEmail').value.trim();
-            const password = document.getElementById('authSenha').value.trim();
+        // Ouvir mudanças nos inputs para atualizar o preço em tempo real
+        pesoInput.addEventListener('input', calcular);
+        tempoInput.addEventListener('input', calcular);
 
-            if (!email || !password) { alert("Preencha todos os campos."); return; }
+        // Função para buscar dados do Supabase
+        async function carregarDados() {
+            listaContainer.innerHTML = '<p class="text-gray-500 text-sm">Buscando...</p>';
+            
+            // Busca da tabela 'catalogo_modelos' (Certifique-se de ter criado a tabela no Supabase)
+            const { data, error } = await _supabase
+                .from('catalogo_modelos')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-            if (MODO_CADASTRO) {
-                const { data, error } = await supabase.auth.signUp({ email, password });
-                if (error) { alert("Erro ao cadastrar: " + error.message); return; }
-                alert("Cadastro realizado! Um e-mail de ativação foi enviado para sua caixa de entrada. Você precisa confirmar o seu e-mail antes de fazer o login.");
-                alternarModoAuth();
+            if (error) {
+                listaContainer.innerHTML = `<p class="text-red-400 text-sm">Erro ao carregar: ${error.message}</p>`;
+                return;
+            }
+
+            if (data.length === 0) {
+                listaContainer.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum modelo salvo ainda.</p>';
+                return;
+            }
+
+            listaContainer.innerHTML = data.map(item => `
+                <div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center">
+                    <div>
+                        <h3 class="font-bold text-white">${item.nome_modelo}</h3>
+                        <p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${item.tempo_estimado_min} min</p>
+                    </div>
+                    <span class="text-green-400 font-bold text-sm">Venda: R$ ${item.preco_venda_sugerido.toFixed(2)}</span>
+                </div>
+            `).join('');
+        }
+
+        // Função para salvar no Supabase ao clicar no botão
+        btnSalvar.addEventListener('click', async () => {
+            const nome = nomeInput.value.trim();
+            const peso = parseFloat(pesoInput.value);
+            const tempoHoras = parseFloat(tempoInput.value);
+            const custo = calcular();
+            const precoVenda = custo * 3; // Sugestão simples: cobrar 3x o custo
+
+            if (!nome) {
+                alert('Por favor, insira o nome do modelo.');
+                return;
+            }
+
+            btnSalvar.disabled = true;
+            btnSalvar.innerText = 'Salvando...';
+
+            const { error } = await _supabase
+                .from('catalogo_modelos')
+                .insert([{
+                    nome_modelo: nome,
+                    tempo_estimado_min: Math.round(tempoHoras * 60),
+                    peso_estimado_g: peso,
+                    preco_venda_sugerido: precoVenda
+                }]);
+
+            btnSalvar.disabled = false;
+            btnSalvar.innerText = 'Salvar no Catálogo e Estoque';
+
+            if (error) {
+                alert('Erro ao salvar: ' + error.message);
             } else {
-                const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-                if (error) {
-                    if(error.message.includes("Email not confirmed")) {
-                        alert("Sua conta ainda não está ativada. Abra seu e-mail e clique no link de ativação enviado pelo Supabase.");
-                    } else {
-                        alert("Falha no login: " + error.message);
-                    }
-                    return;
-                }
-                verificarPerfilESessao(data.user);
+                nomeInput.value = '';
+                carregarDados();
             }
-        }
+        });
 
-        async function verificarPerfilESessao(authUser) {
-            const { data: perfil, error } = await supabase.from('perfis').select('*').eq('id', authUser.id).single();
-            
-            if (error || !perfil) {
-                alert("Erro ao validar credenciais de segurança do perfil.");
-                await supabase.auth.signOut();
-                return;
-            }
-
-            if (perfil.is_revogado) {
-                alert("Seu acesso foi revogado pelo administrador do sistema.");
-                await supabase.auth.signOut();
-                return;
-            }
-
-            DADOS_PERFIL_USUARIO = perfil;
-            
-            document.getElementById('aba-auth').classList.remove('active');
-            document.getElementById('mainTabs').style.display = 'flex';
-            document.getElementById('userInfoBar').style.display = 'block';
-            document.getElementById('usernameDisplay').textContent = "Usuário: " + perfil.email;
-            
-            if (perfil.is_admin) {
-                document.getElementById('abaAdminBtn').style.display = 'inline-block';
-            }
-
-            document.getElementById('aba-orcamentos').classList.add('active');
-            
-            atualizarSelectModelos();
-            exibirHistorico();
-            atualizarMateriaisEEstatistícas();
-        }
-
-        async function efetuarLogout() {
-            await supabase.auth.signOut();
-            DADOS_PERFIL_USUARIO = null;
-            document.getElementById('mainTabs').style.display = 'none';
-            document.getElementById('userInfoBar').style.display = 'none';
-            document.getElementById('abaAdminBtn').style.display = 'none';
-            document.getElementById('aba-orcamentos').classList.remove('active');
-            document.getElementById('aba-materiais').classList.remove('active');
-            document.getElementById('aba-admin').classList.remove('active');
-            document.getElementById('aba-auth').classList.add('active');
-            limparCampos();
-        }
-
-        function mudarAba(aba) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            if(aba === 'orcamentos') {
-                document.querySelectorAll('.tab-btn')[0].classList.add('active');
-                document.getElementById('aba-orcamentos').classList.add('active');
-            } else if (aba === 'materiais') {
-                document.querySelectorAll('.tab-btn')[1].classList.add('active');
-                document.getElementById('aba-materiais').classList.add('active');
-            } else if (aba === 'admin' && DADOS_PERFIL_USUARIO?.is_admin) {
-                document.getElementById('abaAdminBtn').classList.add('active');
-                document.getElementById('aba-admin').classList.add('active');
-                carregarUsuariosPainelAdmin();
-            }
-        }
-
-        async function carregarUsuariosPainelAdmin() {
-            if (!DADOS_PERFIL_USUARIO?.is_admin) return;
-            const tbody = document.getElementById('tabelaAdminUsuarios');
-            tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">Atualizando lista...</td></tr>';
-
-            const { data: listaPerfis, error } = await supabase.from('perfis').select('*').order('created_at', { ascending: false });
-            
-            if (error) { tbody.innerHTML = '<tr><td colspan="4">Erro ao buscar dados.</td></tr>'; return; }
-
-            tbody.innerHTML = '';
-            listaPerfis.forEach(p => {
-                if (p.id === DADOS_PERFIL_USUARIO.id) return; 
-
-                const tr = document.createElement('tr');
-                const dataFormatada = new Date(p.created_at).toLocaleDateString();
-                const statusTexto = p.is_revogado ? "Revogado" : "Ativo";
-                
-                const botaoAcao = p.is_revogado 
-                    ? `<button class="btn btn-secondary" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', false)">Liberar Acesso</button>`
-                    : `<button class="btn btn-danger" style="padding:4px 10px; font-size:12px; margin:0;" onclick="alterarStatusUsuario('${p.id}', true)">Revogar Acesso</button>`;
-
-                tr.innerHTML = "<td>" + p.email + "</td><td>" + dataFormatada + "</td><td>" + statusTexto + "</td><td>" + botaoAcao + "</td>";
-                tbody.appendChild(tr);
-            });
-        }
-
-        async function alterarStatusUsuario(userId, statusBloqueio) {
-            if (!DADOS_PERFIL_USUARIO?.is_admin) return;
-            
-            const { error } = await supabase.from('perfis').update({ is_revogado: statusBloqueio }).eq('id', userId);
-            
-            if (error) { alert("Erro ao atualizar o status do usuário."); } 
-            else { carregarUsuariosPainelAdmin(); }
-        }
-
-        function obterPrefixoEscopo() { return "verk3d_cloud_" + DADOS_PERFIL_USUARIO.id + "_"; }
-
-        function adicionarMaterial() {
-            const nome = document.getElementById('matNome').value.trim();
-            const peso = parseFloat(document.getElementById('matPeso').value) || 0;
-            const preco = parseFloat(document.getElementById('matPreco').value) || 0;
-
-            if (!nome || peso <= 0 || preco <= 0) { alert("Campos inválidos."); return; }
-
-            const chave = obterPrefixoEscopo() + 'materiais';
-            const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
-            materiais.push({ id: Date.now(), nome, peso, preco });
-            localStorage.setItem(chave, JSON.stringify(materiais));
-
-            document.getElementById('matNome').value = "";
-            document.getElementById('matPreco').value = "";
-            atualizarMateriaisEEstatistícas();
-        }
-
-        function deletarMaterial(id) {
-            const chave = obterPrefixoEscopo() + 'materiais';
-            let materiais = JSON.parse(localStorage.getItem(chave) || '[]');
-            materiais = materiais.filter(m => m.id !== id);
-            localStorage.setItem(chave, JSON.stringify(materiais));
-            atualizarMateriaisEEstatistícas();
-        }
-
-        function atualizarMateriaisEEstatistícas() {
-            const alvo = document.getElementById('listaMateriais');
-            if (!alvo) return;
-            
-            const chave = obterPrefixoEscopo() + 'materiais';
-            const materiais = JSON.parse(localStorage.getItem(chave) || '[]');
-            
-            if (materiais.length === 0) {
-                alvo.innerHTML = '<li>Nenhum filamento cadastrado.</li>';
-                CUSTO_POR_GRAMA_MEDIO = 0.10;
-                document.getElementById('mediaDisplay').textContent = "R$ 0,1000 /g (R$ 100,00 /kg)";
-                document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ 0,10 (Padrão)";
-                return;
-            }
-
-            alvo.innerHTML = '';
-            let pesoTotal = 0, precoTotal = 0;
-            materiais.forEach(m => {
-                pesoTotal += m.weight || m.peso; precoTotal += m.price || m.preco;
-                const li = document.createElement('li');
-                li.className = 'item-lista';
-                li.innerHTML = "<div><strong>" + m.nome + "</strong> - " + m.peso + "g por R$ " + m.preco.toFixed(2) + "</div><button class=\"btn btn-danger\" onclick=\"deletarMaterial(" + m.id + ")\">Remover</button>";
-                alvo.appendChild(li);
-            });
-
-            CUSTO_POR_GRAMA_MEDIO = precoTotal / pesoTotal;
-            document.getElementById('mediaDisplay').textContent = "R$ " + CUSTO_POR_GRAMA_MEDIO.toFixed(4) + " /g (R$ " + (CUSTO_POR_GRAMA_MEDIO*1000).toFixed(2) + " /kg)";
-            document.getElementById('labelCustoGrama').textContent = "Custo por Grama Médio: R$ " + CUSTO_POR_GRAMA_MEDIO.toFixed(4);
-        }
-
-        function salvarModeloNoCatalogo() {
-            const nome = document.getElementById('nomeModeloNovo').value.trim();
-            const peso = parseFloat(document.getElementById('peso').value) || 0;
-            const tempo = parseFloat(document.getElementById('tempo').value) || 0;
-
-            if (!nome || peso <= 0 || tempo <= 0) { alert("Preencha dados válidos."); return; }
-
-            const chave = obterPrefixoEscopo() + 'catalogo';
-            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
-            const idx = catalogo.findIndex(m => m.nome.toLowerCase() === nome.toLowerCase());
-            if (idx > -1) catalogo[idx] = { nome, peso, tempo }; else catalogo.push({ nome, peso, tempo });
-
-            localStorage.setItem(chave, JSON.stringify(catalogo));
-            alert("Modelo salvo!");
-            document.getElementById('nomeModeloNovo').value = "";
-            atualizarSelectModelos();
-        }
-
-        function atualizarSelectModelos() {
-            const select = document.getElementById('modeloSelect');
-            select.innerHTML = '<option value="">-- Selecione para autopreencher --</option>';
-            const chave = obterPrefixoEscopo() + 'catalogo';
-            const catalogo = JSON.parse(localStorage.getItem(chave) || '[]');
-            catalogo.forEach((m, index) => {
-                const opt = document.createElement('option'); opt.value = index;
-                opt.textContent = m.nome + " (" + m.peso + "g | " + m.tempo + "h)"; select.appendChild(opt);
-            });
-        }
-
-        function carregarModelo() {
-            const idx = document.getElementById('modeloSelect').value;
-            if (idx === "") return;
-            const catalogo = JSON.parse(localStorage.getItem(obterPrefixoEscopo() + 'catalogo') || '[]');
-            const m = catalogo[idx];
-            if (m) {
-                document.getElementById('peso').value = m.peso;
-                document.getElementById('tempo').value = m.tempo;
-                document.getElementById('cliente').value = "Orçamento: " + m.nome;
-            }
-        }
-
-        function gerarEsalvar() {
-            try {
-                const clienteInput = document.getElementById('cliente').value;
-                const cliente = clienteInput.trim() !== "" ? clienteInput.trim() : "Cliente_Oculto";
-                const peso = parseFloat(document.getElementById('peso').value) || 0;
-                const tempo = parseFloat(document.getElementById('tempo').value) || 0;
-
-                if (peso <= 0 || tempo <= 0) { alert("Informe dados válidos."); return; }
-
-                const custoMaterial = peso * CUSTO_POR_GRAMA_MEDIO;
-                const custoOperacao = tempo * VALOR_HORA_MAQUINA;
-                const valorFinal = (custoMaterial + custoOperacao) * (1 + MARGEM_LUCRO);
-
-                const orcamento = { cliente, valor: valorFinal.toFixed(2), data: new Date().toLocaleDateString() };
-                const chave = obterPrefixoEscopo() + 'orcamentos';
-                const lista = JSON.parse(localStorage.getItem(chave) || '[]');
-                lista.push(orcamento);
-                localStorage.setItem(chave, JSON.stringify(lista));
-
-                if (window.jspdf?.jsPDF) {
-                    const { jsPDF } = window.jspdf;
-                    const doc = new jsPDF();
-                    doc.setFontSize(20); doc.setTextColor(211, 47, 47);
-                    doc.text("VERK3D PRINT - ORÇAMENTO", 10, 20);
-                    doc.setFontSize(12); doc.setTextColor(33, 37, 41);
-                    doc.text("Técnico Responsável: " + DADOS_PERFIL_USUARIO.email, 10, 35);
-                    doc.text("Cliente: " + cliente, 10, 43);
-                    doc.text("Valor Final: R$ " + valorFinal.toFixed(2), 10, 55);
-                    doc.save("orcamento_" + cliente.replace(/\s+/g, '_') + ".pdf");
-                }
-                exibirHistorico();
-            } catch (err) { console.error(err); }
-        }
-
-        function exibirHistorico() {
-            const listaUl = document.getElementById('listaHistorico');
-            if (!listaUl) return;
-            const lista = JSON.parse(localStorage.getItem(obterPrefixoEscopo() + 'orcamentos') || '[]');
-            listaUl.innerHTML = lista.length === 0 ? '<li>Nenhum orçamento ainda.</li>' : '';
-            lista.slice().reverse().forEach(item => {
-                const li = document.createElement('li'); li.className = 'item-lista';
-                li.innerHTML = "📅 " + item.data + " | <strong>" + item.cliente + "</strong>: R$ " + item.valor;
-                listaUl.appendChild(li);
-            });
-        }
-
-        function limparCampos() {
-            document.getElementById('cliente').value = ""; document.getElementById('peso').value = "";
-            document.getElementById('tempo').value = ""; document.getElementById('nomeModeloNovo').value = "";
-            document.getElementById('modeloSelect').value = "";
-        }
+        // Inicializar dados na tela
+        calcular();
+        carregarDados();
     </script>
 </body>
 </html>
