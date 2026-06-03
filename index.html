@@ -170,7 +170,6 @@
                     <input type="text" id="projNome" placeholder="Ex: Aerofólio Civic EJ8 Multipart" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
                 </div>
                 
-                <!-- NOVO CAMPO: SELETOR SUSPENSO DE STATUS DA CAPA -->
                 <div>
                     <label class="block text-sm font-medium mb-1">Status do Projeto</label>
                     <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
@@ -184,8 +183,9 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Imagem do Projeto</label>
                     <input type="file" id="projImagem" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600">
-                    <div id="previewContainer" class="mt-3 hidden">
-                        <img id="imgPreview" class="w-full h-32 object-cover rounded border border-gray-600">
+                    <!-- FIX CAPA: object-contain com max-height e fundo escuro para exibir a foto inteira -->
+                    <div id="previewContainer" class="mt-3 hidden bg-gray-900/60 p-1 rounded border border-gray-700">
+                        <img id="imgPreview" class="w-full max-h-64 object-contain rounded">
                     </div>
                 </div>
                 <div>
@@ -378,7 +378,7 @@
         </div>
     </main>
 
-    <!-- 4. INTEGRAÇÃO JAVASCRIPT CORRIGIDA -->
+    <!-- 4. INTEGRAÇÃO JAVASCRIPT -->
     <script>
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
@@ -387,9 +387,7 @@
         let usuarioAtual = null;
         let sidebarExpandido = true;
         let filamentosCache = []; 
-        let projetosCacheLocal = []; // Armazena dados para engenharia reversa de edição
-
-        // VARIÁVEL DE CONTROLE DE EDIÇÃO DE PROJETOS
+        let projetosCacheLocal = []; 
         let idProjetoEmEdicao = null;
 
         let pecasProjetoAtual = []; 
@@ -405,7 +403,7 @@
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
         const projNome = document.getElementById('projNome');
-        const projStatus = document.getElementById('projStatus'); // Novo Seletor
+        const projStatus = document.getElementById('projStatus'); 
         const projImagem = document.getElementById('projImagem');
         const imgPreview = document.getElementById('imgPreview');
         const previewContainer = document.getElementById('previewContainer');
@@ -598,7 +596,7 @@
         }
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
-        // --- SUBMIT COMPILADO COM DISPARO DE INSERÇÃO OU ALTERAÇÃO (UPDATE) ---
+        // --- SUBMIT COMPILADO ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim();
             const margem = parseFloat(projMargemPorcentagem.value) || 0;
@@ -618,7 +616,6 @@
 
             let query;
             if (idProjetoEmEdicao) {
-                // Modo Edição/Atualização
                 query = _supabase.from('projetos_3d').update([{
                     nome_projeto: nomeProjeto,
                     imagem_base64: imagemBase64Projeto,
@@ -632,7 +629,6 @@
                     status: statusAtual
                 }]).eq('id', idProjetoEmEdicao);
             } else {
-                // Modo Inserção Convencional
                 query = _supabase.from('projetos_3d').insert([{
                     nome_projeto: nomeProjeto,
                     imagem_base64: imagemBase64Projeto,
@@ -678,14 +674,11 @@
 
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
-        // --- FUNÇÃO PARA INVOCAR A ENGENHARIA DE EDIÇÃO ---
         window.editarProjeto3d = function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id);
-            if (!proj) return alert('Projeto não localizado no cache local.');
+            if (!proj) return alert('Projeto não localizado.');
 
             idProjetoEmEdicao = proj.id;
-            
-            // Popula os campos da capa
             projNome.value = proj.nome_projeto;
             projStatus.value = proj.status || 'Aguardando Impressão';
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem;
@@ -701,15 +694,11 @@
             nomeDo3mfProjeto = proj.nome_arquivo_3mf;
             lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Retido: ${nomeDo3mfProjeto}` : '';
 
-            // Importa a lista de peças do banco para o array operacional da tela
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas));
             renderizarPecasDoEscopo();
 
-            // Altera visual dos botões de ação
             btnSalvarProjetoCompleto.innerText = '🔄 Atualizar Projeto';
             btnCancelarEdicao.classList.remove('hidden');
-
-            // Move a tela suavemente para o formulário
             projNome.scrollIntoView({ behavior: 'smooth' });
         };
 
@@ -718,7 +707,7 @@
             const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
             if (error) return;
 
-            projetosCacheLocal = data || []; // Salva no cache de edição
+            projetosCacheLocal = data || [];
 
             if (projetosCacheLocal.length === 0) {
                 listaProjetosSalvos.innerHTML = '<p class="text-gray-500 text-sm italic py-2">Nenhum projeto multipart gravado no portfólio.</p>';
@@ -726,13 +715,13 @@
             }
 
             listaProjetosSalvos.innerHTML = projetosCacheLocal.map(proj => {
+                // FIX PORTFÓLIO: Trocado de object-cover para object-contain e aumentado h-28 para h-44 com fundo para ver a peça inteira
                 const imgTag = proj.imagem_base64 
-                    ? `<img src="${proj.imagem_base64}" class="w-full h-28 object-cover rounded-t-lg border-b border-gray-700">`
-                    : `<div class="w-full h-28 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
+                    ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700"><img src="${proj.imagem_base64}" class="w-full h-44 object-contain rounded-t-lg"></div>`
+                    : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
                 
                 const tag3mf = proj.nome_arquivo_3mf ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 Arquivo: ${proj.nome_arquivo_3mf}</p>` : '';
                 
-                // Mapeamento dinâmico de cores para as tags de status
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' :
                                     proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' :
                                     proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
@@ -764,8 +753,6 @@
                                 <span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>
                                 ${subPecasHtml}
                             </div>
-                            
-                            <!-- CONTAINER DE BOTÕES EXPANDIDO COM ACESSO A EDIÇÃO -->
                             <div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60">
                                 <button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button>
                                 <button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button>
@@ -784,7 +771,7 @@
             }
         };
 
-        // --- ENGINES LEGADOS DE ASSISTÊNCIA ---
+        // --- LÓGICA DO CATÁLOGO DE ORÇAMENTOS BASE ---
         function calcularAbaBase() {
             const peso = parseFloat(pesoInput.value) || 0; const tempo = parseFloat(tempoInput.value) || 0;
             const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
