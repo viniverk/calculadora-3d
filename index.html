@@ -595,28 +595,14 @@
             }
         });
 
-       // --- CORREÇÃO DO LOGIN GOOGLE ---
-        document.addEventListener('DOMContentLoaded', () => {
-            const btnGoogle = document.getElementById('btnGoogleAuth');
-            if (btnGoogle) {
-                btnGoogle.addEventListener('click', async () => {
-                    console.log("Iniciando fluxo de login Google...");
-                    
-                    const { error } = await _supabase.auth.signInWithOAuth({
-                        provider: 'google',
-                        options: {
-                            // A URL deve ser EXATAMENTE a que você cadastrou no Supabase e Google Cloud
-                            redirectTo: 'https://viniverk.github.io/calculadora-3d/'
-                        }
-                    });
-
-                    if (error) {
-                        console.error("Erro no Google Auth:", error.message);
-                        alert("Erro ao conectar com Google: " + error.message);
-                    }
-                });
-            }
+        btnGoogleAuth.addEventListener('click', async () => {
+            await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
         });
+        document.getElementById('btnSair').addEventListener('click', async () => {
+    await _supabase.auth.signOut();
+    // Força a atualização da página para garantir que o cache de sessão seja limpo
+    window.location.href = window.location.origin + window.location.pathname;
+});
 
         // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
         function carregarJanelaVendas() {
