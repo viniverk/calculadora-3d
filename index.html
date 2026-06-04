@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestor 3D - Controle de Impressão</title>
-    <!-- Tailwind CSS para design responsivo e moderno -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Script oficial do Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
@@ -14,7 +12,6 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
-    <!-- 1. TELA DE AUTENTICAÇÃO (LOGIN / CADASTRO / RECUPERAÇÃO) -->
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
@@ -66,7 +63,6 @@
         </div>
     </div>
 
-    <!-- 2. ESTRUTURA DO MENU LATERAL (SIDEBAR) -->
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
@@ -79,27 +75,22 @@
                 </button>
             </div>
 
-            <!-- MENU REORDENADO CONFORME REQUISITADO -->
             <nav class="p-3 space-y-2">
-                <!-- 1. Impressões -->
                 <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition bg-blue-600 font-medium text-white item-menu-btn" data-aba="inserir-impressao">
                     <span class="text-lg">🚀</span>
                     <span class="whitespace-nowrap label-texto">Impressões</span>
                 </button>
 
-                <!-- 2. Vendas (NOVA PÁGINA) -->
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="vendas">
                     <span class="text-lg">💰</span>
                     <span class="whitespace-nowrap label-texto">Vendas</span>
                 </button>
 
-                <!-- 3. Estoque -->
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="filamentos">
                     <span class="text-lg">🧵</span>
                     <span class="whitespace-nowrap label-texto">Estoque</span>
                 </button>
                 
-                <!-- 4. Calculadora/Orçamento -->
                 <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="calculadora">
                     <span class="text-lg">🧮</span>
                     <span class="whitespace-nowrap label-texto">Calculadora/Orçamento</span>
@@ -123,10 +114,8 @@
         </div>
     </aside>
 
-    <!-- 3. ÁREA DE CONTEÚDO PRINCIPAL -->
     <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
         
-        <!-- ABA 1: IMPRESSÕES / PORTFÓLIO -->
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">1. Capa do Projeto</h2>
@@ -241,9 +230,7 @@
             </div>
         </div>
 
-        <!-- ABA 2: VENDAS (NOVA TELA OPERACIONAL FINANCEIRA) -->
         <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
-            <!-- Form de Cadastro de Vendas -->
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-emerald-400 border-b border-gray-700 pb-2">Lançar Nova Venda</h2>
                 <div>
@@ -267,7 +254,6 @@
                     </div>
                 </div>
                 
-                <!-- Box Informativo de Referência de Custos -->
                 <div id="vendaBoxInfo" class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 text-xs text-gray-400 space-y-1 hidden">
                     <p>Preço Sugerido Base: <span id="vendaInfoSugerido" class="text-white font-bold">R$ 0,00</span></p>
                     <p>Custo Real do Insumo: <span id="vendaInfoCusto" class="text-amber-500 font-medium">R$ 0,00</span></p>
@@ -278,14 +264,12 @@
                 </button>
             </div>
 
-            <!-- Listagem e Histórico de Vendas Concluídas -->
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-2 space-y-6">
                 <h2 class="text-xl font-semibold text-teal-400 border-b border-gray-700 pb-2">Histórico de Movimentação Financeira</h2>
                 <div id="listaVendasEfetuadas" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                     <p class="text-gray-500 text-sm italic">Nenhum faturamento registrado.</p>
                 </div>
 
-                <!-- Rodapé de Faturamento Consolidado Dinâmico (Métricas de BI) -->
                 <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 grid grid-cols-3 gap-2 text-center">
                     <div class="border-r border-gray-800">
                         <span class="block text-[9px] uppercase font-bold text-gray-400">Faturamento Bruto</span>
@@ -303,7 +287,6 @@
             </div>
         </div>
 
-        <!-- ABA 3: ESTOQUE -->
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
@@ -389,7 +372,6 @@
             </div>
         </div>
 
-        <!-- ABA 4: CALCULADORA/ORÇAMENTO -->
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
@@ -432,7 +414,6 @@
             </div>
         </div>
 
-        <!-- ABA: ADMINISTRAÇÃO -->
         <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
             <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <div class="overflow-x-auto">
@@ -449,12 +430,12 @@
         </div>
     </main>
 
-    <!-- 4. ENGENHARIA LOGICAL COMPLETA DO GESTOR 3D -->
     <script>
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        let modoAbas = 'login';
         let usuarioAtual = null;
         let sidebarExpandido = true;
         let filamentosCache = []; 
@@ -472,6 +453,16 @@
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
         const iconeSeta = document.getElementById('iconeSeta');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
+
+        const authEmail = document.getElementById('authEmail');
+        const authSenha = document.getElementById('authSenha');
+        const btnAuthPrincipal = document.getElementById('btnAuthPrincipal');
+        const btnGoogleAuth = document.getElementById('btnGoogleAuth');
+        const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+        const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+        const containerSenha = document.getElementById('containerSenha');
+        const divisorSocial = document.getElementById('divisorSocial');
+        const dicaSenha = document.getElementById('dicaSenha');
 
         const projNome = document.getElementById('projNome');
         const projStatus = document.getElementById('projStatus'); 
@@ -540,65 +531,67 @@
 
         document.getElementById('vendaData').valueAsDate = new Date();
 
-        // --- SIDEBAR CONTROL ---
-        btnToggleSidebar.addEventListener('click', () => {
-            sidebarExpandido = !sidebarExpandido;
-            if (sidebarExpandido) {
-                sidebarApp.classList.replace('w-20', 'w-64');
-                conteudoPainel.classList.replace('ml-20', 'ml-64');
-                iconeSeta.innerText = '◀';
-                document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
+        // --- MANIPULAÇÃO DA TELA DE LOGIN/CADASTRO ---
+        btnAlternarAuth.addEventListener('click', () => {
+            if (modoAbas === 'login') {
+                modoAbas = 'cadastro';
+                document.getElementById('tituloAuth').innerText = 'Criar Nova Conta';
+                btnAuthPrincipal.innerText = 'Cadastrar';
+                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+                dicaSenha.classList.remove('hidden');
             } else {
-                sidebarApp.classList.replace('w-64', 'w-20');
-                conteudoPainel.classList.replace('ml-64', 'ml-20');
-                iconeSeta.innerText = '▶';
-                document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
+                modoAbas = 'login';
+                document.getElementById('tituloAuth').innerText = 'Entrar no Sistema';
+                btnAuthPrincipal.innerText = 'Entrar';
+                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+                dicaSenha.classList.add('hidden');
             }
         });
 
-        function mudarAba(abaDestino) {
-            document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
-            document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
+        btnEsqueciSenha.addEventListener('click', () => {
+            modoAbas = 'recuperar';
+            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+            btnAuthPrincipal.innerText = 'Enviar Código';
+            btnAlternarAuth.innerText = 'Voltar ao Login';
+            containerSenha.classList.add('hidden');
+            btnGoogleAuth.classList.add('hidden');
+            divisorSocial.classList.add('hidden');
+            dicaSenha.classList.add('hidden');
+        });
 
-            document.querySelectorAll('.item-menu-btn').forEach(btn => {
-                if (btn.getAttribute('data-aba') === abaDestino) {
-                    btn.classList.add('bg-blue-600', 'text-white');
-                    btn.classList.remove('hover:bg-gray-700', 'text-gray-300');
+        // FLUXO DE LOGIN/CADASTRO COM TRATAMENTO DE ERROS DO SUPABASE
+        btnAuthPrincipal.addEventListener('click', async () => {
+            const email = authEmail.value.trim();
+            const password = authSenha.value;
+            
+            if (!email) return alert('Por favor, informe um e-mail válido.');
+            if (modoAbas !== 'recuperar' && !password) return alert('Por favor, insira sua senha.');
+
+            if (modoAbas === 'login') {
+                const { error } = await _supabase.auth.signInWithPassword({ email, password });
+                if (error) alert('Erro ao entrar: ' + error.message);
+            } else if (modoAbas === 'cadastro') {
+                if (password.length < 6) return alert('A senha precisa ter no mínimo 6 caracteres.');
+                
+                const { error } = await _supabase.auth.signUp({ email, password });
+
+                if (error) {
+                    if (error.message.includes('signup disabled')) {
+                        alert('Cadastro desativado! Ative a chave "Allow new users to sign up" dentro do painel do Supabase em Authentication > Providers > Email.');
+                    } else {
+                        alert('Erro ao registrar conta: ' + error.message);
+                    }
                 } else {
-                    btn.classList.remove('bg-blue-600', 'text-white');
-                    btn.classList.add('hover:bg-gray-700', 'text-gray-300');
+                    alert('Conta criada com sucesso! Realizando login automático...');
+                    const { error: loginError } = await _supabase.auth.signInWithPassword({ email, password });
+                    if (loginError) alert('Conta criada, mas erro ao acessar automaticamente: ' + loginError.message);
                 }
-            });
-
-            if (abaDestino === 'calculadora') carregarModelos();
-            if (abaDestino === 'inserir-impressao') carregarProjetos3d();
-            if (abaDestino === 'vendas') carregarJanelaVendas();
-            if (abaDestino === 'filamentos') carregarFilamentos();
-        }
-
-        // --- SESSION TRACKING ---
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                usuarioAtual = session.user;
-                telaAuth.classList.add('hidden');
-                sidebarApp.classList.remove('hidden');
-                conteudoPainel.classList.remove('hidden');
-                usuarioLogadoText.innerText = session.user.email;
-                carregarFilamentos();
-                carregarModelos();
-                carregarProjetos3d();
-            } else {
-                usuarioAtual = null;
-                sidebarApp.classList.add('hidden');
-                conteudoPainel.classList.add('hidden');
-                telaAuth.classList.remove('hidden');
+            } else if (modoAbas === 'recuperar') {
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+                if (error) alert(error.message);
+                else alert('E-mail de recuperação enviado!');
             }
         });
-
-        btnGoogleAuth.addEventListener('click', async () => {
-            await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
-        });
-        document.getElementById('btnSair').addEventListener('click', () => _supabase.auth.signOut());
 
         // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
         function carregarJanelaVendas() {
@@ -606,7 +599,6 @@
             carregarVendasEfetuadas();
         }
 
-        // Alimenta o menu suspenso de vendas com os projetos cadastrados
         function carregarDropdownProjetosVenda() {
             vendaSelectProjeto.innerHTML = '<option value="">-- Escolha um Projeto --</option>';
             projetosCacheLocal.forEach(p => {
@@ -617,7 +609,6 @@
             });
         }
 
-        // Disparado ao selecionar um projeto no dropdown de vendas
         vendaSelectProjeto.addEventListener('change', function() {
             const id = this.value;
             const proj = projetosCacheLocal.find(p => p.id === id);
@@ -650,7 +641,6 @@
 
             btnRegistrarVenda.disabled = true;
             
-            // 1. Registra a venda na tabela
             const { error: errorVenda } = await _supabase.from('vendas_3d').insert([{
                 projeto_id: projId,
                 nome_projeto: proj.nome_projeto,
@@ -668,7 +658,6 @@
                 return;
             }
 
-            // 2. Atualiza automaticamente o status do projeto para 'Vendido'
             await _supabase.from('projetos_3d').update({ status: 'Vendido' }).eq('id', projId);
 
             btnRegistrarVenda.disabled = false;
@@ -679,7 +668,7 @@
             document.getElementById('vendaData').valueAsDate = new Date();
 
             alert('Faturamento consolidado com sucesso e status atualizado!');
-            carregarProjetos3d(); // Atualiza cache local
+            carregarProjetos3d(); 
             carregarVendasEfetuadas();
         });
 
@@ -730,12 +719,7 @@
             }
         };
 
-        // --- ARQUIVOS E IMAGENS ---
-        // Manutenção das lógicas de previews proporcionais criados anteriormente
-        // ...
-        // --- MULTI-PEÇAS ENGINE ---
-        // ...
-        // [Mantido idêntico ao código anterior para preservar estabilidade]
+        // --- PROCESSOS OPERACIONAIS DE UPLOADS ---
         projImagem.addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
@@ -804,7 +788,7 @@
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
         window.editarProjeto3d = function(id) {
-            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
+            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; projMargemPorcentagem.value = proj.margem_lucro_porcentagem; imagemBase64Projeto = proj.imagem_base64;
             if (imagemBase64Projeto) { imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             nomeDo3mfProjeto = proj.nome_arquivo_3mf; lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Retido: ${nomeDo3mfProjeto}` : ''; pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas)); renderizarPecasDoEscopo();
@@ -835,7 +819,6 @@
                 return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${(proj.tempo_total_min / 60).toFixed(1)}h</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span></div><p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2"><span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button></div></div></div>`;
             }).join('');
             
-            // Recarrega dropdown de vendas se a aba estiver aberta
             carregarDropdownProjetosVenda();
         }
 
