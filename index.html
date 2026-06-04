@@ -489,6 +489,7 @@
         const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
         const listaProjetosSalvos = document.getElementById('listaProjetosSalvos');
 
+        // Mapeamento Elementos Aba Vendas
         const vendaSelectProjeto = document.getElementById('vendaSelectProjeto');
         const vendaCliente = document.getElementById('vendaCliente');
         const vendaPrecoFinal = document.getElementById('vendaPrecoFinal');
@@ -528,6 +529,8 @@
         const filtroCor = document.getElementById('filtroCor');
         const filtroAno = document.getElementById('filtroAno');
 
+        document.getElementById('vendaData').valueAsDate = new Date();
+
         // --- MANIPULAÇÃO DA TELA DE LOGIN/CADASTRO ---
         btnAlternarAuth.addEventListener('click', () => {
             if (modoAbas === 'login') {
@@ -547,7 +550,7 @@
 
         btnEsqueciSenha.addEventListener('click', () => {
             modoAbas = 'recuperar';
-            document.getElementById('tituloAuth').innerText = 'Recover Senha';
+            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
             btnAuthPrincipal.innerText = 'Enviar Código';
             btnAlternarAuth.innerText = 'Voltar ao Login';
             containerSenha.classList.add('hidden');
@@ -620,7 +623,7 @@
             const { error: errorVenda } = await _supabase.from('vendas_3d').insert([{ projeto_id: projId, nome_projeto: proj.nome_projeto, cliente: cliente, preco_venda_final: precoFinal, custo_producao_retido: custoP, lucro_liquido: lucroL, data_venda: dataV, user_id: usuarioAtual.id }]);
 
             if (errorVenda) { alert('Erro ao processar: ' + errorVenda.message); btnRegistrarVenda.disabled = false; return; }
-            await _supabase.from('projects_3d').update({ status: 'Vendido' }).eq('id', projId);
+            await _supabase.from('projetos_3d').update({ status: 'Vendido' }).eq('id', projId);
 
             btnRegistrarVenda.disabled = false; vendaCliente.value = ''; vendaSelectProjeto.value = ''; vendaBoxInfo.classList.add('hidden'); vendaPrecoFinal.value = '';
             document.getElementById('vendaData').valueAsDate = new Date();
@@ -636,7 +639,7 @@
             }
             let somaBruto = 0; let somaCusto = 0; let somaLiquido = 0;
             listaVendasEfetuadas.innerHTML = data.map(v => {
-                somaBruto += parseFloat(v.preco_venda_final); Axel = v.custo_producao_retido; somaCusto += parseFloat(Axel); somaLiquido += parseFloat(v.lucro_liquido);
+                somaBruto += parseFloat(v.preco_venda_final); const Axel = v.custo_producao_retido; somaCusto += parseFloat(Axel); somaLiquido += parseFloat(v.lucro_liquido);
                 return `<div class="bg-gray-700 p-2.5 rounded border border-gray-600 flex justify-between items-center text-xs"><div><span class="font-bold text-white text-sm block">${v.nome_projeto}</span><span class="text-gray-400">Cliente: ${v.cliente} | Dia: ${v.data_venda.split('-').reverse().join('/')}</span></div><div class="text-right"><span class="text-green-400 font-black text-sm block">R$ ${parseFloat(v.preco_venda_final).toFixed(2)}</span><button onclick="deletarVenda('${v.id}')" class="text-[10px] text-red-400 hover:underline">Estornar</button></div></div>`;
             }).join('');
             totBruto.innerText = `R$ ${somaBruto.toFixed(2)}`; totCusto.innerText = `R$ ${somaCusto.toFixed(2)}`; totLiquido.innerText = `R$ ${somaLiquido.toFixed(2)}`;
@@ -646,7 +649,7 @@
             if (confirm('Deseja estornar esta movimentação?')) { await _supabase.from('vendas_3d').delete().eq('id', id); carregarVendasEfetuadas(); }
         };
 
-        // --- ENGINES DO PORTFÓLIO E TRABALHOS MULTIPART ---
+        // --- PROCESSOS OPERACIONAIS DE UPLOADS ---
         projImagem.addEventListener('change', function(e) {
             const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader(); reader.onload = function(evt) { imagemBase64Projeto = evt.target.result; imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden'); }; reader.readAsDataURL(file);
@@ -675,7 +678,7 @@
         function atualizarAcumuladoresMaster() {
             let tTotal = 0; let pTotal = 0; let cTotal = 0; pecasProjetoAtual.forEach(p => { tTotal += p.tempo_h; pTotal += p.peso_g; cTotal += p.custo_calculado; });
             const m = parseFloat(projMargemPorcentagem.value) || 0;
-            resumoTempo.innerText = `${tTotal.toFixed(1)}h`; resumoPeso.innerText = `${pTotal}g`; resumoCusto.innerText = `R$ ${cTotal.toFixed(2)}`; resumoPrecoVenda.innerText = `R$ ${(cTotal * (1 + (m / 100))).toFixed(2)}`;
+            resumoTempo.innerText = `${tTotal.toFixed(1)}h`; resumoSuporte = pTotal; resumoPeso.innerText = `${pTotal}g`; resumoCusto.innerText = `R$ ${cTotal.toFixed(2)}`; resumoPrecoVenda.innerText = `R$ ${(cTotal * (1 + (m / 100))).toFixed(2)}`;
         }
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
@@ -731,7 +734,7 @@
             carregarDropdownProjetosVenda();
         }
 
-        // --- MANUTENÇÃO DE ESTOQUE ---
+        // --- LÓGICA DO ESTOQUE ---
         btnSalvarFilamento.addEventListener('click', async () => {
             const nome = filNome.value.trim(); const fab = filFabricante.value.trim() || 'Desconhecido'; const cor = filCor.value.trim() || 'Incolor'; const tipo = filTipo.value; const dataCompra = filDataCompra.value; const preco = parseFloat(filPreco.value) || 0; const pTotal = parseFloat(filPesoTotal.value) || 0; const pAtual = parseFloat(filPesoAtual.value) || 0;
             if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios.');
