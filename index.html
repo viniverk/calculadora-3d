@@ -58,6 +58,7 @@
                     <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.92 11.92 0 0 0 12 0 11.996 11.996 0 0 0 1.31 6.49l4.09 3.23c.93-2.8 3.53-4.97 6.6-4.97z"/>
                 </svg>
                 Continuar com o Google
+				
             </button>
 
             <div class="text-center mt-4">
@@ -932,6 +933,30 @@
         });
 
         async function deletarModelo(id) { if (confirm('Excluir?')) { await _supabase.from('catalogo_modelos').delete().eq('id', id); carregarModelos(); } }
+		
+		// --- LOGICA DE ALTERNAR ENTRE LOGIN E CADASTRO ---
+const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+
+btnAlternarAuth.addEventListener('click', () => {
+    // Verifica se a variável modoAbas está definida
+    if (typeof modoAbas === 'undefined') {
+        window.modoAbas = 'login'; // Inicializa caso não esteja
+    }
+
+    if (window.modoAbas === 'login') {
+        window.modoAbas = 'cadastro';
+        document.getElementById('tituloAuth').innerText = 'Criar Nova Conta';
+        btnAuthPrincipal.innerText = 'Cadastrar';
+        btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+        document.getElementById('dicaSenha').classList.remove('hidden');
+    } else {
+        window.modoAbas = 'login';
+        document.getElementById('tituloAuth').innerText = 'Entrar no Sistema';
+        btnAuthPrincipal.innerText = 'Entrar';
+        btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+        document.getElementById('dicaSenha').classList.add('hidden');
+    }
+});
     </script>
 </body>
 </html>
