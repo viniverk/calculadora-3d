@@ -229,7 +229,19 @@
             </div>
 
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-3">
-                <h2 class="text-xl font-semibold mb-4 text-teal-400 border-b border-gray-700 pb-2">Projetos em Portfólio</h2>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-700 pb-2 gap-2">
+                    <h2 class="text-xl font-semibold text-teal-400">Projetos em Portfólio</h2>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <label class="text-xs uppercase font-bold text-gray-400 whitespace-nowrap">Ordenar por:</label>
+                        <select id="selectOrdenacaoPortfolio" class="bg-gray-700 p-1.5 rounded border border-gray-600 text-xs font-semibold text-white focus:outline-none w-full sm:w-auto">
+                            <option value="created_at">Data de Cadastro</option>
+                            <option value="status">Status do Projeto</option>
+                            <option value="peso_total_g">Peso Total</option>
+                            <option value="tempo_total_min">Tempo de Impressão</option>
+                            <option value="preco_venda_total">Valor de Venda</option>
+                        </select>
+                    </div>
+                </div>
                 <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
         </div>
@@ -483,6 +495,7 @@
         const btnSalvarProjetoCompleto = document.getElementById('btnSalvarProjetoCompleto');
         const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
         const listaProjetosSalvos = document.getElementById('listaProjetosSalvos');
+        const selectOrdenacaoPortfolio = document.getElementById('selectOrdenacaoPortfolio');
 
         // Mapeamento Elementos Aba Vendas
         const vendaSelectProjeto = document.getElementById('vendaSelectProjeto');
@@ -748,8 +761,8 @@
             const peso = parseFloat(pecaPeso.value) || 0;
             
             const horas = parseFloat(pecaTempoHoras.value) || 0;
-            const minutos = parseFloat(pecaTempoMinutos.value) || 0;
-            const tempoTotalH = horas + (minutos / 60);
+            const minutes = parseFloat(pecaTempoMinutos.value) || 0;
+            const tempoTotalH = horas + (minutes / 60);
             
             const custoPorGrama = parseFloat(pecaSelectFilamento.value);
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
@@ -900,7 +913,6 @@
             }
         };
 
-        // --- EXCLUSÃO DE PROJETOS DO PORTFÓLIO (CORRIGIDA) ---
         window.deletarProjeto3d = async function(id) {
             if (confirm('Deseja realmente excluir permanentemente este projeto do portfólio?')) {
                 const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
@@ -913,13 +925,42 @@
             }
         };
 
-        async function carregarProjetos3d() {
-            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
-            if (error) return;
-            projetosCacheLocal = data || [];
+        // --- SISTEMA DE ORDENAÇÃO DINÂMICA DO PORTFÓLIO ---
+        selectOrdenacaoPortfolio.addEventListener('change', () => {
+            renderizarProjetosOrdenados();
+        });
+
+        function renderizarProjetosOrdenados() {
+            const criterio = selectOrdenacaoPortfolio.value;
+            
+            // Clona o array original para não corromper o cache bruto do banco
+            let projetosOrdenados = [...projetosCacheLocal];
+
+            projetosOrdenados.sort((a, b) => {
+                let valA = a[criterio];
+                let valB = b[criterio];
+
+                // Tratamento especial para strings (como Status)
+                if (typeof valA === 'string') {
+                    return valA.localeCompare(valB);
+                }
+                
+                // Ordenação numérica padrão decrescente (Maior peso/valor/tempo primeiro)
+                // Se for "created_at" (data), o Supabase entrega string ISO, o ideal é converter para timestamp
+                if (criterio === 'created_at') {
+                    return new Date(valB) - new Date(valA);
+                }
+
+                return valB - valA;
+            });
+
             const container = document.getElementById('listaProjetosSalvos');
-            if (projetosCacheLocal.length === 0) { container.innerHTML = '<p class="text-gray-500 text-sm italic py-2">Nenhum projeto gravado.</p>'; return; }
-            container.innerHTML = projetosCacheLocal.map(proj => {
+            if (projetosOrdenados.length === 0) { 
+                container.innerHTML = '<p class="text-gray-500 text-sm italic py-2">Nenhum projeto gravado.</p>'; 
+                return; 
+            }
+
+            container.innerHTML = projetosOrdenados.map(proj => {
                 const imgTag = proj.imagem_base64 ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700"><img src="${proj.imagem_base64}" class="w-full h-44 object-contain rounded-t-lg"></div>` : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
                 const tag3mf = proj.nome_arquivo_3mf ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 Arquivo: ${proj.nome_arquivo_3mf}</p>` : '';
                 const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
@@ -937,6 +978,15 @@
 
                 return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${masterHours}h ${masterMins}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span></div><p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2"><span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button></div></div></div>`;
             }).join('');
+        }
+
+        async function carregarProjetos3d() {
+            const { data, error } = await _supabase.from('projetos_3d').select('*');
+            if (error) return;
+            projetosCacheLocal = data || [];
+            
+            // Renderiza respeitando o filtro ativo selecionado no momento
+            renderizarProjetosOrdenados();
             carregarDropdownProjetosVenda();
         }
 
@@ -1032,13 +1082,11 @@
         
         // --- LOGICA DE ALTERNAR ENTRE LOGIN E CADASTRO ---
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
-        
-        // --- LÓGICA DO BOTÃO "ESQUECEU A SENHA?" ---
         const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
 
         btnEsqueciSenha.addEventListener('click', () => {
             window.modoAbas = 'recuperar';
-            document.getElementById('tituloAuth').innerText = 'Recover Password';
+            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
             btnAuthPrincipal.innerText = 'Enviar Código';
             btnAlternarAuth.innerText = 'Voltar ao Login';
             
