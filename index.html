@@ -577,45 +577,50 @@
             if (abaDestino === 'filamentos') carregarFilamentos();
         }
 
-        // --- SESSION TRACKING ---
-       _supabase.auth.onAuthStateChange((event, session) => {
-    // 1. Detectar se o usuário veio pelo e-mail de "Reset Password"
-    if (event === 'PASSWORD_RECOVERY') {
-        const newPassword = prompt("O link de recuperação foi validado! Por favor, digite sua nova senha:");
-        
-        if (newPassword) {
-            _supabase.auth.updateUser({ password: newPassword }).then(({ data, error }) => {
-                if (error) {
-                    alert("Erro ao atualizar senha: " + error.message);
-                } else {
-                    alert("Senha alterada com sucesso! Você já pode logar com a nova senha.");
-                    window.location.href = window.location.origin + window.location.pathname;
+        // --- SESSION TRACKING COM FLUXO DE RECUPERAÇÃO ---
+        _supabase.auth.onAuthStateChange(async (event, session) => {
+            
+            // 1. O usuário veio pelo e-mail de recuperação
+            if (event === 'PASSWORD_RECOVERY') {
+                const novaSenha = prompt("Link de recuperação validado! Por favor, digite sua nova senha:");
+                
+                if (novaSenha) {
+                    const { error } = await _supabase.auth.updateUser({ password: novaSenha });
+                    if (error) {
+                        alert("Erro ao atualizar senha: " + error.message);
+                    } else {
+                        alert("Senha alterada com sucesso! Você já pode logar com a nova senha.");
+                        // Limpa a URL e recarrega para voltar à tela de login limpa
+                        window.location.href = window.location.origin + window.location.pathname;
+                    }
                 }
-            });
-        }
-    } 
-    // 2. Comportamento normal de login
-    else if (session) {
-        usuarioAtual = session.user;
-        telaAuth.classList.add('hidden');
-        sidebarApp.classList.remove('hidden');
-        conteudoPainel.classList.remove('hidden');
-        usuarioLogadoText.innerText = session.user.email;
-        carregarTudo();
-    } 
-    else {
-        usuarioAtual = null;
-        sidebarApp.classList.add('hidden');
-        conteudoPainel.classList.add('hidden');
-        telaAuth.classList.remove('hidden');
-    }
-});
+            } 
+            // 2. Comportamento normal: se há uma sessão válida e não é recuperação
+            else if (session && event !== 'SIGNED_OUT') {
+                usuarioAtual = session.user;
+                telaAuth.classList.add('hidden');
+                sidebarApp.classList.remove('hidden');
+                conteudoPainel.classList.remove('hidden');
+                usuarioLogadoText.innerText = session.user.email;
+                carregarFilamentos();
+                carregarModelos();
+                carregarProjetos3d();
+            } 
+            // 3. Caso padrão (deslogado)
+            else {
+                usuarioAtual = null;
+                sidebarApp.classList.add('hidden');
+                conteudoPainel.classList.add('hidden');
+                telaAuth.classList.remove('hidden');
+            }
+        });
 
         btnGoogleAuth.addEventListener('click', async () => {
             await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
         });
         document.getElementById('btnSair').addEventListener('click', async () => {
     await _supabase.auth.signOut();
+	
     // Força a atualização da página para garantir que o cache de sessão seja limpo
     window.location.href = window.location.origin + window.location.pathname;
 });
