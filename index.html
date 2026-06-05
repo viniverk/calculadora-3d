@@ -196,7 +196,7 @@
                 <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
                     <div>
                         <span class="block text-[10px] uppercase font-bold text-gray-400">Tempo Acumulado</span>
-                        <span id="resumoTempo" class="text-base font-bold text-white">0.0h</span>
+                        <span id="resumoTempo" class="text-base font-bold text-white">0h 0m</span>
                     </div>
                     <div>
                         <span class="block text-[10px] uppercase font-bold text-gray-400">Peso Total</span>
@@ -446,7 +446,7 @@
         let idProjetoEmEdicao = null;
 
         let pecasProjetoAtual = []; 
-        let idPecaEmEdicaoIndex = null; // Índice da peça que está sendo editada
+        let idPecaEmEdicaoIndex = null;
         let imagemBase64Projeto = null; 
         let nomeDo3mfProjeto = null;
 
@@ -742,7 +742,7 @@
             lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Carregado: ${nomeDo3mfProjeto}` : '';
         });
 
-        // --- ENGINE DE MULTI-PEÇAS COM SUPORTE A HORAS, MINUTOS E EDIÇÃO DE COMPONENTES ---
+        // --- ENGINE DE COMPONENTES DE ESTRUTURA ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
             const peso = parseFloat(pecaPeso.value) || 0;
@@ -767,13 +767,10 @@
             };
 
             if (idPecaEmEdicaoIndex !== null) {
-                // Se estiver no modo edição de componente, atualiza no índice correspondente
                 pecasProjetoAtual[idPecaEmEdicaoIndex] = dadosPeca;
                 idPecaEmEdicaoIndex = null;
                 btnIncluirPeca.innerText = '+ Incluir';
-                btnIncluirPeca.classList.replace('bg-amber-600', 'bg-gray-700');
             } else {
-                // Modo inclusão comum
                 pecasProjetoAtual.push(dadosPeca);
             }
             
@@ -816,7 +813,6 @@
             if(idPecaEmEdicaoIndex === index) {
                 idPecaEmEdicaoIndex = null;
                 btnIncluirPeca.innerText = '+ Incluir';
-                btnIncluirPeca.classList.replace('bg-amber-600', 'bg-gray-700');
                 pecaNome.value = '';
             }
             pecasProjetoAtual.splice(index, 1); 
@@ -831,10 +827,9 @@
             pecaPeso.value = p.peso_g;
             
             const totalMins = Math.round(p.tempo_h * 60);
-            peccaTempoHoras.value = Math.floor(totalMins / 60);
+            pecaTempoHoras.value = Math.floor(totalMins / 60);
             pecaTempoMinutos.value = totalMins % 60;
             
-            // Localiza e seleciona o filamento correspondente no dropdown
             for (let i = 0; i < pecaSelectFilamento.options.length; i++) {
                 if (pecaSelectFilamento.options[i].text === p.filamento_label) {
                     pecaSelectFilamento.selectedIndex = i;
@@ -843,7 +838,6 @@
             }
             
             btnIncluirPeca.innerText = '💾 Salvar Peça';
-            btnIncluirPeca.classList.replace('bg-gray-700', 'bg-amber-600');
             pecaNome.focus();
         };
 
@@ -885,7 +879,6 @@
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
             btnIncluirPeca.innerText = '+ Incluir';
-            btnIncluirPeca.className = 'w-full bg-gray-700 hover:bg-gray-600 text-sky-400 border border-sky-500/30 font-bold py-2 px-2 rounded text-sm transition';
             projNome.value = ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; projImagem.value = ''; projArquivo3mf.value = ''; imagemBase64Projeto = null; nomeDo3mfProjeto = null; lblTxt3mfCarregado.innerText = ''; previewContainer.classList.add('hidden'); pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
         }
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
@@ -904,6 +897,19 @@
                 const pecasClonadas = JSON.parse(JSON.stringify(proj.pecas));
                 const { error } = await _supabase.from('projetos_3d').insert([{ nome_projeto: `${proj.nome_projeto} (Cópia)`, imagem_base64: proj.imagem_base64, nome_arquivo_3mf: proj.nome_arquivo_3mf, pecas: pecasClonadas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total, preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g, status: 'Aguardando Impressão', data_conclusao: null, user_id: usuarioAtual.id }]);
                 if (error) alert('Erro ao duplicar registro: ' + error.message); else { alert('Projeto clonado!'); carregarProjetos3d(); }
+            }
+        };
+
+        // --- EXCLUSÃO DE PROJETOS DO PORTFÓLIO (CORRIGIDA) ---
+        window.deletarProjeto3d = async function(id) {
+            if (confirm('Deseja realmente excluir permanentemente este projeto do portfólio?')) {
+                const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
+                if (error) {
+                    alert('Erro ao excluir projeto: ' + error.message);
+                } else {
+                    alert('Projeto removido com sucesso!');
+                    carregarProjetos3d();
+                }
             }
         };
 
@@ -1032,7 +1038,7 @@
 
         btnEsqueciSenha.addEventListener('click', () => {
             window.modoAbas = 'recuperar';
-            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+            document.getElementById('tituloAuth').innerText = 'Recover Password';
             btnAuthPrincipal.innerText = 'Enviar Código';
             btnAlternarAuth.innerText = 'Voltar ao Login';
             
