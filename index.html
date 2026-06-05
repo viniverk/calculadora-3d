@@ -578,23 +578,38 @@
         }
 
         // --- SESSION TRACKING ---
-        _supabase.auth.onAuthStateChange((event, session) => {
-            if (session) {
-                usuarioAtual = session.user;
-                telaAuth.classList.add('hidden');
-                sidebarApp.classList.remove('hidden');
-                conteudoPainel.classList.remove('hidden');
-                usuarioLogadoText.innerText = session.user.email;
-                carregarFilamentos();
-                carregarModelos();
-                carregarProjetos3d();
-            } else {
-                usuarioAtual = null;
-                sidebarApp.classList.add('hidden');
-                conteudoPainel.classList.add('hidden');
-                telaAuth.classList.remove('hidden');
-            }
-        });
+       _supabase.auth.onAuthStateChange((event, session) => {
+    // 1. Detectar se o usuário veio pelo e-mail de "Reset Password"
+    if (event === 'PASSWORD_RECOVERY') {
+        const newPassword = prompt("O link de recuperação foi validado! Por favor, digite sua nova senha:");
+        
+        if (newPassword) {
+            _supabase.auth.updateUser({ password: newPassword }).then(({ data, error }) => {
+                if (error) {
+                    alert("Erro ao atualizar senha: " + error.message);
+                } else {
+                    alert("Senha alterada com sucesso! Você já pode logar com a nova senha.");
+                    window.location.href = window.location.origin + window.location.pathname;
+                }
+            });
+        }
+    } 
+    // 2. Comportamento normal de login
+    else if (session) {
+        usuarioAtual = session.user;
+        telaAuth.classList.add('hidden');
+        sidebarApp.classList.remove('hidden');
+        conteudoPainel.classList.remove('hidden');
+        usuarioLogadoText.innerText = session.user.email;
+        carregarTudo();
+    } 
+    else {
+        usuarioAtual = null;
+        sidebarApp.classList.add('hidden');
+        conteudoPainel.classList.add('hidden');
+        telaAuth.classList.remove('hidden');
+    }
+});
 
         btnGoogleAuth.addEventListener('click', async () => {
             await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
