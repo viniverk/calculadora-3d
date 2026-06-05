@@ -761,8 +761,8 @@
             const peso = parseFloat(pecaPeso.value) || 0;
             
             const horas = parseFloat(pecaTempoHoras.value) || 0;
-            const minutes = parseFloat(pecaTempoMinutos.value) || 0;
-            const tempoTotalH = horas + (minutes / 60);
+            const minutos = parseFloat(pecaTempoMinutos.value) || 0;
+            const tempoTotalH = horas + (minutos / 60);
             
             const custoPorGrama = parseFloat(pecaSelectFilamento.value);
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
@@ -886,7 +886,7 @@
 
             const { error } = await query; btnSalvarProjetoCompleto.disabled = false;
             if (error) alert('Falha crítica ao persistir no banco:\n' + error.message);
-            else { alert(idProjetoEmEdicao ? 'Projeto atualizado!' : 'Novo projeto registrado!'); limparFormularioProjeto(); carregarProjetos3d(); }
+            else { alert(idProjetoEmEdicao ? 'Projeto updated!' : 'Novo projeto registrado!'); limparFormularioProjeto(); carregarProjetos3d(); }
         });
 
         function limparFormularioProjeto() {
@@ -916,12 +916,42 @@
         window.deletarProjeto3d = async function(id) {
             if (confirm('Deseja realmente excluir permanentemente este projeto do portfólio?')) {
                 const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
-                if (error) {
-                    alert('Erro ao excluir projeto: ' + error.message);
-                } else {
-                    alert('Projeto removido com sucesso!');
-                    carregarProjetos3d();
-                }
+                if (error) alert('Erro ao excluir projeto: ' + error.message);
+                else { alert('Projeto removido com sucesso!'); carregarProjetos3d(); }
+            }
+        };
+
+        // --- SISTEMA COMPLETO PARA RECUPERAÇÃO / DOWNLOAD DO MANIFESTO .3MF ---
+        window.baixarManifesto3mf = function(nomeArquivo, nomeProjeto, pecasJsonString) {
+            try {
+                const pecas = JSON.parse(decodeURIComponent(pecasJsonString));
+                let conteudo = `==================================================\n`;
+                conteudo += `  GESTOR 3D - Zweck 3D Print - MANIFESTO DE PROJETO\n`;
+                conteudo += `==================================================\n\n`;
+                conteudo += `Projeto Geral: ${nomeProjeto}\n`;
+                conteudo += `Arquivo de Origem Fatiador: ${nomeArquivo || 'Nenhum arquivo .3mf anexado'}\n\n`;
+                conteudo += `--- COMPONENTES DA ESTRUTURA METADATA ---\n`;
+                
+                pecas.forEach((p, idx) => {
+                    const totalMins = Math.round(p.tempo_h * 60);
+                    conteudo += `[Peça ${idx + 1}] ${p.nome_peca}\n`;
+                    conteudo += `  - Peso Utilizado: ${p.peso_g}g\n`;
+                    conteudo += `  - Tempo Estimado: ${Math.floor(totalMins / 60)}h ${totalMins % 60}m\n`;
+                    conteudo += `  - Insumo Aplicado: ${p.filamento_label}\n`;
+                    conteudo += `  - Custo Unitário Insumos + Máquina: R$ ${parseFloat(p.custo_calculado).toFixed(2)}\n\n`;
+                });
+
+                conteudo += `--------------------------------------------------\n`;
+                conteudo += `Gerado automaticamente via Gestor 3D Engine.\n`;
+
+                const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(blob);
+                link.download = `${nomeProjeto.toLowerCase().replace(/[^a-z0-9]/g, '_')}_estrutura_3mf.txt`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (e) {
+                alert('Erro ao processar manifesto de download: ' + e.message);
             }
         };
 
@@ -932,25 +962,18 @@
 
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
-            
-            // Clona o array original para não corromper o cache bruto do banco
             let projetosOrdenados = [...projetosCacheLocal];
 
             projetosOrdenados.sort((a, b) => {
                 let valA = a[criterio];
                 let valB = b[criterio];
 
-                // Tratamento especial para strings (como Status)
                 if (typeof valA === 'string') {
                     return valA.localeCompare(valB);
                 }
-                
-                // Ordenação numérica padrão decrescente (Maior peso/valor/tempo primeiro)
-                // Se for "created_at" (data), o Supabase entrega string ISO, o ideal é converter para timestamp
                 if (criterio === 'created_at') {
                     return new Date(valB) - new Date(valA);
                 }
-
                 return valB - valA;
             });
 
@@ -962,15 +985,19 @@
 
             container.innerHTML = projetosOrdenados.map(proj => {
                 const imgTag = proj.imagem_base64 ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700"><img src="${proj.imagem_base64}" class="w-full h-44 object-contain rounded-t-lg"></div>` : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
-                const tag3mf = proj.nome_arquivo_3mf ? `<p class="text-[10px] text-sky-400 mt-1 truncate">📦 Arquivo: ${proj.nome_arquivo_3mf}</p>` : '';
+                
+                // Botão ou Tag de Arquivo Habilitado para Download das propriedades
+                const pecasStringEscaped = encodeURIComponent(JSON.stringify(proj.pecas));
+                const tag3mf = proj.nome_arquivo_3mf 
+                    ? `<button onclick="baixarManifesto3mf('${proj.nome_arquivo_3mf}', '${proj.nome_projeto}', '${pecasStringEscaped}')" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full">📦 Baixar Estrutura: ${proj.nome_arquivo_3mf} ⬇️</button>` 
+                    : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum arquivo fatiador carregado</span>`;
+                
                 const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';
                 
                 const subPecasHtml = proj.pecas.map(p => {
                     const totalMinsGlobal = Math.round(p.tempo_h * 60);
-                    const hEx = Math.floor(totalMinsGlobal / 60);
-                    const mEx = totalMinsGlobal % 60;
-                    return `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span class="truncate max-w-[120px]">${p.nome_peca} (${hEx}h ${mEx}m)</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`;
+                    return `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span class="truncate max-w-[120px]">${p.nome_peca} (${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m)</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`;
                 }).join('');
 
                 const masterHours = Math.floor(proj.tempo_total_min / 60);
@@ -984,8 +1011,6 @@
             const { data, error } = await _supabase.from('projetos_3d').select('*');
             if (error) return;
             projetosCacheLocal = data || [];
-            
-            // Renderiza respeitando o filtro ativo selecionado no momento
             renderizarProjetosOrdenados();
             carregarDropdownProjetosVenda();
         }
