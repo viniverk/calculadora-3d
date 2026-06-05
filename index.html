@@ -936,6 +936,21 @@
 		
 	// --- LOGICA DE ALTERNAR ENTRE LOGIN E CADASTRO ---
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+		
+		// --- LÓGICA DO BOTÃO "ESQUECEU A SENHA?" ---
+const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+
+btnEsqueciSenha.addEventListener('click', () => {
+    window.modoAbas = 'recuperar';
+    document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+    btnAuthPrincipal.innerText = 'Enviar Código';
+    btnAlternarAuth.innerText = 'Voltar ao Login';
+    
+    // Esconde campos que não são necessários na recuperação
+    document.getElementById('containerSenha').classList.add('hidden');
+    document.getElementById('btnGoogleAuth').classList.add('hidden');
+    document.getElementById('divisorSocial').classList.add('hidden');
+});
 
         // Inicializa a variável se não existir
         window.modoAbas = 'login'; 
@@ -956,31 +971,35 @@
             }
         });
 
-        // --- CORREÇÃO: LÓGICA DO BOTÃO PRINCIPAL (LOGIN / CADASTRO) ---
+    // --- CORREÇÃO: LÓGICA DO BOTÃO PRINCIPAL (LOGIN / CADASTRO / RECUPERAR) ---
         btnAuthPrincipal.addEventListener('click', async () => {
             const email = document.getElementById('authEmail').value.trim();
             const password = document.getElementById('authSenha').value;
+            const modo = window.modoAbas || 'login'; 
 
-            if (!email || !password) {
-                return alert('Por favor, preencha e-mail e senha.');
-            }
+            if (!email) return alert('Por favor, informe seu e-mail.');
 
-            if (window.modoAbas === 'login') {
-                // Ação de Login
+            if (modo === 'login') {
+                if (!password) return alert('Informe a senha.');
                 const { error } = await _supabase.auth.signInWithPassword({ email, password });
                 if (error) alert('Erro ao entrar: ' + error.message);
-            } else {
-                // Ação de Cadastro
+            } 
+            else if (modo === 'cadastro') {
+                if (!password) return alert('Informe uma senha.');
                 if (password.length < 6) return alert('A senha precisa ter no mínimo 6 caracteres.');
-                
                 const { error } = await _supabase.auth.signUp({ email, password });
-                if (error) {
-                    alert('Erro ao cadastrar: ' + error.message);
-                } else {
-                    alert('Cadastro realizado com sucesso! Verifique seu e-mail para confirmar a conta.');
-                }
+                if (error) alert('Erro ao cadastrar: ' + error.message);
+                else alert('Cadastro realizado com sucesso! Verifique seu e-mail.');
+            } 
+            else if (modo === 'recuperar') {
+                // Aqui está a ação de esqueci a senha
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, { 
+                    redirectTo: window.location.origin + window.location.pathname 
+                });
+                if (error) alert('Erro ao enviar e-mail: ' + error.message);
+                else alert('E-mail de recuperação enviado para ' + email);
             }
-        });
+        });    
     </script>
 </body>
 </html>
