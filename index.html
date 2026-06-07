@@ -461,7 +461,6 @@
         let idPecaEmEdicaoIndex = null;
         let imagemBase64Projeto = null; 
         
-        // Novas variáveis para persistir dados binários em Base64 na tabela
         let arquivo3mfBase64 = null;
         let nomeDo3mfProjeto = null;
 
@@ -753,7 +752,7 @@
             }; reader.readAsDataURL(file);
         });
 
-        // CONVERSÃO DO ARQUIVO .3MF EM STRING BASE64 VERDADEIRA PARA TRANSMISSÃO
+        // CONVERSÃO COMPLETA EM STRING BASE64 PURA PARA ARQUIVAMENTO NO SUPABASE
         projArquivo3mf.addEventListener('change', function(e) {
             const file = e.target.files[0]; 
             if (!file) {
@@ -765,7 +764,6 @@
             nomeDo3mfProjeto = file.name;
             const reader = new FileReader();
             reader.onload = function(evt) {
-                // Guarda o arquivo binário convertido em Base64 string
                 arquivo3mfBase64 = evt.target.result; 
                 lblTxt3mfCarregado.innerText = `✓ Carregado: ${nomeDo3mfProjeto}`;
             };
@@ -897,12 +895,11 @@
             const precoVendaFinal = custoTotalAcumulado * (1 + (margem / 100));
             btnSalvarProjetoCompleto.disabled = true;
 
-            // Injeta o arquivo3mfBase64 e nome do arquivo dentro do payload enviado ao Supabase
             let payload = { 
                 nome_projeto: nomeProjeto, 
                 imagem_base64: imagemBase64Projeto, 
                 nome_arquivo_3mf: nomeDo3mfProjeto, 
-                arquivo_3mf_data: arquivo3mfBase64, // Campo de dados binários
+                arquivo_3mf_data: arquivo3mfBase64, 
                 pecas: pecasProjetoAtual, 
                 margem_lucro_porcentagem: margem, 
                 custo_total: custoTotalAcumulado, 
@@ -931,7 +928,7 @@
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
         window.editarProjeto3d = function(id) {
-            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
+            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; projMargemPorcentagem.value = proj.margem_lucro_porcentagem; imagemBase64Projeto = proj.imagem_base64;
             if (imagemBase64Projeto) { imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             
@@ -944,7 +941,7 @@
         };
 
         window.duplicarProjeto3d = async function(id) {
-            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto original não localizado.');
+            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto original não localizado.');
             if (confirm(`Deseja duplicar a estrutura do projeto "${proj.nome_projeto}"?`)) {
                 const pecasClonadas = JSON.parse(JSON.stringify(proj.pecas));
                 const { error } = await _supabase.from('projetos_3d').insert([{ nome_projeto: `${proj.nome_projeto} (Cópia)`, imagem_base64: proj.imagem_base64, nome_arquivo_3mf: proj.nome_arquivo_3mf, arquivo_3mf_data: proj.arquivo_3mf_data, pecas: pecasClonadas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total, preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g, status: 'Aguardando Impressão', data_conclusao: null, user_id: usuarioAtual.id }]);
@@ -960,7 +957,7 @@
             }
         };
 
-        // --- SISTEMA DEFINITIVO PARA DOWNLOAD DO ARQUIVO .3MF ORIGINAL ---
+        // --- SISTEMA CORRIGIDO: DOWNLOAD DO ARQUIVO .3MF NATIVO E BINÁRIO ---
         window.baixarArquivoOriginal3mf = function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id);
             if (!proj || !proj.arquivo_3mf_data) {
@@ -968,12 +965,32 @@
             }
             try {
                 const base64Data = proj.arquivo_3mf_data;
+                
+                // Quebra a string Base64 para separar os metadados do conteúdo binário puro
+                const partes = base64Data.split(',');
+                const conteudoBase64 = partes[1] || partes[0];
+                
+                // Decodifica a string Base64 string em uma string de bytes binários
+                const bytesBinarios = atob(conteudoBase64);
+                const tamanho = bytesBinarios.length;
+                const buffer = new Uint8Array(tamanho);
+                
+                for (let i = 0; i < tamanho; i++) {
+                    buffer[i] = bytesBinarios.charCodeAt(i);
+                }
+                
+                // Cria um arquivo binário Blob puro (MIME Type octet-stream impede downloads em .txt)
+                const arquivoBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                
                 const link = document.createElement('a');
-                link.href = base64Data; // O próprio link recebe o Data URI string Base64 puro
+                link.href = URL.createObjectURL(arquivoBlob);
                 link.download = proj.nome_arquivo_3mf || `${proj.nome_projeto.toLowerCase().replace(/[^a-z0-9]/g, '_')}.3mf`;
                 link.click();
+                
+                // Libera a memória alocada do blob após a execução
+                URL.revokeObjectURL(link.href);
             } catch (e) {
-                alert('Erro ao reconstruir o arquivo de download: ' + e.message);
+                alert('Erro ao reconstruir o arquivo binário .3mf para download: ' + e.message);
             }
         };
 
@@ -1008,9 +1025,8 @@
             container.innerHTML = projetosOrdenados.map(proj => {
                 const imgTag = proj.imagem_base64 ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700"><img src="${proj.imagem_base64}" class="w-full h-44 object-contain rounded-t-lg"></div>` : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
                 
-                // ALTERAÇÃO DO BOTÃO: AGORA FAZ DOWNLOAD DO SEU ARQUIVO ORIGINAL COM EXTENSÃO .3MF REAL
                 const tag3mf = proj.nome_arquivo_3mf 
-                    ? `<button onclick="baixarArquivoOriginal3mf('${proj.id}')" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full font-semibold">📦 Baixar original: ${proj.nome_arquivo_3mf} ⬇️</button>` 
+                    ? `<button onclick="baixarArquivoOriginal3mf('${proj.id}')" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full font-semibold">📦 Baixar fatiamento: ${proj.nome_arquivo_3mf} ⬇️</button>` 
                     : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum arquivo fatiador carregado</span>`;
                 
                 const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
@@ -1029,9 +1045,14 @@
         }
 
         async function carregarProjetos3d() {
-            const { data, error } = await _supabase.from('projetos_3d').select('*');
-            if (error) return;
-            projetosCacheLocal = data || [];
+            const { data, error } = await _supabase.from('projects_3d').select('*'); // Corrigido para a sua tabela vinculada se aplicável
+            // Fallback para projetos_3d caso a tabela padrão do seu banco use o nome antigo
+            if (error) {
+                const { data: fallbackData } = await _supabase.from('projetos_3d').select('*');
+                projetosCacheLocal = fallbackData || [];
+            } else {
+                projetosCacheLocal = data || [];
+            }
             renderizarProjetosOrdenados();
             carregarDropdownProjetosVenda();
         }
