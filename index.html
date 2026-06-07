@@ -551,13 +551,12 @@
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
             } else {
                 sidebarApp.classList.replace('w-64', 'w-20');
-                conteudoPainel.classList.replace('ml-20', 'ml-64'); // Mantido alinhado
+                conteudoPainel.classList.replace('ml-64', 'ml-20');
                 iconeSeta.innerText = '▶';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
             }
         });
 
-        // Correção global do roteamento interno de abas para manter estabilidade
         function mudarAba(abaDestino) {
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
@@ -610,7 +609,168 @@
             }
         });
 
-        // --- CORREÇÃO DA ENGENHARIA DE MULTI-PEÇAS ---
+        btnGoogleAuth.addEventListener('click', async () => {
+            await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+        });
+        document.getElementById('btnSair').addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+            window.location.href = window.location.origin + window.location.pathname;
+        });
+
+        // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
+        function carregarJanelaVendas() {
+            carregarDropdownProjetosVenda();
+            carregarVendasEfetuadas();
+        }
+
+        function carregarDropdownProjetosVenda() {
+            vendaSelectProjeto.innerHTML = '<option value="">-- Escolha um Projeto --</option>';
+            projetosCacheLocal.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.nome_projeto;
+                vendaSelectProjeto.appendChild(opt);
+            });
+        }
+
+        vendaSelectProjeto.addEventListener('change', function() {
+            const id = this.value;
+            const proj = projetosCacheLocal.find(p => p.id === id);
+            
+            if (!proj) {
+                vendaBoxInfo.classList.add('hidden');
+                vendaPrecoFinal.value = '';
+                return;
+            }
+
+            vendaInfoSugerido.innerText = `R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}`;
+            vendaInfoCusto.innerText = `R$ ${parseFloat(proj.custo_total).toFixed(2)}`;
+            vendaPrecoFinal.value = parseFloat(proj.preco_venda_total).toFixed(2);
+            vendaBoxInfo.classList.remove('hidden');
+        });
+
+        btnRegistrarVenda.addEventListener('click', async () => {
+            const projId = vendaSelectProjeto.value;
+            const cliente = vendaCliente.value.trim() || 'Cliente Geral';
+            const precoFinal = parseFloat(vendaPrecoFinal.value) || 0;
+            const dataV = vendaData.value;
+
+            const proj = projetosCacheLocal.find(p => p.id === projId);
+            if (!projId || !proj || precoFinal <= 0 || !dataV) {
+                return alert('Por favor, selecione um projeto e insira o valor final acordado.');
+            }
+
+            const custoP = parseFloat(proj.custo_total);
+            const lucroL = precoFinal - custoP;
+
+            btnRegistrarVenda.disabled = true;
+            
+            const { error: errorVenda } = await _supabase.from('vendas_3d').insert([{
+                projeto_id: projId,
+                nome_projeto: proj.nome_projeto,
+                cliente: cliente,
+                preco_venda_final: precoFinal,
+                custo_producao_retido: custoP,
+                lucro_liquido: lucroL,
+                data_venda: dataV,
+                user_id: usuarioAtual.id
+            }]);
+
+            if (errorVenda) {
+                alert('Erro ao processar faturamento: ' + errorVenda.message);
+                btnRegistrarVenda.disabled = false;
+                return;
+            }
+
+            await _supabase.from('projetos_3d').update({ status: 'Vendido' }).eq('id', projId);
+
+            btnRegistrarVenda.disabled = false;
+            vendaCliente.value = '';
+            vendaSelectProjeto.value = '';
+            vendaBoxInfo.classList.add('hidden');
+            vendaPrecoFinal.value = '';
+            document.getElementById('vendaData').valueAsDate = new Date();
+
+            alert('Faturamento consolidado com sucesso e status atualizado!');
+            carregarProjetos3d(); 
+            carregarVendasEfetuadas();
+        });
+
+        async function carregarVendasEfetuadas() {
+            const { data, error } = await _supabase.from('vendas_3d').select('*').order('data_venda', { ascending: false });
+            if (error) return;
+
+            if (!data || data.length === 0) {
+                listaVendasEfetuadas.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum faturamento registrado.</p>';
+                totBruto.innerText = 'R$ 0,00';
+                totCusto.innerText = 'R$ 0,00';
+                totLiquido.innerText = 'R$ 0,00';
+                return;
+            }
+
+            let somaBruto = 0; let somaCusto = 0; let somaLiquido = 0;
+
+            listaVendasEfetuadas.innerHTML = data.map(v => {
+                somaBruto += parseFloat(v.preco_venda_final);
+                somaCusto += parseFloat(v.custo_producao_retido);
+                somaLiquido += parseFloat(v.lucro_liquido);
+
+                const dataF = v.data_venda ? v.data_venda.split('-').reverse().join('/') : 'S/D';
+                return `
+                    <div class="bg-gray-700 p-2.5 rounded border border-gray-600 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-white text-sm block">${v.nome_projeto}</span>
+                            <span class="text-gray-400">Comprador: ${v.cliente} | Dia: ${dataF}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-green-400 font-black text-sm block">R$ ${parseFloat(v.preco_venda_final).toFixed(2)}</span>
+                            <button onclick="deletarVenda('${v.id}')" class="text-[10px] text-red-400 hover:underline">Estornar</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            totBruto.innerText = `R$ ${somaBruto.toFixed(2)}`;
+            totCusto.innerText = `R$ ${somaCusto.toFixed(2)}`;
+            totLiquido.innerText = `R$ ${somaLiquido.toFixed(2)}`;
+        }
+
+        window.deletarVenda = async function(id) {
+            if (confirm('Deseja estornar e remover esta movimentação financeira?')) {
+                const { error } = await _supabase.from('vendas_3d').delete().eq('id', id);
+                if (error) alert(error.message);
+                else carregarVendasEfetuadas();
+            }
+        };
+
+        // --- ARQUIVOS E IMAGENS ---
+        projImagem.addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                imagemBase64Projeto = evt.target.result; imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden');
+            }; reader.readAsDataURL(file);
+        });
+
+        // CONVERSÃO COMPLETA EM STRING BASE64 PURA PARA ARQUIVAMENTO NO SUPABASE
+        projArquivo3mf.addEventListener('change', function(e) {
+            const file = e.target.files[0]; 
+            if (!file) {
+                nomeDo3mfProjeto = null;
+                arquivo3mfBase64 = null;
+                lblTxt3mfCarregado.innerText = '';
+                return;
+            }
+            nomeDo3mfProjeto = file.name;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                arquivo3mfBase64 = evt.target.result; 
+                lblTxt3mfCarregado.innerText = `✓ Carregado: ${nomeDo3mfProjeto}`;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // --- ENGINE DE COMPONENTES DE ESTRUTURA ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
             const peso = parseFloat(pecaPeso.value) || 0;
@@ -756,18 +916,35 @@
 
             const { error } = await query; btnSalvarProjetoCompleto.disabled = false;
             if (error) alert('Falha crítica ao persistir no banco:\n' + error.message);
-            else { alert(idProjetoEmEdicao ? 'Projeto atualizado!' : 'Novo projeto registrado!'); limparFormularioProjeto(); carregarProjetos3d(); }
+            else { 
+                alert(idProjetoEmEdicao ? 'Projeto atualizado!' : 'Novo projeto registrado!'); 
+                limparFormularioProjeto(); 
+                carregarProjetos3d(); 
+            }
         });
 
+        // --- ATENÇÃO: FIX DA PERSISTÊNCIA DO FILE EM MEMÓRIA ---
         function limparFormularioProjeto() {
-            idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            arquivo3mfBase64 = null; nomeDo3mfProjeto = null;
+            idProjetoEmEdicao = null; 
+            idPecaEmEdicaoIndex = null;
+            arquivo3mfBase64 = null; 
+            nomeDo3mfProjeto = null;
             btnIncluirPeca.innerText = '+ Incluir';
-            projNome.value = ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; projImagem.value = ''; projArquivo3mf.value = ''; imagemBase64Projeto = null; lblTxt3mfCarregado.innerText = ''; previewContainer.classList.add('hidden'); pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
+            projNome.value = ''; 
+            projStatus.value = 'Aguardando Impressão'; 
+            projDataConclusao.value = ''; 
+            projImagem.value = ''; 
+            projArquivo3mf.value = ''; 
+            imagemBase64Projeto = null; 
+            lblTxt3mfCarregado.innerText = ''; 
+            previewContainer.classList.add('hidden'); 
+            pecasProjetoAtual = []; 
+            btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
+            btnCancelarEdicao.classList.add('hidden'); 
+            renderizarPecasDoEscopo();
         }
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
-        // --- CORREÇÃO DA FUNÇÃO DO BOTÃO EDITAR NO PORTFÓLIO ---
         window.editarProjeto3d = function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
             idProjetoEmEdicao = proj.id; 
