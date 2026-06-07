@@ -927,21 +927,37 @@
         }
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
+        // --- CORREÇÃO DA FUNÇÃO DO BOTÃO EDITAR NO PORTFÓLIO ---
         window.editarProjeto3d = function(id) {
-            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; projMargemPorcentagem.value = proj.margem_lucro_porcentagem; imagemBase64Projeto = proj.imagem_base64;
-            if (imagemBase64Projeto) { imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
+            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
+            idProjetoEmEdicao = proj.id; 
+            projNome.value = proj.nome_projeto; 
+            projStatus.value = proj.status || 'Aguardando Impressão'; 
+            projDataConclusao.value = proj.data_conclusao || ''; 
+            projMargemPorcentagem.value = proj.margem_lucro_porcentagem; 
+            imagemBase64Projeto = proj.imagem_base64;
+            
+            if (imagemBase64Projeto) { 
+                imgPreview.src = imagemBase64Projeto; 
+                previewContainer.classList.remove('hidden'); 
+            } else { 
+                previewContainer.classList.add('hidden'); 
+            }
             
             nomeDo3mfProjeto = proj.nome_arquivo_3mf; 
             arquivo3mfBase64 = proj.arquivo_3mf_data || null;
             lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Retido: ${nomeDo3mfProjeto}` : ''; 
             
-            pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas)); renderizarPecasDoEscopo();
-            btnSalvarProjetoCompleto.innerText = '🔄 Atualizar Projeto'; btnCancelarEdicao.classList.remove('hidden'); projNome.scrollIntoView({ behavior: 'smooth' });
+            pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas)); 
+            renderizarPecasDoEscopo();
+            
+            btnSalvarProjetoCompleto.innerText = '🔄 Atualizar Projeto'; 
+            btnCancelarEdicao.classList.remove('hidden'); 
+            projNome.scrollIntoView({ behavior: 'smooth' });
         };
 
         window.duplicarProjeto3d = async function(id) {
-            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto original não localizado.');
+            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto original não localizado.');
             if (confirm(`Deseja duplicar a estrutura do projeto "${proj.nome_projeto}"?`)) {
                 const pecasClonadas = JSON.parse(JSON.stringify(proj.pecas));
                 const { error } = await _supabase.from('projetos_3d').insert([{ nome_projeto: `${proj.nome_projeto} (Cópia)`, imagem_base64: proj.imagem_base64, nome_arquivo_3mf: proj.nome_arquivo_3mf, arquivo_3mf_data: proj.arquivo_3mf_data, pecas: pecasClonadas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total, preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g, status: 'Aguardando Impressão', data_conclusao: null, user_id: usuarioAtual.id }]);
@@ -965,12 +981,9 @@
             }
             try {
                 const base64Data = proj.arquivo_3mf_data;
-                
-                // Quebra a string Base64 para separar os metadados do conteúdo binário puro
                 const partes = base64Data.split(',');
                 const conteudoBase64 = partes[1] || partes[0];
                 
-                // Decodifica a string Base64 string em uma string de bytes binários
                 const bytesBinarios = atob(conteudoBase64);
                 const tamanho = bytesBinarios.length;
                 const buffer = new Uint8Array(tamanho);
@@ -979,15 +992,11 @@
                     buffer[i] = bytesBinarios.charCodeAt(i);
                 }
                 
-                // Cria um arquivo binário Blob puro (MIME Type octet-stream impede downloads em .txt)
                 const arquivoBlob = new Blob([buffer], { type: 'application/octet-stream' });
-                
                 const link = document.createElement('a');
                 link.href = URL.createObjectURL(arquivoBlob);
                 link.download = proj.nome_arquivo_3mf || `${proj.nome_projeto.toLowerCase().replace(/[^a-z0-9]/g, '_')}.3mf`;
                 link.click();
-                
-                // Libera a memória alocada do blob após a execução
                 URL.revokeObjectURL(link.href);
             } catch (e) {
                 alert('Erro ao reconstruir o arquivo binário .3mf para download: ' + e.message);
@@ -1045,14 +1054,9 @@
         }
 
         async function carregarProjetos3d() {
-            const { data, error } = await _supabase.from('projects_3d').select('*'); // Corrigido para a sua tabela vinculada se aplicável
-            // Fallback para projetos_3d caso a tabela padrão do seu banco use o nome antigo
-            if (error) {
-                const { data: fallbackData } = await _supabase.from('projetos_3d').select('*');
-                projetosCacheLocal = fallbackData || [];
-            } else {
-                projetosCacheLocal = data || [];
-            }
+            const { data, error } = await _supabase.from('projetos_3d').select('*');
+            if (error) return;
+            projetosCacheLocal = data || [];
             renderizarProjetosOrdenados();
             carregarDropdownProjetosVenda();
         }
@@ -1094,7 +1098,7 @@
                 const fab = (item.fabricante || 'Desconhecido').trim(); const cor = (item.cor || 'Incolor').trim(); fornecedores.add(fab); cores.add(cor);
                 if (item.data_compra) { const ano = item.data_compra.split('-')[0]; if (ano) anos.add(ano); }
             });
-            const selFornecedor = filtroFornecedor.value || "Todos"; const selCor = filtroCor.value || "Todos"; const selAno = filtroAno.value || "Todos";
+            const sel Fornecedor = filtroFornecedor.value || "Todos"; const selCor = filtroCor.value || "Todos"; const selAno = filtroAno.value || "Todos";
             filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>'; Array.from(fornecedores).sort().forEach(f => { filtroFornecedor.innerHTML += `<option value="${f}">${f}</option>`; });
             filtroCor.innerHTML = '<option value="Todos">Todos</option>'; Array.from(cores).sort().forEach(c => { filtroCor.innerHTML += `<option value="${c}">${c}</option>`; });
             filtroAno.innerHTML = '<option value="Todos">Todos</option>'; Array.from(anos).sort((a, b) => b - a).forEach(a => { filtroAno.innerHTML += `<option value="${a}">${a}</option>`; });
