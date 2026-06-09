@@ -6,121 +6,1257 @@
     <title>Gestor 3D - Controle de Impressão</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <style>.transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }</style>
+    <style>
+        .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
+    </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
+        
         <div class="space-y-4">
-            <input type="email" id="authEmail" class="w-full bg-gray-700 p-2 rounded border border-gray-600" placeholder="E-mail">
-            <input type="password" id="authSenha" class="w-full bg-gray-700 p-2 rounded border border-gray-600" placeholder="Senha">
-            <button id="btnAuthPrincipal" class="w-full bg-blue-600 py-2 rounded font-bold">Entrar</button>
-            <button id="btnAlternarAuth" class="w-full text-sm text-gray-400">Não tem conta? Cadastre-se</button>
+            <div>
+                <label class="block text-sm font-medium mb-1">E-mail</label>
+                <input type="email" id="authEmail" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500" placeholder="seu@email.com">
+            </div>
+            
+            <div id="containerSenha">
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-sm font-medium">Senha</label>
+                    <button id="btnEsqueciSenha" class="text-xs text-blue-400 hover:underline">Esqueceu a senha?</button>
+                </div>
+                <input type="password" id="authSenha" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500" placeholder="••••••••">
+                
+                <div id="dicaSenha" class="text-xs text-gray-400 mt-2 bg-gray-900/50 p-2 rounded border border-gray-700 hidden">
+                    <p class="font-semibold text-blue-300 mb-1">A senha precisa ter obrigatoriamente:</p>
+                    <ul class="list-disc list-inside space-y-0.5 text-gray-300">
+                        <li>No mínimo 6 caracteres</li>
+                        <li>Pelo menos uma letra MAIÚSCULA</li>
+                        <li>Pelo menos uma letra minúscula</li>
+                        <li>Pelo menos um número</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <button id="btnAuthPrincipal" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Entrar</button>
+            
+            <div id="divisorSocial" class="relative flex py-2 items-center">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-xs uppercase">ou</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+
+            <button id="btnGoogleAuth" class="w-full bg-white hover:bg-gray-100 text-gray-900 font-bold py-2 px-4 rounded flex items-center justify-center gap-2 transition duration-200">
+                <svg class="w-5 h-5" viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.61c-.3 1.56-1.17 2.88-2.48 3.76v3.13h3.99c2.34-2.16 3.685-5.32 3.685-8.74z"/>
+                    <path fill="#34A853" d="M12 24c3.24 0 5.97-1.08 7.96-2.91l-3.99-3.13c-1.11.75-2.53 1.19-3.97 1.19-3.07 0-5.67-2.08-6.6-4.88H1.31v3.23A11.996 11.996 0 0 0 12 24z"/>
+                    <path fill="#FBBC05" d="M5.4 14.28a7.16 7.16 0 0 1 0-4.56V6.49H1.31a11.99 11.99 0 0 0 0 11.02L5.4 14.28z"/>
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43A11.92 11.92 0 0 0 12 0 11.996 11.996 0 0 0 1.31 6.49l4.09 3.23c.93-2.8 3.53-4.97 6.6-4.97z"/>
+                </svg>
+                Continuar com o Google
+            </button>
+
+            <div class="text-center mt-4">
+                <button id="btnAlternarAuth" class="text-sm text-gray-400 hover:underline">Não tem conta? Cadastre-se</button>
+            </div>
         </div>
     </div>
 
-    <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 w-64 z-30 hidden border-r border-gray-700 flex flex-col">
-        <div class="p-4 border-b border-gray-700 flex justify-between">
-            <h1 class="font-bold text-blue-400">Gestor 3D</h1>
-            <button id="btnToggleSidebar">◀</button>
+    <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
+        <div>
+            <div class="p-4 flex items-center justify-between border-b border-gray-700">
+                <div class="flex items-center gap-2 overflow-hidden">
+                    <span class="text-2xl">🖨️</span>
+                    <h1 class="font-bold text-lg text-blue-400 tracking-wider whitespace-nowrap label-texto">Gestor 3D</h1>
+                </div>
+                <button id="btnToggleSidebar" class="p-1.5 rounded bg-gray-700 hover:bg-gray-600 text-gray-300 focus:outline-none">
+                    <span id="iconeSeta">◀</span>
+                </button>
+            </div>
+
+            <nav class="p-3 space-y-2">
+                <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition bg-blue-600 font-medium text-white item-menu-btn" data-aba="inserir-impressao">
+                    <span class="text-lg">🚀</span>
+                    <span class="whitespace-nowrap label-texto">Impressões</span>
+                </button>
+
+                <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="vendas">
+                    <span class="text-lg">💰</span>
+                    <span class="whitespace-nowrap label-texto">Vendas</span>
+                </button>
+
+                <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="filamentos">
+                    <span class="text-lg">🧵</span>
+                    <span class="whitespace-nowrap label-texto">Estoque</span>
+                </button>
+                
+                <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="calculadora">
+                    <span class="text-lg">🧮</span>
+                    <span class="whitespace-nowrap label-texto">Calculadora/Orçamento</span>
+                </button>
+
+                <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-amber-900/40 text-amber-400 border border-amber-800/30 font-medium hidden item-menu-btn" data-aba="admin">
+                    <span class="text-lg">🛡️</span>
+                    <span class="whitespace-nowrap label-texto">Gerenciar Users</span>
+                </button>
+            </nav>
         </div>
-        <nav class="p-3 space-y-2">
-            <button onclick="mudarAba('inserir-impressao')" class="w-full px-3 py-2 bg-blue-600 rounded">Impressões</button>
-            <button onclick="mudarAba('vendas')" class="w-full px-3 py-2 hover:bg-gray-700 rounded">Vendas</button>
-            <button onclick="mudarAba('filamentos')" class="w-full px-3 py-2 hover:bg-gray-700 rounded">Estoque</button>
-        </nav>
-        <div class="p-4 mt-auto border-t border-gray-700"><button id="btnSair" class="w-full bg-red-600/20 py-2 rounded">Sair</button></div>
+
+        <div class="p-4 border-t border-gray-700 bg-gray-800/50">
+            <div class="overflow-hidden mb-2 label-texto">
+                <p class="text-xs text-gray-400 truncate" id="usuarioLogado">...</p>
+            </div>
+            <button id="btnSair" class="w-full bg-red-600/20 hover:bg-red-600 border border-red-700 text-red-200 hover:text-white text-sm font-bold py-2 rounded transition flex items-center justify-center gap-2">
+                <span>🚪</span>
+                <span class="label-texto whitespace-nowrap">Sair do Sistema</span>
+            </button>
+        </div>
     </aside>
 
-    <main id="conteudoPainel" class="flex-1 p-8 ml-64 hidden w-full">
+    <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
+        
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
-                <input type="text" id="projNome" placeholder="Nome do Projeto" class="w-full bg-gray-700 p-2 rounded border border-gray-600 text-white">
-                <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 text-white">
-                    <option value="Aguardando Impressão">Aguardando Impressão</option>
-                    <option value="Imprimindo">Imprimindo</option>
-                    <option value="Montagem">Montagem</option>
-                    <option value="Projeto Finalizado">Projeto Finalizado</option>
-                    <option value="Vendido">Vendido</option>
-                </select>
-                <input type="file" id="projArquivo3mf" accept=".3mf" class="w-full text-xs text-gray-400">
-                <p id="lblTxt3mfCarregado" class="text-[11px] text-gray-400 italic"></p>
-                <button id="btnSalvarProjetoCompleto" class="w-full bg-blue-600 py-3 rounded font-bold">Salvar Projeto</button>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
+                <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">1. Capa do Projeto</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nome do Projeto Geral</label>
+                    <input type="text" id="projNome" placeholder="Ex: Aerofólio Civic EJ8 Multipart" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Status do Projeto</label>
+                        <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
+    <option value="Aguardando Impressão">Aguardando Impressão</option>
+    <option value="Imprimindo">Imprimindo</option>
+    <option value="Montagem">Montagem</option> <option value="Projeto Finalizado">Projeto Finalizado</option>
+    <option value="Vendido">Vendido</option>
+</select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Data de Conclusão</label>
+                        <input type="date" id="projDataConclusao" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Imagem do Projeto</label>
+                    <input type="file" id="projImagem" accept="image/*" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600">
+                    <div id="previewContainer" class="mt-3 hidden bg-gray-900/60 p-1 rounded border border-gray-700">
+                        <img id="imgPreview" class="w-full max-h-64 object-contain rounded">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Arquivo de Fatiamento (.3mf)</label>
+                    <input type="file" id="projArquivo3mf" accept=".3mf" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600">
+                    <p id="lblTxt3mfCarregado" class="text-[11px] text-gray-400 mt-1 italic"></p>
+                </div>
             </div>
-            <div class="bg-gray-800 p-6 rounded-xl border border-gray-700 xl:col-span-2">
-                <h2 class="text-xl font-semibold text-teal-400 mb-4">Projetos em Portfólio</h2>
-                <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-                <button id="btnCarregarMais" onclick="carregarMaisProjetos()" class="w-full mt-4 bg-gray-700 text-sky-400 py-2 rounded">Ver mais projetos...</button>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-2 space-y-6">
+                <div>
+                    <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">2. Adicionar Componentes / Peças</h2>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-3">
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-gray-300">Nome do Membro / Peça</label>
+                            <input type="text" id="pecaNome" placeholder="Ex: Suporte Lateral Esquerdo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-gray-300">Filamento / Cor (Lote Ativo)</label>
+                            <select id="pecaSelectFilamento" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
+                                <option value="0.12">Preço Padrão (R$ 0,12 /g)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3 items-end">
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-gray-300">Peso Utilizado (g)</label>
+                            <input type="number" id="pecaPeso" value="30" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-gray-300">Horas</label>
+                            <input type="number" id="pecaTempoHoras" value="2" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-gray-300">Minutos</label>
+                            <input type="number" id="pecaTempoMinutos" value="0" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-sm">
+                        </div>
+                        <button id="btnIncluirPeca" class="w-full bg-gray-700 hover:bg-gray-600 text-sky-400 border border-sky-500/30 font-bold py-2 px-2 rounded text-sm transition">
+                            + Incluir
+                        </button>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900/50 p-4 rounded-lg border border-gray-700">
+                    <h3 class="text-sm font-bold text-gray-300 mb-2 uppercase tracking-wide">Componentes da Estrutura</h3>
+                    <div id="gridPecasProjeto" class="space-y-2 max-h-[160px] overflow-y-auto pr-1 text-xs">
+                        <p class="text-gray-500 italic">Nenhuma peça adicionada a este projeto ainda.</p>
+                    </div>
+                </div>
+
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 grid grid-cols-2 sm:grid-cols-4 gap-4 items-center">
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-gray-400">Tempo Acumulado</span>
+                        <span id="resumoTempo" class="text-base font-bold text-white">0h 0m</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-gray-400">Peso Total</span>
+                        <span id="resumoPeso" class="text-base font-bold text-white">0g</span>
+                    </div>
+                    <div>
+                        <span class="block text-[10px] uppercase font-bold text-gray-400">Custo Total Global</span>
+                        <span id="resumoCusto" class="text-base font-bold text-amber-400">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-sky-400 mb-0.5">Margem Lucro (%)</label>
+                        <input type="number" id="projMargemPorcentagem" value="200" class="w-full bg-gray-700 p-1 rounded border border-gray-600 text-sm font-bold text-white focus:outline-none">
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pt-2 border-t border-gray-700">
+                    <div>
+                        <span class="text-xs text-gray-400 uppercase font-bold block">Preço Final de Venda Sugerido:</span>
+                        <span id="resumoPrecoVenda" class="text-2xl font-black text-green-400">R$ 0,00</span>
+                    </div>
+                    <div class="flex gap-2">
+                        <button id="btnCancelarEdicao" class="bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold py-3 px-4 rounded-xl text-sm transition hidden">
+                            Cancelar
+                        </button>
+                        <button id="btnSalvarProjetoCompleto" class="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-700 hover:to-blue-700 text-white font-black py-3 px-6 rounded-xl shadow-lg transition duration-200">
+                            📁 Salvar Projeto Completo
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-3">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-gray-700 pb-2 gap-2">
+                    <h2 class="text-xl font-semibold text-teal-400">Projetos em Portfólio</h2>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <label class="text-xs uppercase font-bold text-gray-400 whitespace-nowrap">Ordenar por:</label>
+                        <select id="selectOrdenacaoPortfolio" class="bg-gray-700 p-1.5 rounded border border-gray-600 text-xs font-semibold text-white focus:outline-none w-full sm:w-auto">
+                            <option value="created_at">Data de Cadastro</option>
+                            <option value="status">Status do Projeto</option>
+                            <option value="peso_total_g">Peso Total</option>
+                            <option value="tempo_total_min">Tempo de Impressão</option>
+                            <option value="preco_venda_total">Valor de Venda</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+				<div id="containerCarregarMais" class="text-center py-4 xl:col-span-3">
+    <button id="btnCarregarMais" onclick="carregarMaisProjetos()" class="bg-gray-700 hover:bg-gray-600 text-sky-400 font-bold py-2 px-6 rounded-lg text-sm transition">
+        Ver mais projetos...
+    </button>
+</div>
+            </div>
+        </div>
+
+        <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-1 space-y-4">
+                <h2 class="text-xl font-semibold text-emerald-400 border-b border-gray-700 pb-2">Lançar Nova Venda</h2>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Selecione o Projeto do Portfólio</label>
+                    <select id="vendaSelectProjeto" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500 text-white text-sm">
+                        <option value="">-- Escolha um Projeto --</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Nome do Cliente / Comprador</label>
+                    <input type="text" id="vendaCliente" placeholder="Ex: Morgana Verkruessen" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500 text-sm text-white">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Valor Fechado (R$)</label>
+                        <input type="number" id="vendaPrecoFinal" placeholder="0.00" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-sm text-white">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-gray-300">Data do Acordo</label>
+                        <input type="date" id="vendaData" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-sm text-white">
+                    </div>
+                </div>
+                
+                <div id="vendaBoxInfo" class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 text-xs text-gray-400 space-y-1 hidden">
+                    <p>Preço Sugerido Base: <span id="vendaInfoSugerido" class="text-white font-bold">R$ 0,00</span></p>
+                    <p>Custo Real do Insumo: <span id="vendaInfoCusto" class="text-amber-500 font-medium">R$ 0,00</span></p>
+                </div>
+
+                <button id="btnRegistrarVenda" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-2.5 rounded-xl transition duration-200">
+                    💰 Confirmar Faturamento
+                </button>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-2 space-y-6">
+                <h2 class="text-xl font-semibold text-teal-400 border-b border-gray-700 pb-2">Histórico de Movimentação Financeira</h2>
+                <div id="listaVendasEfetuadas" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
+                    <p class="text-gray-500 text-sm italic">Nenhum faturamento registrado.</p>
+                </div>
+
+                <div class="bg-gray-900 p-4 rounded-xl border border-gray-700 grid grid-cols-3 gap-2 text-center">
+                    <div class="border-r border-gray-800">
+                        <span class="block text-[9px] uppercase font-bold text-gray-400">Faturamento Bruto</span>
+                        <span id="totBruto" class="text-base font-black text-sky-400">R$ 0,00</span>
+                    </div>
+                    <div class="border-r border-gray-800">
+                        <span class="block text-[9px] uppercase font-bold text-gray-400">Custo Total Insumos</span>
+                        <span id="totCusto" class="text-base font-black text-red-400">R$ 0,00</span>
+                    </div>
+                    <div>
+                        <span class="block text-[9px] uppercase font-bold text-emerald-400">Lucro Líquido Real</span>
+                        <span id="totLiquido" class="text-lg font-black text-green-400">R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome / Identificação do Rolo</label>
+                        <input type="text" id="filNome" placeholder="Ex: PLA Premium Especial" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-emerald-500">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Fabricante / Fornecedor</label>
+                            <input type="text" id="filFabricante" placeholder="Ex: Masterprint" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Cor do Filamento</label>
+                            <input type="text" id="filCor" placeholder="Ex: Azul Ciano" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tipo de Material</label>
+                            <select id="filTipo" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                                <option value="PLA">PLA</option>
+                                <option value="ABS">ABS</option>
+                                <option value="PETG">PETG</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Data da Compra</label>
+                            <input type="date" id="filDataCompra" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none text-white">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Preço Pago (R$)</label>
+                            <input type="number" id="filPreco" placeholder="100.00" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Total (g)</label>
+                            <input type="number" id="filPesoTotal" value="1000" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Atual (g)</label>
+                            <input type="number" id="filPesoAtual" value="1000" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition">Registrar Compra no Estoque</button>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-3 text-teal-400 border-b border-gray-700 pb-2">Histórico de Compras e Estoque</h2>
+                <div class="bg-gray-900/60 p-3 rounded-lg border border-gray-700 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Tipo</label>
+                        <select id="filtroTipo" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                            <option value="PLA">PLA</option>
+                            <option value="ABS">ABS</option>
+                            <option value="PETG">PETG</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Fornecedor</label>
+                        <select id="filtroFornecedor" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Cor</label>
+                        <select id="filtroCor" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-gray-400 mb-0.5">Ano Compra</label>
+                        <select id="filtroAno" class="w-full bg-gray-700 p-1 rounded text-xs border border-gray-600 text-white focus:outline-none">
+                            <option value="Todos">Todos</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="listaFilamentos" class="space-y-3 max-h-[420px] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+
+        <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
+                        <input type="text" id="nomeModelo" placeholder="Ex: Protótipo Base" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-1">Selecione o Filamento Base</label>
+                        <select id="selectFilamento" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-white">
+                            <option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Peso Estimado (g)</label>
+                            <input type="number" id="pesoGrams" value="50" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium mb-1">Tempo Estimado (Horas)</label>
+                            <input type="number" id="tempoHoras" value="3" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="bg-gray-700/50 p-4 rounded-lg border border-gray-600">
+                        <p id="labelCustoInsumo" class="text-xs text-gray-400 mb-1">Base de Custo: R$ 0,1200 /g</p>
+                        <p class="text-xs text-gray-400 mb-2">Taxa operadora de máquina: R$ 1,50 / hora</p>
+                        <hr class="border-gray-600 my-2">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-sm">Preço Sugerido (Lucro 3x):</span>
+                            <span id="custoTotal" class="text-xl font-black text-green-400">R$ 0,00</span>
+                        </div>
+                    </div>
+                    <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no Catálogo</button>
+                </div>
+            </div>
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+                <h2 class="text-xl font-semibold mb-4 text-purple-300 border-b border-gray-700 pb-2">Seu Catálogo de Preços</h2>
+                <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2"></div>
+            </div>
+        </div>
+
+        <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
+            <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-max text-sm text-left text-gray-300">
+                    <thead class="bg-gray-700 text-gray-200 uppercase text-xs">
+                        <tr>
+                            <th class="p-3">E-mail</th>
+                            <th class="p-3">Acesso</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabelaAdminUsuarios" class="divide-y divide-gray-700"></tbody>
+                </table>
             </div>
         </div>
     </main>
 
     <script>
-        const _supabase = supabase.createClient("https://tacxvkvpnialzdhbhffc.supabase.co", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0");
-        let offset = 0;
-        let projetosCacheLocal = [];
+        const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
+        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let usuarioAtual = null;
+        let sidebarExpandido = true;
+        let filamentosCache = []; 
+        let projetosCacheLocal = []; 
+        let idProjetoEmEdicao = null;
+
+        let pecasProjetoAtual = []; 
+        let idPecaEmEdicaoIndex = null;
+        let imagemBase64Projeto = null; 
+        
         let arquivo3mfBase64 = null;
         let nomeDo3mfProjeto = null;
 
-        // PAGINAÇÃO E CARREGAMENTO
-        async function carregarProjetos3d(reset = true) {
-            if (reset) { offset = 0; projetosCacheLocal = []; }
-            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false }).range(offset, offset + 9);
-            if (error) return;
-            if (reset) projetosCacheLocal = data || [];
-            else projetosCacheLocal = [...projetosCacheLocal, ...data];
-            renderizarProjetosOrdenados();
-            const btn = document.getElementById('btnCarregarMais');
-            if (data && data.length < 10) btn.classList.add('hidden'); else btn.classList.remove('hidden');
+        // Elementos DOM
+        const telaAuth = document.getElementById('telaAutenticacao');
+        const sidebarApp = document.getElementById('sidebarApp');
+        const conteudoPainel = document.getElementById('conteudoPainel');
+        const btnToggleSidebar = document.getElementById('btnToggleSidebar');
+        const iconeSeta = document.getElementById('iconeSeta');
+        const usuarioLogadoText = document.getElementById('usuarioLogado');
+
+        const projNome = document.getElementById('projNome');
+        const projStatus = document.getElementById('projStatus'); 
+        const projDataConclusao = document.getElementById('projDataConclusao');
+        const projImagem = document.getElementById('projImagem');
+        const imgPreview = document.getElementById('imgPreview');
+        const previewContainer = document.getElementById('previewContainer');
+        const projArquivo3mf = document.getElementById('projArquivo3mf');
+        const lblTxt3mfCarregado = document.getElementById('lblTxt3mfCarregado');
+
+        const pecaNome = document.getElementById('pecaNome');
+        const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
+        const pecaPeso = document.getElementById('pecaPeso');
+        const pecaTempoHoras = document.getElementById('pecaTempoHoras');
+        const pecaTempoMinutos = document.getElementById('pecaTempoMinutos');
+        const btnIncluirPeca = document.getElementById('btnIncluirPeca');
+        const gridPecasProjeto = document.getElementById('gridPecasProjeto');
+
+        const resumoTempo = document.getElementById('resumoTempo');
+        const resumoPeso = document.getElementById('resumoPeso');
+        const resumoCusto = document.getElementById('resumoCusto');
+        const projMargemPorcentagem = document.getElementById('projMargemPorcentagem');
+        const resumoPrecoVenda = document.getElementById('resumoPrecoVenda');
+        const btnSalvarProjetoCompleto = document.getElementById('btnSalvarProjetoCompleto');
+        const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
+        const listaProjetosSalvos = document.getElementById('listaProjetosSalvos');
+        const selectOrdenacaoPortfolio = document.getElementById('selectOrdenacaoPortfolio');
+
+        // Mapeamento Elementos Aba Vendas
+        const vendaSelectProjeto = document.getElementById('vendaSelectProjeto');
+        const vendaCliente = document.getElementById('vendaCliente');
+        const vendaPrecoFinal = document.getElementById('vendaPrecoFinal');
+        const vendaData = document.getElementById('vendaData');
+        const vendaBoxInfo = document.getElementById('vendaBoxInfo');
+        const vendaInfoSugerido = document.getElementById('vendaInfoSugerido');
+        const vendaInfoCusto = document.getElementById('vendaInfoCusto');
+        const btnRegistrarVenda = document.getElementById('btnRegistrarVenda');
+        const listaVendasEfetuadas = document.getElementById('listaVendasEfetuadas');
+
+        const totBruto = document.getElementById('totBruto');
+        const totCusto = document.getElementById('totCusto');
+        const totLiquido = document.getElementById('totLiquido');
+
+        const nomeInput = document.getElementById('nomeModelo');
+        const pesoInput = document.getElementById('pesoGrams');
+        const tempoInput = document.getElementById('tempoHoras');
+        const custoTexto = document.getElementById('custoTotal');
+        const btnSalvar = document.getElementById('btnSalvar');
+        const listaContainer = document.getElementById('listaModelos');
+        const labelCustoInsumo = document.getElementById('labelCustoInsumo');
+        const selectFilamento = document.getElementById('selectFilamento');
+
+        const filNome = document.getElementById('filNome');
+        const filFabricante = document.getElementById('filFabricante');
+        const filCor = document.getElementById('filCor');
+        const filTipo = document.getElementById('filTipo');
+        const filDataCompra = document.getElementById('filDataCompra');
+        const filPreco = document.getElementById('filPreco');
+        const filPesoTotal = document.getElementById('filPesoTotal');
+        const filPesoAtual = document.getElementById('filPesoAtual');
+        const btnSalvarFilamento = document.getElementById('btnSalvarFilamento');
+        const listaFilamentos = document.getElementById('listaFilamentos');
+        
+        const filtroTipo = document.getElementById('filtroTipo');
+        const filtroFornecedor = document.getElementById('filtroFornecedor');
+        const filtroCor = document.getElementById('filtroCor');
+        const filtroAno = document.getElementById('filtroAno');
+
+        document.getElementById('vendaData').valueAsDate = new Date();
+
+        // --- SIDEBAR CONTROL ---
+        btnToggleSidebar.addEventListener('click', () => {
+            sidebarExpandido = !sidebarExpandido;
+            if (sidebarExpandido) {
+                sidebarApp.classList.replace('w-20', 'w-64');
+                conteudoPainel.classList.replace('ml-20', 'ml-64');
+                iconeSeta.innerText = '◀';
+                document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
+            } else {
+                sidebarApp.classList.replace('w-64', 'w-20');
+                conteudoPainel.classList.replace('ml-64', 'ml-20');
+                iconeSeta.innerText = '▶';
+                document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
+            }
+        });
+
+        function mudarAba(abaDestino) {
+            document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
+            document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
+
+            document.querySelectorAll('.item-menu-btn').forEach(btn => {
+                if (btn.getAttribute('data-aba') === abaDestino) {
+                    btn.classList.add('bg-blue-600', 'text-white');
+                    btn.classList.remove('hover:bg-gray-700', 'text-gray-300');
+                } else {
+                    btn.classList.remove('bg-blue-600', 'text-white');
+                    btn.classList.add('hover:bg-gray-700', 'text-gray-300');
+                }
+            });
+
+            if (abaDestino === 'calculadora') carregarModelos();
+            if (abaDestino === 'inserir-impressao') carregarProjetos3d();
+            if (abaDestino === 'vendas') carregarJanelaVendas();
+            if (abaDestino === 'filamentos') carregarFilamentos();
         }
 
-        function carregarMaisProjetos() { offset += 10; carregarProjetos3d(false); }
+        // --- SESSION TRACKING COM FLUXO DE RECUPERAÇÃO ---
+        _supabase.auth.onAuthStateChange(async (event, session) => {
+            if (event === 'PASSWORD_RECOVERY') {
+                const novaSenha = prompt("Link de recuperação validado! Por favor, digite sua nova senha:");
+                if (novaSenha) {
+                    const { error } = await _supabase.auth.updateUser({ password: novaSenha });
+                    if (error) {
+                        alert("Erro ao atualizar senha: " + error.message);
+                    } else {
+                        alert("Senha alterada com sucesso! Você já pode logar com a nova senha.");
+                        window.location.href = window.location.origin + window.location.pathname;
+                    }
+                }
+            } 
+            else if (session && event !== 'SIGNED_OUT') {
+                usuarioAtual = session.user;
+                telaAuth.classList.add('hidden');
+                sidebarApp.classList.remove('hidden');
+                conteudoPainel.classList.remove('hidden');
+                usuarioLogadoText.innerText = session.user.email;
+                carregarFilamentos();
+                carregarModelos();
+                carregarProjetos3d();
+            } 
+            else {
+                usuarioAtual = null;
+                sidebarApp.classList.add('hidden');
+                conteudoPainel.classList.add('hidden');
+                telaAuth.classList.remove('hidden');
+            }
+        });
 
-        // DOWNLOAD BINÁRIO CORRETO
-        window.baixarArquivoOriginal3mf = function(id) {
+        btnGoogleAuth.addEventListener('click', async () => {
+            await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
+        });
+        document.getElementById('btnSair').addEventListener('click', async () => {
+            await _supabase.auth.signOut();
+            window.location.href = window.location.origin + window.location.pathname;
+        });
+
+        // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
+        function carregarJanelaVendas() {
+            carregarDropdownProjetosVenda();
+            carregarVendasEfetuadas();
+        }
+
+        function carregarDropdownProjetosVenda() {
+            vendaSelectProjeto.innerHTML = '<option value="">-- Escolha um Projeto --</option>';
+            projetosCacheLocal.forEach(p => {
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                opt.textContent = p.nome_projeto;
+                vendaSelectProjeto.appendChild(opt);
+            });
+        }
+
+        vendaSelectProjeto.addEventListener('change', function() {
+            const id = this.value;
             const proj = projetosCacheLocal.find(p => p.id === id);
-            if (!proj || !proj.arquivo_3mf_data) return alert('Nenhum arquivo 3mf anexado.');
-            const base64 = proj.arquivo_3mf_data.includes(',') ? proj.arquivo_3mf_data.split(',')[1] : proj.arquivo_3mf_data;
-            const bytes = Uint8Array.from(atob(base64), c => c.charCodeAt(0));
-            const blob = new Blob([bytes], { type: 'application/octet-stream' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = proj.nome_arquivo_3mf || "projeto.3mf";
-            link.click();
-        };
+            
+            if (!proj) {
+                vendaBoxInfo.classList.add('hidden');
+                vendaPrecoFinal.value = '';
+                return;
+            }
 
-        // RENDERIZAÇÃO COM STATUS COLORIDO
-        function renderizarProjetosOrdenados() {
-            const container = document.getElementById('listaProjetosSalvos');
-            container.innerHTML = projetosCacheLocal.map(proj => {
-                const statusColor = proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400' : 'bg-gray-600/30 text-gray-400';
+            vendaInfoSugerido.innerText = `R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}`;
+            vendaInfoCusto.innerText = `R$ ${parseFloat(proj.custo_total).toFixed(2)}`;
+            vendaPrecoFinal.value = parseFloat(proj.preco_venda_total).toFixed(2);
+            vendaBoxInfo.classList.remove('hidden');
+        });
+
+        btnRegistrarVenda.addEventListener('click', async () => {
+            const projId = vendaSelectProjeto.value;
+            const cliente = vendaCliente.value.trim() || 'Cliente Geral';
+            const precoFinal = parseFloat(vendaPrecoFinal.value) || 0;
+            const dataV = vendaData.value;
+
+            const proj = projetosCacheLocal.find(p => p.id === projId);
+            if (!projId || !proj || precoFinal <= 0 || !dataV) {
+                return alert('Por favor, selecione um projeto e insira o valor final acordado.');
+            }
+
+            const custoP = parseFloat(proj.custo_total);
+            const lucroL = precoFinal - custoP;
+
+            btnRegistrarVenda.disabled = true;
+            
+            const { error: errorVenda } = await _supabase.from('vendas_3d').insert([{
+                projeto_id: projId,
+                nome_projeto: proj.nome_projeto,
+                cliente: cliente,
+                preco_venda_final: precoFinal,
+                custo_producao_retido: custoP,
+                lucro_liquido: lucroL,
+                data_venda: dataV,
+                user_id: usuarioAtual.id
+            }]);
+
+            if (errorVenda) {
+                alert('Erro ao processar faturamento: ' + errorVenda.message);
+                btnRegistrarVenda.disabled = false;
+                return;
+            }
+
+            await _supabase.from('projetos_3d').update({ status: 'Vendido' }).eq('id', projId);
+
+            btnRegistrarVenda.disabled = false;
+            vendaCliente.value = '';
+            vendaSelectProjeto.value = '';
+            vendaBoxInfo.classList.add('hidden');
+            vendaPrecoFinal.value = '';
+            document.getElementById('vendaData').valueAsDate = new Date();
+
+            alert('Faturamento consolidado com sucesso e status atualizado!');
+            carregarProjetos3d(); 
+            carregarVendasEfetuadas();
+        });
+
+        async function carregarVendasEfetuadas() {
+            const { data, error } = await _supabase.from('vendas_3d').select('*').order('data_venda', { ascending: false });
+            if (error) return;
+
+            if (!data || data.length === 0) {
+                listaVendasEfetuadas.innerHTML = '<p class="text-gray-500 text-sm italic">Nenhum faturamento registrado.</p>';
+                totBruto.innerText = 'R$ 0,00';
+                totCusto.innerText = 'R$ 0,00';
+                totLiquido.innerText = 'R$ 0,00';
+                return;
+            }
+
+            let somaBruto = 0; let somaCusto = 0; let somaLiquido = 0;
+
+            listaVendasEfetuadas.innerHTML = data.map(v => {
+                somaBruto += parseFloat(v.preco_venda_final);
+                somaCusto += parseFloat(v.custo_producao_retido);
+                somaLiquido += parseFloat(v.lucro_liquido);
+
+                const dataF = v.data_venda ? v.data_venda.split('-').reverse().join('/') : 'S/D';
                 return `
-                    <div class="bg-gray-700 p-4 rounded border border-gray-600">
-                        <h3 class="font-bold">${proj.nome_projeto}</h3>
-                        <span class="text-[9px] ${statusColor} px-2 py-1 rounded uppercase">${proj.status}</span>
-                        <button onclick="baixarArquivoOriginal3mf('${proj.id}')" class="text-xs text-sky-400 mt-2 block hover:underline">📦 Baixar .3mf</button>
+                    <div class="bg-gray-700 p-2.5 rounded border border-gray-600 flex justify-between items-center text-xs">
+                        <div>
+                            <span class="font-bold text-white text-sm block">${v.nome_projeto}</span>
+                            <span class="text-gray-400">Comprador: ${v.cliente} | Dia: ${dataF}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-green-400 font-black text-sm block">R$ ${parseFloat(v.preco_venda_final).toFixed(2)}</span>
+                            <button onclick="deletarVenda('${v.id}')" class="text-[10px] text-red-400 hover:underline">Estornar</button>
+                        </div>
                     </div>
                 `;
             }).join('');
+
+            totBruto.innerText = `R$ ${somaBruto.toFixed(2)}`;
+            totCusto.innerText = `R$ ${somaCusto.toFixed(2)}`;
+            totLiquido.innerText = `R$ ${somaLiquido.toFixed(2)}`;
         }
 
-        // --- RESTANTE DAS FUNÇÕES (LOGIN, ESTOQUE, VENDAS) ---
-        // Mantenha as suas funções existentes aqui abaixo
-        function mudarAba(aba) {
-            document.querySelectorAll('.aba-conteudo').forEach(a => a.classList.add('hidden'));
-            document.getElementById('view-' + aba).classList.remove('hidden');
-        }
-        
-        // Listener de arquivo 3mf
-        document.getElementById('projArquivo3mf').addEventListener('change', e => {
-            const file = e.target.files[0];
-            if (!file) return;
+        window.deletarVenda = async function(id) {
+            if (confirm('Deseja estornar e remover esta movimentação financeira?')) {
+                const { error } = await _supabase.from('vendas_3d').delete().eq('id', id);
+                if (error) alert(error.message);
+                else carregarVendasEfetuadas();
+            }
+        };
+
+        // --- ARQUIVOS E IMAGENS ---
+        projImagem.addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                imagemBase64Projeto = evt.target.result; imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden');
+            }; reader.readAsDataURL(file);
+        });
+
+        // CONVERSÃO COMPLETA EM STRING BASE64 PURA PARA ARQUIVAMENTO NO SUPABASE
+        projArquivo3mf.addEventListener('change', function(e) {
+            const file = e.target.files[0]; 
+            if (!file) {
+                nomeDo3mfProjeto = null;
+                arquivo3mfBase64 = null;
+                lblTxt3mfCarregado.innerText = '';
+                return;
+            }
             nomeDo3mfProjeto = file.name;
             const reader = new FileReader();
-            reader.onload = evt => { arquivo3mfBase64 = evt.target.result; document.getElementById('lblTxt3mfCarregado').innerText = '✓ Carregado: ' + file.name; };
+            reader.onload = function(evt) {
+                arquivo3mfBase64 = evt.target.result; 
+                lblTxt3mfCarregado.innerText = `✓ Carregado: ${nomeDo3mfProjeto}`;
+            };
             reader.readAsDataURL(file);
         });
+
+        // --- ENGINE DE COMPONENTES DE ESTRUTURA ---
+        btnIncluirPeca.addEventListener('click', () => {
+            const nome = pecaNome.value.trim();
+            const peso = parseFloat(pecaPeso.value) || 0;
+            
+            const horas = parseFloat(pecaTempoHoras.value) || 0;
+            const minutos = parseFloat(pecaTempoMinutos.value) || 0;
+            const tempoTotalH = horas + (minutos / 60);
+            
+            const custoPorGrama = parseFloat(pecaSelectFilamento.value);
+            const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
+            
+            if (!nome || peso <= 0 || tempoTotalH <= 0) return alert('Informe os parâmetros da peça corretamente.');
+            
+            const custoComponente = (peso * custoPorGrama) + (tempoTotalH * 1.50);
+            
+            const dadosPeca = { 
+                nome_peca: nome, 
+                peso_g: peso, 
+                tempo_h: tempoTotalH, 
+                custo_calculado: custoComponente, 
+                filamento_label: textoFilamento 
+            };
+
+            if (idPecaEmEdicaoIndex !== null) {
+                pecasProjetoAtual[idPecaEmEdicaoIndex] = dadosPeca;
+                idPecaEmEdicaoIndex = null;
+                btnIncluirPeca.innerText = '+ Incluir';
+            } else {
+                pecasProjetoAtual.push(dadosPeca);
+            }
+            
+            pecaNome.value = '';
+            pecaTempoHoras.value = 2;
+            pecaTempoMinutos.value = 0;
+            renderizarPecasDoEscopo();
+        });
+
+        function renderizarPecasDoEscopo() {
+            if (pecasProjetoAtual.length === 0) { 
+                gridPecasProjeto.innerHTML = '<p class="text-gray-500 italic">Nenhuma peça adicionada a este projeto ainda.</p>'; 
+                atualizarAcumuladoresMaster(); 
+                return; 
+            }
+            gridPecasProjeto.innerHTML = pecasProjetoAtual.map((p, index) => {
+                const totalMinsGlobal = Math.round(p.tempo_h * 60);
+                const hExibir = Math.floor(totalMinsGlobal / 60);
+                const mExibir = totalMinsGlobal % 60;
+                return `
+                    <div class="bg-gray-800 p-2 rounded border border-gray-700 flex justify-between items-center">
+                        <div>
+                            <span class="font-bold text-sky-300 block">${p.nome_peca}</span>
+                            <span class="text-[10px] text-gray-400">${p.peso_g}g | ${hExibir}h ${mExibir}m | ${p.filamento_label.split('-')[0]}</span>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <span class="text-amber-500 font-medium">R$ ${p.custo_calculado.toFixed(2)}</span>
+                            <div class="flex gap-2 text-sm">
+                                <button onclick="editarComponenteDoEscopo(${index})" title="Editar Peça" class="text-sky-400 hover:text-sky-300 font-bold">✏️</button>
+                                <button onclick="removerPecaDoEscopo(${index})" title="Remover Peça" class="text-red-400 hover:text-red-300 font-bold">✕</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            atualizarAcumuladoresMaster();
+        }
+
+        window.removerPecaDoEscopo = function(index) { 
+            if(idPecaEmEdicaoIndex === index) {
+                idPecaEmEdicaoIndex = null;
+                btnIncluirPeca.innerText = '+ Incluir';
+                pecaNome.value = '';
+            }
+            pecasProjetoAtual.splice(index, 1); 
+            renderizarPecasDoEscopo(); 
+        };
+
+        window.editarComponenteDoEscopo = function(index) {
+            const p = pecasProjetoAtual[index];
+            idPecaEmEdicaoIndex = index;
+            
+            pecaNome.value = p.nome_peca;
+            pecaPeso.value = p.peso_g;
+            
+            const totalMins = Math.round(p.tempo_h * 60);
+            pecaTempoHoras.value = Math.floor(totalMins / 60);
+            pecaTempoMinutos.value = totalMins % 60;
+            
+            for (let i = 0; i < pecaSelectFilamento.options.length; i++) {
+                if (pecaSelectFilamento.options[i].text === p.filamento_label) {
+                    pecaSelectFilamento.selectedIndex = i;
+                    break;
+                }
+            }
+            
+            btnIncluirPeca.innerText = '💾 Salvar Peça';
+            pecaNome.focus();
+        };
+
+        function atualizarAcumuladoresMaster() {
+            let tempoTotal = 0; let pesoTotal = 0; let custoTotal = 0;
+            pecasProjetoAtual.forEach(p => { tempoTotal += p.tempo_h; pesoTotal += p.peso_g; custoTotal += p.custo_calculado; });
+            const margemPorcentagem = parseFloat(projMargemPorcentagem.value) || 0;
+            const precoVendaFinal = custoTotal * (1 + (margemPorcentagem / 100));
+            
+            const totalMinsAcumulados = Math.round(tempoTotal * 60);
+            const hAcumuladas = Math.floor(totalMinsAcumulados / 60);
+            const mAcumuladas = totalMinsAcumulados % 60;
+
+            resumoTempo.innerText = `${hAcumuladas}h ${mAcumuladas}m`; 
+            resumoPeso.innerText = `${pesoTotal}g`; 
+            resumoCusto.innerText = `R$ ${custoTotal.toFixed(2)}`; 
+            resumoPrecoVenda.innerText = `R$ ${precoVendaFinal.toFixed(2)}`;
+        }
+        projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
+
+        btnSalvarProjetoCompleto.addEventListener('click', async () => {
+            const nomeProjeto = projNome.value.trim(); const margem = parseFloat(projMargemPorcentagem.value) || 0; const statusAtual = projStatus.value; const dataConclusao = projDataConclusao.value || null;
+            if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
+            if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça para poder salvar.');
+            let tempoTotalMin = 0; let pesoTotalG = 0; let custoTotalAcumulado = 0;
+            pecasProjetoAtual.forEach(p => { tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoTotalAcumulado += p.custo_calculado; });
+            const precoVendaFinal = custoTotalAcumulado * (1 + (margem / 100));
+            btnSalvarProjetoCompleto.disabled = true;
+
+            let payload = { 
+                nome_projeto: nomeProjeto, 
+                imagem_base64: imagemBase64Projeto, 
+                nome_arquivo_3mf: nomeDo3mfProjeto, 
+                arquivo_3mf_data: arquivo3mfBase64, 
+                pecas: pecasProjetoAtual, 
+                margem_lucro_porcentagem: margem, 
+                custo_total: custoTotalAcumulado, 
+                preco_venda_total: precoVendaFinal, 
+                tempo_total_min: tempoTotalMin, 
+                peso_total_g: pesoTotalG, 
+                status: statusAtual, 
+                data_conclusao: dataConclusao 
+            };
+
+            let query = idProjetoEmEdicao 
+                ? _supabase.from('projetos_3d').update([payload]).eq('id', idProjetoEmEdicao)
+                : _supabase.from('projetos_3d').insert([Object.assign(payload, { user_id: usuarioAtual.id })]);
+
+            const { error } = await query; btnSalvarProjetoCompleto.disabled = false;
+            if (error) alert('Falha crítica ao persistir no banco:\n' + error.message);
+            else { 
+                alert(idProjetoEmEdicao ? 'Projeto atualizado!' : 'Novo projeto registrado!'); 
+                limparFormularioProjeto(); 
+                carregarProjetos3d(); 
+            }
+        });
+
+        // --- ATENÇÃO: FIX DA PERSISTÊNCIA DO FILE EM MEMÓRIA ---
+        function limparFormularioProjeto() {
+            idProjetoEmEdicao = null; 
+            idPecaEmEdicaoIndex = null;
+            arquivo3mfBase64 = null; 
+            nomeDo3mfProjeto = null;
+            btnIncluirPeca.innerText = '+ Incluir';
+            projNome.value = ''; 
+            projStatus.value = 'Aguardando Impressão'; 
+            projDataConclusao.value = ''; 
+            projImagem.value = ''; 
+            projArquivo3mf.value = ''; 
+            imagemBase64Projeto = null; 
+            lblTxt3mfCarregado.innerText = ''; 
+            previewContainer.classList.add('hidden'); 
+            pecasProjetoAtual = []; 
+            btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
+            btnCancelarEdicao.classList.add('hidden'); 
+            renderizarPecasDoEscopo();
+        }
+        btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
+
+        window.editarProjeto3d = function(id) {
+            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto não localizado.');
+            idProjetoEmEdicao = proj.id; 
+            projNome.value = proj.nome_projeto; 
+            projStatus.value = proj.status || 'Aguardando Impressão'; 
+            projDataConclusao.value = proj.data_conclusao || ''; 
+            projMargemPorcentagem.value = proj.margem_lucro_porcentagem; 
+            imagemBase64Projeto = proj.imagem_base64;
+            
+            if (imagemBase64Projeto) { 
+                imgPreview.src = imagemBase64Projeto; 
+                previewContainer.classList.remove('hidden'); 
+            } else { 
+                previewContainer.classList.add('hidden'); 
+            }
+            
+            nomeDo3mfProjeto = proj.nome_arquivo_3mf; 
+            arquivo3mfBase64 = proj.arquivo_3mf_data || null;
+            lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Retido: ${nomeDo3mfProjeto}` : ''; 
+            
+            pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas)); 
+            renderizarPecasDoEscopo();
+            
+            btnSalvarProjetoCompleto.innerText = '🔄 Atualizar Projeto'; 
+            btnCancelarEdicao.classList.remove('hidden'); 
+            projNome.scrollIntoView({ behavior: 'smooth' });
+        };
+
+        window.duplicarProjeto3d = async function(id) {
+            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Projeto original não localizado.');
+            if (confirm(`Deseja duplicar a estrutura do projeto "${proj.nome_projeto}"?`)) {
+                const pecasClonadas = JSON.parse(JSON.stringify(proj.pecas));
+                const { error } = await _supabase.from('projetos_3d').insert([{ nome_projeto: `${proj.nome_projeto} (Cópia)`, imagem_base64: proj.imagem_base64, nome_arquivo_3mf: proj.nome_arquivo_3mf, arquivo_3mf_data: proj.arquivo_3mf_data, pecas: pecasClonadas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total, preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g, status: 'Aguardando Impressão', data_conclusao: null, user_id: usuarioAtual.id }]);
+                if (error) alert('Erro ao duplicar registro: ' + error.message); else { alert('Projeto clonado!'); carregarProjetos3d(); }
+            }
+        };
+
+        window.deletarProjeto3d = async function(id) {
+            if (confirm('Deseja realmente excluir permanentemente este projeto do portfólio?')) {
+                const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
+                if (error) alert('Erro ao excluir projeto: ' + error.message);
+                else { alert('Projeto removido com sucesso!'); carregarProjetos3d(); }
+            }
+        };
+
+        // --- DOWNLOAD DO ARQUIVO .3MF NATIVO E BINÁRIO ---
+        window.baixarArquivoOriginal3mf = function(id) {
+            const proj = projetosCacheLocal.find(p => p.id === id);
+            if (!proj || !proj.arquivo_3mf_data) {
+                return alert('Nenhum arquivo físico real .3mf foi anexado a este projeto.');
+            }
+            try {
+                const base64Data = proj.arquivo_3mf_data;
+                const partes = base64Data.split(',');
+                const conteudoBase64 = partes[1] || partes[0];
+                
+                const bytesBinarios = atob(conteudoBase64);
+                const tamanho = bytesBinarios.length;
+                const buffer = new Uint8Array(tamanho);
+                
+                for (let i = 0; i < tamanho; i++) {
+                    buffer[i] = bytesBinarios.charCodeAt(i);
+                }
+                
+                const arquivoBlob = new Blob([buffer], { type: 'application/octet-stream' });
+                const link = document.createElement('a');
+                link.href = URL.createObjectURL(arquivoBlob);
+                link.download = proj.nome_arquivo_3mf || `${proj.nome_projeto.toLowerCase().replace(/[^a-z0-9]/g, '_')}.3mf`;
+                link.click();
+                URL.revokeObjectURL(link.href);
+            } catch (e) {
+                alert('Erro ao reconstruir o arquivo binário .3mf para download: ' + e.message);
+            }
+        };
+
+        // --- SISTEMA DE ORDENAÇÃO DINÂMICA DO PORTFÓLIO ---
+        selectOrdenacaoPortfolio.addEventListener('change', () => {
+            renderizarProjetosOrdenados();
+        });
+
+        function renderizarProjetosOrdenados() {
+            const criterio = selectOrdenacaoPortfolio.value;
+            let projetosOrdenados = [...projetosCacheLocal];
+
+            projetosOrdenados.sort((a, b) => {
+                let valA = a[criterio];
+                let valB = b[criterio];
+
+                if (typeof valA === 'string') {
+                    return valA.localeCompare(valB);
+                }
+                if (criterio === 'created_at') {
+                    return new Date(valB) - new Date(valA);
+                }
+                return valB - valA;
+            });
+
+            const container = document.getElementById('listaProjetosSalvos');
+            if (projetosOrdenados.length === 0) { 
+                container.innerHTML = '<p class="text-gray-500 text-sm italic py-2">Nenhum projeto gravado.</p>'; 
+                return; 
+            }
+
+            container.innerHTML = projetosOrdenados.map(proj => {
+// Exemplo de como ficaria a linha da imagem no .map()
+const imgTag = proj.imagem_base64 
+    ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700">
+         <img src="${proj.imagem_base64}" loading="lazy" class="w-full h-44 object-contain rounded-t-lg">
+       </div>` 
+    : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
+	
+                const tag3mf = proj.nome_arquivo_3mf 
+                    ? `<button onclick="baixarArquivoOriginal3mf('${proj.id}')" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full font-semibold">📦 Baixar fatiamento: ${proj.nome_arquivo_3mf} ⬇️</button>` 
+                    : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum arquivo fatiador carregado</span>`;
+                
+                const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
+// Localize esta linha dentro da função carregarProjetos3d()
+const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                  : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                  : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' // Adicione esta linha
+                  : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';                
+                const subPecasHtml = proj.pecas.map(p => {
+                    const totalMinsGlobal = Math.round(p.tempo_h * 60);
+                    return `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span class="truncate max-w-[120px]">${p.nome_peca} (${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m)</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`;
+                }).join('');
+
+                const masterHours = Math.floor(proj.tempo_total_min / 60);
+                const masterMins = proj.tempo_total_min % 60;
+
+                return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${masterHours}h ${masterMins}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span></div><p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2"><span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button></div></div></div>`;
+            }).join('');
+        }
+
+        async function carregarProjetos3d() {
+    // Adicionamos .range(0, 9) para carregar apenas os primeiros 10 itens
+    const { data, error } = await _supabase
+        .from('projetos_3d')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .range(0, 9); 
+
+    if (error) {
+        console.error("Erro ao carregar projetos:", error);
+        return;
+    }
+    
+    projetosCacheLocal = data || [];
+    renderizarProjetosOrdenados();
+    carregarDropdownProjetosVenda();
+}
+
+        // --- LÓGICA DO ESTOQUE ---
+        btnSalvarFilamento.addEventListener('click', async () => {
+            const nome = filNome.value.trim(); const fab = filFabricante.value.trim() || 'Desconhecido'; const cor = filCor.value.trim() || 'Incolor'; const tipo = filTipo.value; const dataCompra = filDataCompra.value; const preco = parseFloat(filPreco.value) || 0; const pTotal = parseFloat(filPesoTotal.value) || 0; const pAtual = parseFloat(filPesoAtual.value) || 0;
+            if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios corretamente.');
+            btnSalvarFilamento.disabled = true;
+            const { error } = await _supabase.from('estoque_materiais').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
+            btnSalvarFilamento.disabled = false;
+            if (error) alert('Erro: ' + error.message); else { filNome.value = ''; filCor.value = ''; filFabricante.value = ''; carregarFilamentos(); }
+        });
+
+        async function carregarFilamentos() {
+            const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
+            if (error) return; filamentosCache = data || [];
+            atualizarDropdownsDeUso(); atualizarDropdownsFiltros(); filtrarERenderizarFilamentos();
+        }
+
+        function atualizarDropdownsDeUso() {
+            selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
+            pecaSelectFilamento.innerHTML = '<option value="0.12">Preço Padrão (R$ 0,12 /g)</option>';
+            const chavesRegistradas = new Set();
+            filamentosCache.forEach(item => {
+                const fab = (item.fabricante || 'Desconhecido').trim(); const cor = (item.cor || 'Incolor').trim(); const chaveUnica = `${fab} | ${item.tipo} | ${cor}`.toLowerCase();
+                if (!chavesRegistradas.has(chaveUnica)) {
+                    chavesRegistradas.add(chaveUnica); const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
+                    const opt1 = document.createElement('option'); opt1.value = custoPorGramaItem; opt1.textContent = `${fab} - ${item.tipo} (${cor})`; selectFilamento.appendChild(opt1);
+                    const opt2 = document.createElement('option'); opt2.value = custoPorGramaItem; opt2.textContent = `${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
+                }
+            });
+            calcularAbaBase(); atualizarAcumuladoresMaster();
+        }
+
+        function atualizarDropdownsFiltros() {
+            const fornecedores = new Set(); const cores = new Set(); const anos = new Set();
+            filamentosCache.forEach(item => {
+                const fab = (item.fabricante || 'Desconhecido').trim(); const cor = (item.cor || 'Incolor').trim(); fornecedores.add(fab); cores.add(cor);
+                if (item.data_compra) { const ano = item.data_compra.split('-')[0]; if (ano) anos.add(ano); }
+            });
+            const selFornecedor = filtroFornecedor.value || "Todos"; const selCor = filtroCor.value || "Todos"; const selAno = filtroAno.value || "Todos";
+            filtroFornecedor.innerHTML = '<option value="Todos">Todos</option>'; Array.from(fornecedores).sort().forEach(f => { filtroFornecedor.innerHTML += `<option value="${f}">${f}</option>`; });
+            filtroCor.innerHTML = '<option value="Todos">Todos</option>'; Array.from(cores).sort().forEach(c => { filtroCor.innerHTML += `<option value="${c}">${c}</option>`; });
+            filtroAno.innerHTML = '<option value="Todos">Todos</option>'; Array.from(anos).sort((a, b) => b - a).forEach(a => { filtroAno.innerHTML += `<option value="${a}">${a}</option>`; });
+            if (fornecedores.has(selFornecedor)) filtroFornecedor.value = selFornecedor; if (cores.has(selCor)) filtroCor.value = selCor; if (anos.has(selAno)) filtroAno.value = selAno;
+        }
+
+        function filtrarERenderizarFilamentos() {
+            const tFiltro = filtroTipo.value; const fFiltro = filtroFornecedor.value; const cFiltro = filtroCor.value; const anoFiltro = filtroAno.value;
+            const dadosFiltrados = filamentosCache.filter(item => {
+                const fabItem = (item.fabricante || 'Desconhecido').trim(); const corItem = (item.cor || 'Incolor').trim(); const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
+                return (tFiltro === "Todos" || item.tipo === tFiltro) && (fFiltro === "Todos" || fabItem === fFiltro) && (cFiltro === "Todos" || corItem === cFiltro) && (anoFiltro === "Todos" || anoItem === anoFiltro);
+            });
+            const targetLista = document.getElementById('listaFilamentos');
+            if (dadosFiltrados.length === 0) { targetLista.innerHTML = '<p class="text-gray-500 text-sm italic text-center p-4">Nenhum lote corresponde aos filtros.</p>'; return; }
+            targetLista.innerHTML = dadosFiltrados.map(item => {
+                const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
+                return `<div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400 font-normal">[${item.tipo}]</span></h3><p class="text-xs text-gray-300">Marca: ${(item.fabricante||'Desconhecido').trim()} | Cor: ${(item.cor||'Incolor').trim()}</p><p class="text-[11px] text-gray-400">Data: ${dataFormatada} | Saldo: ${item.peso_atual_g}g</p></div><div class="text-right"><span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span><button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div></div>`;
+            }).join('');
+        }
+
+        async function deletarFilamento(id) {
+            if (confirm('Deseja remover esta compra?')) {
+                const { error } = await _supabase.from('estoque_materiais').delete().eq('id', id);
+                if (error) alert('Erro ao deletar filamento: ' + error.message); else carregarFilamentos();
+            }
+        }
+
+        // --- CALCULADORA DE ORÇAMENTOS BASE ---
+        function calcularAbaBase() {
+            const peso = parseFloat(pesoInput.value) || 0; const tempo = parseFloat(tempoInput.value) || 0;
+            const custoPorGrama = selectFilamento.value === "padrao" ? 0.12 : parseFloat(selectFilamento.value);
+            const custoTotal = (peso * custoPorGrama) + (tempo * 1.50); const vendaSugerida = custoTotal * 3;
+            custoTexto.innerText = `R$ ${vendaSugerida.toFixed(2)}`; labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
+            return vendaSugerida;
+        }
+        pesoInput.addEventListener('input', calcularAbaBase); tempoInput.addEventListener('input', calcularAbaBase); selectFilamento.addEventListener('change', calcularAbaBase);
+
+        async function carregarModelos() {
+            const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
+            if (error) return;
+            listaContainer.innerHTML = data.map(item => `<div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-white">${item.nome_modelo}</h3><p class="text-xs text-gray-400">${item.peso_estimado_g}g | ${(item.tempo_estimado_min / 60).toFixed(1)}h</p></div><div class="text-right"><span class="text-green-400 font-bold text-sm block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span><button onclick="deletarModelo('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div></div>`).join('');
+        }
+
+        btnSalvar.addEventListener('click', async () => {
+            const nome = nomeInput.value.trim(); const peso = parseFloat(pesoInput.value) || 0; const tempoHoras = parseFloat(tempoInput.value) || 0; const precoVenda = calcularAbaBase();
+            if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados.');
+            await _supabase.from('catalogo_modelos').insert([{ nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.id }]);
+            nomeInput.value = ''; carregarModelos();
+        });
+
+        async function deletarModelo(id) { if (confirm('Excluir?')) { await _supabase.from('catalogo_modelos').delete().eq('id', id); carregarModelos(); } }
+        
+        // --- LOGICA DE ALTERNAR ENTRE LOGIN E CADASTRO ---
+        const btnAlternarAuth = document.getElementById('btnAlternarAuth');
+        const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
+
+        btnEsqueciSenha.addEventListener('click', () => {
+            window.modoAbas = 'recuperar';
+            document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+            btnAuthPrincipal.innerText = 'Enviar Código';
+            btnAlternarAuth.innerText = 'Voltar ao Login';
+            
+            document.getElementById('containerSenha').classList.add('hidden');
+            document.getElementById('btnGoogleAuth').classList.add('hidden');
+            document.getElementById('divisorSocial').classList.add('hidden');
+        });
+
+        window.modoAbas = 'login'; 
+
+        btnAlternarAuth.addEventListener('click', () => {
+            if (window.modoAbas === 'login') {
+                window.modoAbas = 'cadastro';
+                document.getElementById('tituloAuth').innerText = 'Criar Nova Conta';
+                btnAuthPrincipal.innerText = 'Cadastrar';
+                btnAlternarAuth.innerText = 'Já tem conta? Entre aqui';
+                document.getElementById('dicaSenha').classList.remove('hidden');
+            } else {
+                window.modoAbas = 'login';
+                document.getElementById('tituloAuth').innerText = 'Entrar no Sistema';
+                btnAuthPrincipal.innerText = 'Entrar';
+                btnAlternarAuth.innerText = 'Não tem conta? Cadastre-se';
+                document.getElementById('dicaSenha').classList.add('hidden');
+                
+                document.getElementById('containerSenha').classList.remove('hidden');
+                document.getElementById('btnGoogleAuth').classList.remove('hidden');
+                document.getElementById('divisorSocial').classList.remove('hidden');
+            }
+        });
+
+        // --- LÓGICA DO BOTÃO PRINCIPAL (LOGIN / CADASTRO / RECUPERAR) ---
+        btnAuthPrincipal.addEventListener('click', async () => {
+            const email = document.getElementById('authEmail').value.trim();
+            const password = document.getElementById('authSenha').value;
+            const modo = window.modoAbas || 'login'; 
+
+            if (!email) return alert('Por favor, informe seu e-mail.');
+
+            if (modo === 'login') {
+                if (!password) return alert('Informe a senha.');
+                const { error } = await _supabase.auth.signInWithPassword({ email, password });
+                if (error) alert('Erro ao entrar: ' + error.message);
+            } 
+            else if (modo === 'cadastro') {
+                if (!password) return alert('Informe uma senha.');
+                if (password.length < 6) return alert('A senha precisa ter no mínimo 6 caracteres.');
+                const { error } = await _supabase.auth.signUp({ email, password });
+                if (error) alert('Erro ao cadastrar: ' + error.message);
+                else alert('Cadastro realizado com sucesso! Verifique seu e-mail.');
+            } 
+            else if (modo === 'recuperar') {
+                const { error } = await _supabase.auth.resetPasswordForEmail(email, { 
+                    redirectTo: window.location.origin + window.location.pathname 
+                });
+                if (error) alert('Erro ao enviar e-mail: ' + error.message);
+                else alert('E-mail de recuperação enviado para ' + email);
+            }
+        });     
     </script>
 </body>
 </html>
