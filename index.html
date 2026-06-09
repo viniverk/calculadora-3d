@@ -127,11 +127,11 @@
                     <div>
                         <label class="block text-xs font-medium mb-1 text-gray-300">Status do Projeto</label>
                         <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
-                            <option value="Aguardando Impressão">Aguardando Impressão</option>
-                            <option value="Imprimindo">Imprimindo</option>
-                            <option value="Projeto Finalizado">Projeto Finalizado</option>
-                            <option value="Vendido">Vendido</option>
-                        </select>
+    <option value="Aguardando Impressão">Aguardando Impressão</option>
+    <option value="Imprimindo">Imprimindo</option>
+    <option value="Montagem">Montagem</option> <option value="Projeto Finalizado">Projeto Finalizado</option>
+    <option value="Vendido">Vendido</option>
+</select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium mb-1 text-gray-300">Data de Conclusão</label>
@@ -1056,8 +1056,12 @@
                     : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum arquivo fatiador carregado</span>`;
                 
                 const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
-                const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';
-                
+// Localize esta linha dentro da função carregarProjetos3d()
+const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                  : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                  : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                  : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' // Adicione esta linha
+                  : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';                
                 const subPecasHtml = proj.pecas.map(p => {
                     const totalMinsGlobal = Math.round(p.tempo_h * 60);
                     return `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span class="truncate max-w-[120px]">${p.nome_peca} (${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m)</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`;
