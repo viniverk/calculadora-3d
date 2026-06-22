@@ -127,11 +127,12 @@
                     <div>
                         <label class="block text-xs font-medium mb-1 text-gray-300">Status do Projeto</label>
                         <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
-    <option value="Aguardando Impressão">Aguardando Impressão</option>
-    <option value="Imprimindo">Imprimindo</option>
-    <option value="Montagem">Montagem</option> <option value="Projeto Finalizado">Projeto Finalizado</option>
-    <option value="Vendido">Vendido</option>
-</select>
+                            <option value="Aguardando Impressão">Aguardando Impressão</option>
+                            <option value="Imprimindo">Imprimindo</option>
+                            <option value="Montagem">Montagem</option> 
+                            <option value="Projeto Finalizado">Projeto Finalizado</option>
+                            <option value="Vendido">Vendido</option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium mb-1 text-gray-300">Data de Conclusão</label>
@@ -146,9 +147,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Arquivo de Fatiamento (.3mf)</label>
-                    <input type="file" id="projArquivo3mf" accept=".3mf" class="w-full text-xs text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-gray-700 file:text-gray-200 hover:file:bg-gray-600">
-                    <p id="lblTxt3mfCarregado" class="text-[11px] text-gray-400 mt-1 italic"></p>
+                    <label class="block text-sm font-medium mb-1">Link de Download do Arquivo (.3mf)</label>
+                    <input type="url" id="projLink3mf" placeholder="https://drive.google.com/..." class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-white text-sm">
                 </div>
             </div>
 
@@ -243,11 +243,6 @@
                     </div>
                 </div>
                 <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
-				<div id="containerCarregarMais" class="text-center py-4 xl:col-span-3">
-    <button id="btnCarregarMais" onclick="carregarMaisProjetos()" class="bg-gray-700 hover:bg-gray-600 text-sky-400 font-bold py-2 px-6 rounded-lg text-sm transition">
-        Ver mais projetos...
-    </button>
-</div>
             </div>
         </div>
 
@@ -429,7 +424,7 @@
                     <button id="btnSalvar" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded transition">Salvar no Catálogo</button>
                 </div>
             </div>
-            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-purple-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-purple-300 border-b border-gray-700 pb-2">Seu Catálogo de Preços</h2>
                 <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2"></div>
             </div>
@@ -483,8 +478,7 @@
         const projImagem = document.getElementById('projImagem');
         const imgPreview = document.getElementById('imgPreview');
         const previewContainer = document.getElementById('previewContainer');
-        const projArquivo3mf = document.getElementById('projArquivo3mf');
-        const lblTxt3mfCarregado = document.getElementById('lblTxt3mfCarregado');
+        const projLink3mf = document.getElementById('projLink3mf');
 
         const pecaNome = document.getElementById('pecaNome');
         const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
@@ -696,7 +690,7 @@
             vendaPrecoFinal.value = '';
             document.getElementById('vendaData').valueAsDate = new Date();
 
-            alert('Faturamento consolidado com sucesso e status atualizado!');
+            alert('Faturamento consolidado com sucesso e status updated!');
             carregarProjetos3d(); 
             carregarVendasEfetuadas();
         });
@@ -755,24 +749,6 @@
             reader.onload = function(evt) {
                 imagemBase64Projeto = evt.target.result; imgPreview.src = imagemBase64Projeto; previewContainer.classList.remove('hidden');
             }; reader.readAsDataURL(file);
-        });
-
-        // CONVERSÃO COMPLETA EM STRING BASE64 PURA PARA ARQUIVAMENTO NO SUPABASE
-        projArquivo3mf.addEventListener('change', function(e) {
-            const file = e.target.files[0]; 
-            if (!file) {
-                nomeDo3mfProjeto = null;
-                arquivo3mfBase64 = null;
-                lblTxt3mfCarregado.innerText = '';
-                return;
-            }
-            nomeDo3mfProjeto = file.name;
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                arquivo3mfBase64 = evt.target.result; 
-                lblTxt3mfCarregado.innerText = `✓ Carregado: ${nomeDo3mfProjeto}`;
-            };
-            reader.readAsDataURL(file);
         });
 
         // --- ENGINE DE COMPONENTES DE ESTRUTURA ---
@@ -900,11 +876,13 @@
             const precoVendaFinal = custoTotalAcumulado * (1 + (margem / 100));
             btnSalvarProjetoCompleto.disabled = true;
 
+            const linkDownload = projLink3mf.value.trim();
+
             let payload = { 
                 nome_projeto: nomeProjeto, 
                 imagem_base64: imagemBase64Projeto, 
-                nome_arquivo_3mf: nomeDo3mfProjeto, 
-                arquivo_3mf_data: arquivo3mfBase64, 
+                nome_arquivo_3mf: linkDownload, 
+                arquivo_3mf_data: null, 
                 pecas: pecasProjetoAtual, 
                 margem_lucro_porcentagem: margem, 
                 custo_total: custoTotalAcumulado, 
@@ -939,9 +917,8 @@
             projStatus.value = 'Aguardando Impressão'; 
             projDataConclusao.value = ''; 
             projImagem.value = ''; 
-            projArquivo3mf.value = ''; 
+            projLink3mf.value = ''; 
             imagemBase64Projeto = null; 
-            lblTxt3mfCarregado.innerText = ''; 
             previewContainer.classList.add('hidden'); 
             pecasProjetoAtual = []; 
             btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -966,9 +943,8 @@
                 previewContainer.classList.add('hidden'); 
             }
             
-            nomeDo3mfProjeto = proj.nome_arquivo_3mf; 
-            arquivo3mfBase64 = proj.arquivo_3mf_data || null;
-            lblTxt3mfCarregado.innerText = nomeDo3mfProjeto ? `✓ Retido: ${nomeDo3mfProjeto}` : ''; 
+            projLink3mf.value = proj.nome_arquivo_3mf || '';
+            arquivo3mfBase64 = null;
             
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas)); 
             renderizarPecasDoEscopo();
@@ -992,36 +968,6 @@
                 const { error } = await _supabase.from('projetos_3d').delete().eq('id', id);
                 if (error) alert('Erro ao excluir projeto: ' + error.message);
                 else { alert('Projeto removido com sucesso!'); carregarProjetos3d(); }
-            }
-        };
-
-        // --- DOWNLOAD DO ARQUIVO .3MF NATIVO E BINÁRIO ---
-        window.baixarArquivoOriginal3mf = function(id) {
-            const proj = projetosCacheLocal.find(p => p.id === id);
-            if (!proj || !proj.arquivo_3mf_data) {
-                return alert('Nenhum arquivo físico real .3mf foi anexado a este projeto.');
-            }
-            try {
-                const base64Data = proj.arquivo_3mf_data;
-                const partes = base64Data.split(',');
-                const conteudoBase64 = partes[1] || partes[0];
-                
-                const bytesBinarios = atob(conteudoBase64);
-                const tamanho = bytesBinarios.length;
-                const buffer = new Uint8Array(tamanho);
-                
-                for (let i = 0; i < tamanho; i++) {
-                    buffer[i] = bytesBinarios.charCodeAt(i);
-                }
-                
-                const arquivoBlob = new Blob([buffer], { type: 'application/octet-stream' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(arquivoBlob);
-                link.download = proj.nome_arquivo_3mf || `${proj.nome_projeto.toLowerCase().replace(/[^a-z0-9]/g, '_')}.3mf`;
-                link.click();
-                URL.revokeObjectURL(link.href);
-            } catch (e) {
-                alert('Erro ao reconstruir o arquivo binário .3mf para download: ' + e.message);
             }
         };
 
@@ -1054,60 +1000,59 @@
             }
 
             container.innerHTML = projetosOrdenados.map(proj => {
-// Exemplo de como ficaria a linha da imagem no .map()
-const imgTag = proj.imagem_base64 
-    ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700">
-         <img src="${proj.imagem_base64}" loading="lazy" class="w-full h-44 object-contain rounded-t-lg">
-       </div>` 
-    : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
-	
+                const imgTag = proj.imagem_base64 
+                    ? `<div class="bg-gray-900/60 p-1 w-full border-b border-gray-700">
+                         <img src="${proj.imagem_base64}" loading="lazy" class="w-full h-44 object-contain rounded-t-lg">
+                       </div>` 
+                    : `<div class="w-full h-44 bg-gray-900 flex items-center justify-center text-gray-600 text-xs rounded-t-lg border-b border-gray-700">Sem Imagem Anexada</div>`;
+                
                 const tag3mf = proj.nome_arquivo_3mf 
-                    ? `<button onclick="baixarArquivoOriginal3mf('${proj.id}')" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full font-semibold">📦 Baixar fatiamento: ${proj.nome_arquivo_3mf} ⬇️</button>` 
-                    : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum arquivo fatiador carregado</span>`;
+                    ? `<a href="${proj.nome_arquivo_3mf}" target="_blank" class="text-[10px] text-sky-400 mt-1 truncate hover:underline block text-left w-full font-semibold">🔗 Acessar download .3mf ⬇️</a>` 
+                    : `<span class="text-[10px] text-gray-500 mt-1 block">Nenhum link de download fornecido</span>`;
                 
                 const dataConclusaoFormatada = proj.data_conclusao ? proj.data_conclusao.split('-').reverse().join('/') : 'Em aberto';
-// Localize esta linha dentro da função carregarProjetos3d()
-const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
-                  : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
-                  : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                  : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' // Adicione esta linha
-                  : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';                
-                const subPecasHtml = proj.pecas.map(p => {
+
+                const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                                  : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' 
+                                  : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                                  : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                  : 'bg-gray-600/30 text-gray-400 border border-gray-500/20';                
+                
+                const subPecasHtml = proj.pecas ? proj.pecas.map(p => {
                     const totalMinsGlobal = Math.round(p.tempo_h * 60);
                     return `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span class="truncate max-w-[120px]">${p.nome_peca} (${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m)</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`;
-                }).join('');
+                }).join('') : '';
 
-                const masterHours = Math.floor(proj.tempo_total_min / 60);
-                const masterMins = proj.tempo_total_min % 60;
+                const masterHours = Math.floor((proj.tempo_total_min || 0) / 60);
+                const masterMins = (proj.tempo_total_min || 0) % 60;
 
-                return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g}g | ${masterHours}h ${masterMins}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span></div><p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2"><span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas.length}):</span>${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button></div></div></div>`;
+                return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g || 0}g | ${masterHours}h ${masterMins}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase tracking-wider">${proj.status || 'Aguardando Impressão'}</span></div><p class="text-[11px] text-amber-400 font-semibold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p><p class="text-[10px] text-gray-400 mt-1">📅 Conclusão: <span class="text-gray-200 font-medium">${dataConclusaoFormatada}</span></p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2"><span class="text-[10px] text-gray-400 font-bold uppercase block mb-1">Sub-peças (${proj.pecas ? proj.pecas.length : 0}):</span>${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 hover:underline font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 hover:underline font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400 hover:underline">Excluir</button></div></div></div>`;
             }).join('');
         }
 
         async function carregarProjetos3d() {
-    // Adicionamos .range(0, 9) para carregar apenas os primeiros 10 itens
-    const { data, error } = await _supabase
-        .from('projetos_3d')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .range(0, 9); 
+            // Buscamos a lista completa do banco, sem limites (.range) de paginação para carregar todo o portfólio de uma vez
+            const { data, error } = await _supabase
+                .from('projetos_3d')
+                .select('*')
+                .order('created_at', { ascending: false }); 
 
-    if (error) {
-        console.error("Erro ao carregar projetos:", error);
-        return;
-    }
-    
-    projetosCacheLocal = data || [];
-    renderizarProjetosOrdenados();
-    carregarDropdownProjetosVenda();
-}
+            if (error) {
+                console.error("Erro ao carregar projetos:", error);
+                return;
+            }
+            
+            projetosCacheLocal = data || [];
+            renderizarProjetosOrdenados();
+            carregarDropdownProjetosVenda();
+        }
 
         // --- LÓGICA DO ESTOQUE ---
         btnSalvarFilamento.addEventListener('click', async () => {
             const nome = filNome.value.trim(); const fab = filFabricante.value.trim() || 'Desconhecido'; const cor = filCor.value.trim() || 'Incolor'; const tipo = filTipo.value; const dataCompra = filDataCompra.value; const preco = parseFloat(filPreco.value) || 0; const pTotal = parseFloat(filPesoTotal.value) || 0; const pAtual = parseFloat(filPesoAtual.value) || 0;
             if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios corretamente.');
             btnSalvarFilamento.disabled = true;
-            const { error } = await _supabase.from('estoque_materiais').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
+            const { error } = await _supabase.from('estoque_materiales').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
             btnSalvarFilamento.disabled = false;
             if (error) alert('Erro: ' + error.message); else { filNome.value = ''; filCor.value = ''; filFabricante.value = ''; carregarFilamentos(); }
         });
