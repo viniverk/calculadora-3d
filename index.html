@@ -565,23 +565,31 @@
         const modoPublicoAtivo = urlParams.get('modo') === 'publico';
 
         function verificarModoPublico() {
-            if (modoPublicoAtivo) {
-                // Isola a UI escondendo login e sidebar privada
-                telaAuth.style.setProperty('display', 'none', 'important');
-                sidebarApp.style.setProperty('display', 'none', 'important');
-                conteudoPainel.classList.remove('hidden', 'ml-64');
-                conteudoPainel.classList.add('p-4', 'w-full');
-                
-                const btnComp = document.getElementById('btnCompartilharCatalogo');
-                if(btnComp) btnComp.style.display = 'none';
+    if (modoPublicoAtivo) {
+        // Isola a UI escondendo login e sidebar privada
+        telaAuth.style.setProperty('display', 'none', 'important');
+        sidebarApp.style.setProperty('display', 'none', 'important');
+        conteudoPainel.classList.remove('hidden', 'ml-64');
+        conteudoPainel.classList.add('p-4', 'w-full');
+        
+        const btnComp = document.getElementById('btnCompartilharCatalogo');
+        if(btnComp) btnComp.style.display = 'none';
 
-                document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
-                document.getElementById('view-portfolio-cliente').classList.remove('hidden');
-                
-                // Dispara o loop estável para buscar o portfólio assim que a API REST estiver pronta
-                executarCargaPublicaEstavel();
-            }
-        }
+        // CORREÇÃO AQUI: Esconde todas e ativa a correta com a classe 'active'
+        document.querySelectorAll('.aba-conteudo').forEach(aba => {
+            aba.classList.remove('hidden', 'active');
+            aba.style.display = 'none'; // Força o reset visual
+        });
+        
+        const abaPortfolio = document.getElementById('view-portfolio-cliente');
+        abaPortfolio.classList.remove('hidden');
+        abaPortfolio.classList.add('active'); // Adiciona a classe que o teu CSS precisa
+        abaPortfolio.style.display = 'grid'; // Força o display
+        
+        // Dispara o loop para buscar os dados
+        executarCargaPublicaEstavel();
+    }
+}
 
         function executarCargaPublicaEstavel() {
             let tentativas = 0;
