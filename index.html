@@ -8,10 +8,13 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
+        .aba-conteudo { display: none; }
+        .aba-conteudo.active { display: grid; }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
+    <!-- TELA DE AUTENTICAÇÃO -->
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
@@ -63,6 +66,7 @@
         </div>
     </div>
 
+    <!-- SIDEBAR -->
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
@@ -83,7 +87,7 @@
 
                 <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="portfolio-cliente">
                     <span class="text-lg">🖼️</span>
-                    <span class="whitespace-nowrap label-texto">Portfólios (Clientes)</span>
+                    <span class="whitespace-nowrap label-texto">Portfólios</span>
                 </button>
 
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="vendas">
@@ -121,6 +125,7 @@
 
     <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
         
+        <!-- ABA IMPRESSÕES -->
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">1. Capa do Projeto</h2>
@@ -251,18 +256,24 @@
             </div>
         </div>
 
+        <!-- VIEW PORTFÓLIO COMPLETO PARA CLIENTES (SÓ IMAGEM E PREÇO) -->
         <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-700 pb-3 gap-2">
                     <div>
-                        <h2 class="text-2xl font-bold text-teal-400">Nosso Catálogo de Modelos 3D</h2>
+                        <h2 class="text-2xl font-bold text-teal-400">Catálogo de Modelos 3D</h2>
                         <p class="text-xs text-gray-400 mt-1">Apresentação limpa de valores e designs para encomendas.</p>
                     </div>
+                    <!-- BOTÃO ADICIONADO: COMPARTILHAR EXCLUSIVO -->
+                    <button id="btnCompartilharCatalogo" onclick="copiarLinkPublico()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition flex items-center gap-2">
+                        <span>🔗</span> <span id="txtCompartilhar">Compartilhar Catálogo</span>
+                    </button>
                 </div>
                 <div id="listaPortfolioClientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
         </div>
 
+        <!-- VIEW VENDAS -->
         <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-emerald-400 border-b border-gray-700 pb-2">Lançar Nova Venda</h2>
@@ -320,6 +331,7 @@
             </div>
         </div>
 
+        <!-- ABA ESTOQUE -->
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
@@ -405,6 +417,7 @@
             </div>
         </div>
 
+        <!-- ABA CALCULADORA -->
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
@@ -447,6 +460,7 @@
             </div>
         </div>
 
+        <!-- ABA ADMIN -->
         <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
             <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <div class="overflow-x-auto">
@@ -464,7 +478,6 @@
     </main>
 
     <script>
-        // URL da API Correta utilizando HTTPS - Evitando travamentos Postgres TCP
         const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -477,6 +490,8 @@
         let pecasProjetoAtual = []; 
         let idPecaEmEdicaoIndex = null;
         let imagemBase64Projeto = null; 
+        let arquivo3mfBase64 = null;
+        let nomeDo3mfProjeto = null;
 
         // Elementos DOM
         const telaAuth = document.getElementById('telaAutenticacao');
@@ -554,8 +569,56 @@
 
         document.getElementById('vendaData').valueAsDate = new Date();
 
-        // --- MANIPULAÇÃO DA SIDEBAR ---
+        // --- SISTEMA DE ISOLAMENTO DE LINK PÚBLICO (MÓDULO SEGURANÇA CLIENTE) ---
+        const urlParams = new URLSearchParams(window.location.search);
+        const modoPublicoAtivo = urlParams.get('modo') === 'publico';
+
+        function verificarModoPublico() {
+            if (modoPublicoAtivo) {
+                // Esconde login, sidebar e força margem zero na visualização
+                telaAuth.style.display = 'none';
+                sidebarApp.style.setProperty('display', 'none', 'important');
+                conteudoPainel.classList.remove('hidden', 'ml-64');
+                conteudoPainel.classList.add('p-4', 'w-full');
+                
+                // Esconde botão de compartilhar dentro da própria visão pública
+                const btnComp = document.getElementById('btnCompartilharCatalogo');
+                if(btnComp) btnComp.style.display = 'none';
+
+                // Redireciona diretamente e exclusivamente para a Aba de Clientes
+                document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
+                document.getElementById('view-portfolio-cliente').classList.remove('hidden');
+                
+                // Ignora Auth e carrega os dados públicos direto
+                carregarProjetosPublicos();
+            }
+        }
+
+        async function carregarProjetosPublicos() {
+            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
+            if (!error && data) {
+                projetosCacheLocal = data;
+                renderizerPortfolioCliente();
+            }
+        }
+
+        function copiarLinkPublico() {
+            const linkCompleto = `${window.location.origin}${window.location.pathname}?modo=publico`;
+            navigator.clipboard.writeText(linkCompleto).then(() => {
+                const txt = document.getElementById('txtCompartilhar');
+                txt.innerText = "✓ Link Copiado!";
+                setTimeout(() => { txt.innerText = "Compartilhar Catálogo"; }, 2500);
+            }).catch(err => {
+                alert("Copie o link: " + linkCompleto);
+            });
+        }
+
+        // Executa validação de link imediatamente na abertura da página
+        window.addEventListener('DOMContentLoaded', verificarModoPublico);
+
+        // --- SIDEBAR CONTROL ---
         btnToggleSidebar.addEventListener('click', () => {
+            if (modoPublicoAtivo) return;
             sidebarExpandido = !sidebarExpandido;
             if (sidebarExpandido) {
                 sidebarApp.classList.replace('w-20', 'w-64');
@@ -571,6 +634,7 @@
         });
 
         function mudarAba(abaDestino) {
+            if (modoPublicoAtivo) return; // Bloqueia navegação se for cliente
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
 
@@ -593,6 +657,7 @@
 
         // --- CONTROLE DE SESSÃO / AUTH ---
         _supabase.auth.onAuthStateChange(async (event, session) => {
+            if (modoPublicoAtivo) return; // Desativa monitoramento de login no link do cliente
             if (event === 'PASSWORD_RECOVERY') {
                 const novaSenha = prompt("Link de recuperação validado! Por favor, digite sua nova senha:");
                 if (novaSenha) {
@@ -744,13 +809,13 @@
             }
         };
 
-        // --- CONVERSÃO VISUAL E COMPONENTES MULTI-PEÇAS ---
+        // --- ENGINE DE COMPONENTES MULTI-PEÇAS ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
             const peso = parseFloat(pecaPeso.value) || 0;
             const horas = parseFloat(pecaTempoHoras.value) || 0;
-            const minutos = parseFloat(pecaTempoMinutos.value) || 0;
-            const tempoTotalH = horas + (minutos / 60);
+            const minutes = parseFloat(pecaTempoMinutos.value) || 0;
+            const tempoTotalH = horas + (minutes / 60);
             const custoPorGrama = parseFloat(pecaSelectFilamento.value);
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
             
@@ -824,7 +889,7 @@
         }
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
-        // --- PERSISTÊNCIA DOS PROJETOS NO BANCO ---
+        // --- SALVAMENTO E MANUTENÇÃO DE REGISTROS ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim(); const margem = parseFloat(projMargemPorcentagem.value) || 0; const statusAtual = projStatus.value; const dataConclusao = projDataConclusao.value || null;
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
@@ -848,7 +913,7 @@
                 : _supabase.from('projetos_3d').insert([Object.assign(payload, { user_id: usuarioAtual.id })]);
 
             const { error } = await query; btnSalvarProjetoCompleto.disabled = false;
-            if (error) alert('Falha ao persistir dados: ' + error.message);
+            if (error) alert('Falha ao salvar dados: ' + error.message);
             else { 
                 alert('Projeto registrado com sucesso!'); 
                 limparFormularioProjeto(); carregarProjetos3d(); 
@@ -897,7 +962,7 @@
             }
         };
 
-        // --- SISTEMAS DE RENDERIZAÇÃO E CARD VISUAL ---
+        // --- SISTEMAS DE RENDERIZAÇÃO ---
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
             let projetosOrdenados = [...projetosCacheLocal];
@@ -912,7 +977,7 @@
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-400' : proj.status === 'Vendido' ? 'bg-blue-500/20 text-blue-400' : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-400' : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-gray-600/30 text-gray-400';                
                 const subPecasHtml = proj.pecas ? proj.pecas.map(p => `<div class="flex justify-between text-[11px] text-gray-400 bg-gray-900/40 px-1.5 py-0.5 rounded"><span>${p.nome_peca}</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`).join('') : '';
 
-                return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${ (proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><p class="text-[11px] text-amber-400 font-semibold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400">Excluir</button></div></div></div>`;
+                return `<div class="bg-gray-700 rounded-lg border border-gray-600 flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-white text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-gray-400">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><p class="text-[11px] text-amber-400 font-semibold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-gray-600/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-gray-600/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-400 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-400 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-400">Excluir</button></div></div></div>`;
             }).join('');
         }
 
@@ -938,8 +1003,8 @@
             }).join('');
         }
 
-        // Carregamento de dados completo de uma só vez (Garantindo que o Mascote Urubu apareça)
         async function carregarProjetos3d() {
+            if (modoPublicoAtivo) return; // Cancela fluxo interno se for visão pública
             const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false }); 
             if (error) return console.error(error);
             
@@ -993,7 +1058,6 @@
             const targetLista = document.getElementById('listaFilamentos');
             if (dadosFiltrados.length === 0) { targetLista.innerHTML = '<p class="text-gray-500 text-sm text-center p-4">Nenhum lote corresponde.</p>'; return; }
             targetLista.innerHTML = dadosFiltrados.map(item => {
-                const dataFormatada = item.data_compra ? item.data_compra.split('-').reverse().join('/') : 'S/D';
                 return `<div class="bg-gray-700 p-3 rounded border border-gray-600 flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-white">${item.nome} <span class="text-xs text-blue-400">[${item.tipo}]</span></h3><p class="text-xs text-gray-300">Cor: ${item.cor}</p></div><div class="text-right"><span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span><button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div></div>`;
             }).join('');
         }
