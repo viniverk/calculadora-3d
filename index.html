@@ -32,7 +32,7 @@
                     <p class="font-semibold text-blue-300 mb-1">A senha precisa ter obrigatoriamente:</p>
                     <ul class="list-disc list-inside space-y-0.5 text-gray-300">
                         <li>No mínimo 6 caracteres</li>
-                        <li>Pelo menos uma letra MAIÚSCULA</li>
+                        <li>Pelo menos uma letter MAIÚSCULA</li>
                         <li>Pelo menos uma letra minúscula</li>
                         <li>Pelo menos um número</li>
                     </ul>
@@ -79,6 +79,12 @@
                 <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition bg-blue-600 font-medium text-white item-menu-btn" data-aba="inserir-impressao">
                     <span class="text-lg">🚀</span>
                     <span class="whitespace-nowrap label-texto">Impressões</span>
+                </button>
+
+                <!-- NOVA ABA PORTFÓLIOS CLIENTES ADICIONADA NA SIDEBAR -->
+                <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="portfolio-cliente">
+                    <span class="text-lg">🖼️</span>
+                    <span class="whitespace-nowrap label-texto">Portfólios</span>
                 </button>
 
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="vendas">
@@ -129,7 +135,7 @@
                         <select id="projStatus" class="w-full bg-gray-700 p-2 rounded border border-gray-600 focus:outline-none focus:border-sky-500 text-sm text-white">
                             <option value="Aguardando Impressão">Aguardando Impressão</option>
                             <option value="Imprimindo">Imprimindo</option>
-                            <option value="Montagem">Montagem</option> 
+                            <option value="Montagem">Montagem</option>
                             <option value="Projeto Finalizado">Projeto Finalizado</option>
                             <option value="Vendido">Vendido</option>
                         </select>
@@ -243,6 +249,19 @@
                     </div>
                 </div>
                 <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+        </div>
+
+        <!-- VIEW PORTFÓLIO COMPLETO PARA CLIENTES (SÓ IMAGEM E PREÇO) -->
+        <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
+            <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-700 pb-3 gap-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-teal-400">Nossos Modelos & Projetos 3D</h2>
+                        <p class="text-xs text-gray-400 mt-1">Catálogo geral disponível para faturamento e encomendas.</p>
+                    </div>
+                </div>
+                <div id="listaPortfolioClientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
         </div>
 
@@ -572,6 +591,7 @@
 
             if (abaDestino === 'calculadora') carregarModelos();
             if (abaDestino === 'inserir-impressao') carregarProjetos3d();
+            if (abaDestino === 'portfolio-cliente') renderizerPortfolioCliente();
             if (abaDestino === 'vendas') carregarJanelaVendas();
             if (abaDestino === 'filamentos') carregarFilamentos();
         }
@@ -690,7 +710,7 @@
             vendaPrecoFinal.value = '';
             document.getElementById('vendaData').valueAsDate = new Date();
 
-            alert('Faturamento consolidado com sucesso e status updated!');
+            alert('Faturamento consolidado com sucesso e status atualizado!');
             carregarProjetos3d(); 
             carregarVendasEfetuadas();
         });
@@ -709,7 +729,7 @@
 
             let somaBruto = 0; let somaCusto = 0; let somaLiquido = 0;
 
-            listaVendasEfetuadas.innerHTML = data.map(v => {
+            listaVendasEfVas.innerHTML = data.map(v => {
                 somaBruto += parseFloat(v.preco_venda_final);
                 somaCusto += parseFloat(v.custo_producao_retido);
                 somaLiquido += parseFloat(v.lucro_liquido);
@@ -971,7 +991,7 @@
             }
         };
 
-        // --- SISTEMA DE ORDENAÇÃO DINÂMICA DO PORTFÓLIO ---
+        // --- SISTEMA DE ORDENAÇÃO DINÂMICA DO PORTFÓLIO INTERNO ---
         selectOrdenacaoPortfolio.addEventListener('change', () => {
             renderizarProjetosOrdenados();
         });
@@ -1030,8 +1050,38 @@
             }).join('');
         }
 
+        // --- RENDERIZAÇÃO DA NOVA ABA DE PORTFÓLIO PARA CLIENTES ---
+        function renderizerPortfolioCliente() {
+            const containerClientes = document.getElementById('listaPortfolioClientesGrid');
+            if (!containerClientes) return;
+
+            if (projetosCacheLocal.length === 0) {
+                containerClientes.innerHTML = '<p class="text-gray-500 text-sm italic col-span-full py-4 text-center">Nenhum modelo cadastrado no catálogo.</p>';
+                return;
+            }
+
+            containerClientes.innerHTML = projetosCacheLocal.map(proj => {
+                const imgTag = proj.imagem_base64 
+                    ? `<div class="bg-gray-900/40 p-2 w-full h-52 flex items-center justify-center border-b border-gray-700/50">
+                         <img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg">
+                       </div>` 
+                    : `<div class="w-full h-52 bg-gray-900 flex items-center justify-center text-gray-600 text-sm font-medium rounded-t-lg border-b border-gray-700/50">Sem Imagem Anexada</div>`;
+
+                return `
+                    <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
+                        ${imgTag}
+                        <div class="p-4 flex flex-col justify-between flex-1 gap-3">
+                            <h3 class="font-bold text-white text-base tracking-wide truncate" title="${proj.nome_projeto}">${proj.nome_projeto}</h3>
+                            <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-700/50">
+                                <span class="text-xs text-gray-400 font-medium uppercase tracking-wider">Preço Sugerido</span>
+                                <span class="text-lg font-black text-green-400">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>`;
+            }).join('');
+        }
+
         async function carregarProjetos3d() {
-            // Buscamos a lista completa do banco, sem limites (.range) de paginação para carregar todo o portfólio de uma vez
             const { data, error } = await _supabase
                 .from('projetos_3d')
                 .select('*')
@@ -1045,6 +1095,11 @@
             projetosCacheLocal = data || [];
             renderizarProjetosOrdenados();
             carregarDropdownProjetosVenda();
+            
+            // Sempre mantém o portfólio de clientes atualizado caso a aba esteja aberta
+            if (!document.getElementById('view-portfolio-cliente').classList.contains('hidden')) {
+                renderizerPortfolioCliente();
+            }
         }
 
         // --- LÓGICA DO ESTOQUE ---
@@ -1052,7 +1107,7 @@
             const nome = filNome.value.trim(); const fab = filFabricante.value.trim() || 'Desconhecido'; const cor = filCor.value.trim() || 'Incolor'; const tipo = filTipo.value; const dataCompra = filDataCompra.value; const preco = parseFloat(filPreco.value) || 0; const pTotal = parseFloat(filPesoTotal.value) || 0; const pAtual = parseFloat(filPesoAtual.value) || 0;
             if (!nome || preco <= 0 || pTotal <= 0) return alert('Preencha os campos obrigatórios corretamente.');
             btnSalvarFilamento.disabled = true;
-            const { error } = await _supabase.from('estoque_materiales').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
+            const { error } = await _supabase.from('estoque_materiais').insert([{ nome, fabricante: fab, cor, tipo, data_compra: dataCompra, preco_pago: preco, peso_total_g: pTotal, peso_atual_g: pAtual, user_id: usuarioAtual.id }]);
             btnSalvarFilamento.disabled = false;
             if (error) alert('Erro: ' + error.message); else { filNome.value = ''; filCor.value = ''; filFabricante.value = ''; carregarFilamentos(); }
         });
