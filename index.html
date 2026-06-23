@@ -1002,16 +1002,52 @@
             }).join('');
         }
 
-        async function carregarProjetos3d() {
-            if (modoPublicoAtivo) return; 
-            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false }); 
-            if (error) return console.error(error);
-            
-            projetosCacheLocal = data || [];
-            renderizarProjetosOrdenados();
-            carregarDropdownProjetosVenda();
-            renderizerPortfolioCliente();
-        }
+        // A função de carga que traz TUDO (sem o .range)
+async function carregarProjetos3d() {
+    const { data, error } = await _supabase
+        .from('projetos_3d')
+        .select('*')
+        .order('created_at', { ascending: false }); 
+
+    if (error) {
+        console.error("Erro ao carregar projetos:", error);
+        return;
+    }
+    
+    projetosCacheLocal = data || [];
+    renderizarProjetosOrdenados(); // Atualiza a aba interna
+    renderizerPortfolioCliente();  // Atualiza a aba de clientes automaticamente
+    carregarDropdownProjetosVenda();
+}
+
+// A função que desenha os cards para os clientes (sem custos)
+function renderizerPortfolioCliente() {
+    const containerClientes = document.getElementById('listaPortfolioClientesGrid');
+    if (!containerClientes) return;
+    
+    if (projetosCacheLocal.length === 0) {
+        containerClientes.innerHTML = '<p class="text-gray-500 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>';
+        return;
+    }
+
+    containerClientes.innerHTML = projetosCacheLocal.map(proj => {
+        const imgTag = proj.imagem_base64 
+            ? `<div class="bg-gray-900/40 p-2 w-full h-52 flex items-center justify-center border-b border-gray-700/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` 
+            : `<div class="w-full h-52 bg-gray-900 flex items-center justify-center text-gray-600 text-sm font-medium rounded-t-lg border-b border-gray-700/50">Sem Imagem</div>`;
+        
+        return `
+            <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
+                ${imgTag}
+                <div class="p-4 flex flex-col justify-between flex-1 gap-3">
+                    <h3 class="font-bold text-white text-base truncate" title="${proj.nome_projeto}">${proj.nome_projeto}</h3>
+                    <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-700/50">
+                        <span class="text-xs text-gray-400 font-medium uppercase">Preço Final</span>
+                        <span class="text-lg font-black text-green-400">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span>
+                    </div>
+                </div>
+            </div>`;
+    }).join('');
+}
 
         // --- ESTOQUE / FILAMENTOS ---
         async function carregarFilamentos() {
