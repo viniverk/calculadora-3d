@@ -14,7 +14,6 @@
 </head>
 <body class="bg-gray-900 text-gray-100 min-h-screen font-sans flex">
 
-    <!-- TELA DE AUTENTICAÇÃO -->
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-20 bg-gray-800 p-8 rounded-xl shadow-xl border border-gray-700 w-full">
         <h2 id="tituloAuth" class="text-2xl font-bold text-center text-blue-400 mb-6">Entrar no Sistema</h2>
         
@@ -66,7 +65,6 @@
         </div>
     </div>
 
-    <!-- SIDEBAR -->
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-gray-800 border-r border-gray-700 flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-gray-700">
@@ -87,7 +85,7 @@
 
                 <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="portfolio-cliente">
                     <span class="text-lg">🖼️</span>
-                    <span class="whitespace-nowrap label-texto">Portfólios</span>
+                    <span class="whitespace-nowrap label-texto">Portfólios (Clientes)</span>
                 </button>
 
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gray-700 text-gray-300 item-menu-btn" data-aba="vendas">
@@ -125,7 +123,6 @@
 
     <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
         
-        <!-- ABA IMPRESSÕES -->
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit xl:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-sky-400 border-b border-gray-700 pb-2">1. Capa do Projeto</h2>
@@ -256,7 +253,6 @@
             </div>
         </div>
 
-        <!-- VIEW PORTFÓLIO COMPLETO PARA CLIENTES (SÓ IMAGEM E PREÇO) -->
         <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-gray-700 pb-3 gap-2">
@@ -264,7 +260,6 @@
                         <h2 class="text-2xl font-bold text-teal-400">Catálogo de Modelos 3D</h2>
                         <p class="text-xs text-gray-400 mt-1">Apresentação limpa de valores e designs para encomendas.</p>
                     </div>
-                    <!-- BOTÃO ADICIONADO: COMPARTILHAR EXCLUSIVO -->
                     <button id="btnCompartilharCatalogo" onclick="copiarLinkPublico()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition flex items-center gap-2">
                         <span>🔗</span> <span id="txtCompartilhar">Compartilhar Catálogo</span>
                     </button>
@@ -273,7 +268,6 @@
             </div>
         </div>
 
-        <!-- VIEW VENDAS -->
         <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit lg:col-span-1 space-y-4">
                 <h2 class="text-xl font-semibold text-emerald-400 border-b border-gray-700 pb-2">Lançar Nova Venda</h2>
@@ -331,7 +325,6 @@
             </div>
         </div>
 
-        <!-- ABA ESTOQUE -->
         <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-emerald-400 border-b border-gray-700 pb-2">Cadastrar Compra de Filamento</h2>
@@ -417,7 +410,6 @@
             </div>
         </div>
 
-        <!-- ABA CALCULADORA -->
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
             <div class="bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 h-fit">
                 <h2 class="text-xl font-semibold mb-4 text-blue-300 border-b border-gray-700 pb-2">Orçamento / Modelo Estimado</h2>
@@ -460,7 +452,6 @@
             </div>
         </div>
 
-        <!-- ABA ADMIN -->
         <div id="view-admin" class="aba-conteudo bg-gray-800 p-6 rounded-xl shadow-xl border border-gray-700 hidden">
             <h2 class="text-xl font-semibold mb-4 text-amber-400 border-b border-gray-700 pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <div class="overflow-x-auto">
@@ -569,37 +560,43 @@
 
         document.getElementById('vendaData').valueAsDate = new Date();
 
-        // --- SISTEMA DE ISOLAMENTO DE LINK PÚBLICO (MÓDULO SEGURANÇA CLIENTE) ---
+        // --- ENGINE DE CONTROLE PÚBLICO E EXECUÇÃO ---
         const urlParams = new URLSearchParams(window.location.search);
         const modoPublicoAtivo = urlParams.get('modo') === 'publico';
 
         function verificarModoPublico() {
             if (modoPublicoAtivo) {
-                // Esconde login, sidebar e força margem zero na visualização
-                telaAuth.style.display = 'none';
+                // Isola a UI escondendo login e sidebar privada
+                telaAuth.style.setProperty('display', 'none', 'important');
                 sidebarApp.style.setProperty('display', 'none', 'important');
                 conteudoPainel.classList.remove('hidden', 'ml-64');
                 conteudoPainel.classList.add('p-4', 'w-full');
                 
-                // Esconde botão de compartilhar dentro da própria visão pública
                 const btnComp = document.getElementById('btnCompartilharCatalogo');
                 if(btnComp) btnComp.style.display = 'none';
 
-                // Redireciona diretamente e exclusivamente para a Aba de Clientes
                 document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
                 document.getElementById('view-portfolio-cliente').classList.remove('hidden');
                 
-                // Ignora Auth e carrega os dados públicos direto
-                carregarProjetosPublicos();
+                // Dispara o loop estável para buscar o portfólio assim que a API REST estiver pronta
+                executarCargaPublicaEstavel();
             }
         }
 
-        async function carregarProjetosPublicos() {
-            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
-            if (!error && data) {
-                projetosCacheLocal = data;
-                renderizerPortfolioCliente();
-            }
+        function executarCargaPublicaEstavel() {
+            let tentativas = 0;
+            const intervalo = setInterval(async () => {
+                tentativas++;
+                if (typeof _supabase !== 'undefined') {
+                    clearInterval(intervalo);
+                    const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
+                    if (!error && data) {
+                        projetosCacheLocal = data;
+                        renderizerPortfolioCliente();
+                    }
+                }
+                if (tentativas > 20) clearInterval(intervalo); // limite de segurança
+            }, 250);
         }
 
         function copiarLinkPublico() {
@@ -613,8 +610,8 @@
             });
         }
 
-        // Executa validação de link imediatamente na abertura da página
-        window.addEventListener('DOMContentLoaded', verificarModoPublico);
+        // Inicializador imediato do modo cliente
+        verificarModoPublico();
 
         // --- SIDEBAR CONTROL ---
         btnToggleSidebar.addEventListener('click', () => {
@@ -634,7 +631,7 @@
         });
 
         function mudarAba(abaDestino) {
-            if (modoPublicoAtivo) return; // Bloqueia navegação se for cliente
+            if (modoPublicoAtivo) return; 
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
 
@@ -655,9 +652,9 @@
             if (abaDestino === 'filamentos') carregarFilamentos();
         }
 
-        // --- CONTROLE DE SESSÃO / AUTH ---
+        // --- SESSION TRACKING COM FLUXO DE RECUPERAÇÃO ---
         _supabase.auth.onAuthStateChange(async (event, session) => {
-            if (modoPublicoAtivo) return; // Desativa monitoramento de login no link do cliente
+            if (modoPublicoAtivo) return; 
             if (event === 'PASSWORD_RECOVERY') {
                 const novaSenha = prompt("Link de recuperação validado! Por favor, digite sua nova senha:");
                 if (novaSenha) {
@@ -695,7 +692,7 @@
             window.location.href = window.location.origin + window.location.pathname;
         });
 
-        // --- ENGINE DE MODELOS FINANCEIROS: VENDAS ---
+        // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
         function carregarJanelaVendas() {
             carregarDropdownProjetosVenda();
             carregarVendasEfetuadas();
@@ -809,13 +806,13 @@
             }
         };
 
-        // --- ENGINE DE COMPONENTES MULTI-PEÇAS ---
+        // --- ENGINE DE COMPONENTES ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
             const peso = parseFloat(pecaPeso.value) || 0;
             const horas = parseFloat(pecaTempoHoras.value) || 0;
-            const minutes = parseFloat(pecaTempoMinutos.value) || 0;
-            const tempoTotalH = horas + (minutes / 60);
+            const minutos = parseFloat(pecaTempoMinutos.value) || 0;
+            const tempoTotalH = horas + (minutos / 60);
             const custoPorGrama = parseFloat(pecaSelectFilamento.value);
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
             
@@ -889,7 +886,7 @@
         }
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
-        // --- SALVAMENTO E MANUTENÇÃO DE REGISTROS ---
+        // --- SALVAMENTO ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim(); const margem = parseFloat(projMargemPorcentagem.value) || 0; const statusAtual = projStatus.value; const dataConclusao = projDataConclusao.value || null;
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
@@ -931,7 +928,7 @@
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
         window.editarProjeto3d = function(id) {
-            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
+            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; imagemBase64Projeto = proj.imagem_base64;
@@ -963,6 +960,8 @@
         };
 
         // --- SISTEMAS DE RENDERIZAÇÃO ---
+        selectOrdenacaoPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
+
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
             let projetosOrdenados = [...projetosCacheLocal];
@@ -981,14 +980,14 @@
             }).join('');
         }
 
-        // --- VISUALIZAÇÃO EXCLUSIVA DO PORTFÓLIO PARA CLIENTES (SEM REVELAR CUSTOS) ---
+        // --- ABA DE CLIENTES ---
         function renderizerPortfolioCliente() {
             const containerClientes = document.getElementById('listaPortfolioClientesGrid');
             if (!containerClientes) return;
             if (projetosCacheLocal.length === 0) { containerClientes.innerHTML = '<p class="text-gray-500 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
 
             containerClientes.innerHTML = projetosCacheLocal.map(proj => {
-                const imgTag = proj.imagem_base64 ? `<div class="bg-gray-900/40 p-2 w-full h-52 flex items-center justify-center border-b border-gray-700/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` : `<div class="w-full h-52 bg-gray-900 flex items-center justify-center text-gray-600 text-sm font-medium border-b border-gray-700/50">Catálogo Verk3D</div>`;
+                const imgTag = proj.imagem_base64 ? `<div class="bg-gray-900/40 p-2 w-full h-52 flex items-center justify-center border-b border-gray-700/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` : `<div class="w-full h-52 bg-gray-900 flex items-center justify-center text-gray-600 text-sm font-medium border-b border-gray-700/50">Catálogo Zweck3D</div>`;
                 return `
                     <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
                         ${imgTag}
@@ -1004,7 +1003,7 @@
         }
 
         async function carregarProjetos3d() {
-            if (modoPublicoAtivo) return; // Cancela fluxo interno se for visão pública
+            if (modoPublicoAtivo) return; 
             const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false }); 
             if (error) return console.error(error);
             
@@ -1014,7 +1013,7 @@
             renderizerPortfolioCliente();
         }
 
-        // --- CONTROLE DE FILAMENTOS / ESTOQUE ---
+        // --- ESTOQUE / FILAMENTOS ---
         async function carregarFilamentos() {
             const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
             if (error) return; filamentosCache = data || [];
@@ -1062,7 +1061,7 @@
             }).join('');
         }
 
-        // --- CALCULADORA DE MODELOS ---
+        // --- CALCULADORA ---
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
             if (error) return;
@@ -1078,7 +1077,7 @@
 
         async function deletarModelo(id) { if (confirm('Excluir?')) { await _supabase.from('catalogo_modelos').delete().eq('id', id); carregarModelos(); } }
 
-        // --- CONTROLE DE LOGIN / INTERFACE ACESSO ---
+        // --- AUTH E LOGIN INTERFACE ---
         const btnAlternarAuth = document.getElementById('btnAlternarAuth');
         const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
 
