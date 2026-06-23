@@ -654,35 +654,41 @@
 
         // --- SESSION TRACKING COM FLUXO DE RECUPERAÇÃO ---
         _supabase.auth.onAuthStateChange(async (event, session) => {
-            if (modoPublicoAtivo) return; 
-            if (event === 'PASSWORD_RECOVERY') {
-                const novaSenha = prompt("Link de recuperação validado! Por favor, digite sua nova senha:");
-                if (novaSenha) {
-                    const { error } = await _supabase.auth.updateUser({ password: novaSenha });
-                    if (error) alert("Erro ao atualizar senha: " + error.message);
-                    else {
-                        alert("Senha alterada com sucesso!");
-                        window.location.href = window.location.origin + window.location.pathname;
-                    }
-                }
-            } 
-            else if (session && event !== 'SIGNED_OUT') {
-                usuarioAtual = session.user;
-                telaAuth.classList.add('hidden');
-                sidebarApp.classList.remove('hidden');
-                conteudoPainel.classList.remove('hidden');
-                usuarioLogadoText.innerText = session.user.email;
-                carregarFilamentos();
-                carregarModelos();
-                carregarProjetos3d();
-            } 
-            else {
-                usuarioAtual = null;
-                sidebarApp.classList.add('hidden');
-                conteudoPainel.classList.add('hidden');
-                telaAuth.classList.remove('hidden');
-            }
-        });
+    // Adicionamos esta lógica para o Modo Público
+    const urlParams = new URLSearchParams(window.location.search);
+    const modoPublicoAtivo = urlParams.get('modo') === 'publico';
+
+    if (modoPublicoAtivo) {
+        verificarModoPublico(); // Ativa a visão de cliente
+        return; 
+    }
+
+    if (event === 'PASSWORD_RECOVERY') {
+        const novaSenha = prompt("Digite sua nova senha:");
+        if (novaSenha) {
+            await _supabase.auth.updateUser({ password: novaSenha });
+            alert("Senha alterada!");
+        }
+    } 
+    else if (session && event !== 'SIGNED_OUT') {
+        usuarioAtual = session.user;
+        telaAuth.classList.add('hidden');
+        sidebarApp.classList.remove('hidden');
+        conteudoPainel.classList.remove('hidden');
+        usuarioLogadoText.innerText = session.user.email;
+        
+        // Carrega tudo aqui, garantindo que o portfólio cliente também seja preenchido
+        carregarFilamentos();
+        carregarModelos();
+        carregarProjetos3d();
+    } 
+    else {
+        usuarioAtual = null;
+        sidebarApp.classList.add('hidden');
+        conteudoPainel.classList.add('hidden');
+        telaAuth.classList.remove('hidden');
+    }
+});
 
         btnGoogleAuth.addEventListener('click', async () => {
             await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
