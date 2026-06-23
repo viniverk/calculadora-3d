@@ -1010,32 +1010,22 @@
 
         // A função de carga que traz TUDO (sem o .range)
 async function carregarProjetos3d() {
-    // 1. Busca todos os dados sem limite
     const { data, error } = await _supabase
         .from('projetos_3d')
         .select('*')
         .order('created_at', { ascending: false }); 
 
-    if (error) {
-        console.error("Erro ao carregar projetos:", error);
-        return;
-    }
+    if (error) return;
     
-    // 2. Atualiza os dados
     projetosCacheLocal = data || [];
     
-    // 3. Renderiza o portfólio interno
+    // Atualiza a visualização interna
     renderizarProjetosOrdenados();
     
-    // 4. GARANTIA: Renderiza também o portfólio do cliente
-    renderizerPortfolioCliente();
+    // ATUALIZA A VISÃO DO CLIENTE IMEDIATAMENTE APÓS RECEBER OS DADOS
+    renderizerPortfolioCliente(); 
     
-    // 5. Atualiza o dropdown de vendas
     carregarDropdownProjetosVenda();
-
-    // 6. FORÇA A ABA ATIVA (Se a aba 'inserir-impressao' estiver vazia, talvez ela precise de um trigger de classe)
-    const abaPrincipal = document.getElementById('view-inserir-impressao');
-    if (abaPrincipal) abaPrincipal.classList.add('active');
 }
 
 // A função que desenha os cards para os clientes (sem custos)
