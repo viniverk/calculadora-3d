@@ -565,31 +565,28 @@
         const modoPublicoAtivo = urlParams.get('modo') === 'publico';
 
         function verificarModoPublico() {
-    if (modoPublicoAtivo) {
-        // Isola a UI escondendo login e sidebar privada
-        telaAuth.style.setProperty('display', 'none', 'important');
-        sidebarApp.style.setProperty('display', 'none', 'important');
-        conteudoPainel.classList.remove('hidden', 'ml-64');
-        conteudoPainel.classList.add('p-4', 'w-full');
-        
-        const btnComp = document.getElementById('btnCompartilharCatalogo');
-        if(btnComp) btnComp.style.display = 'none';
+            if (modoPublicoAtivo) {
+                telaAuth.style.setProperty('display', 'none', 'important');
+                sidebarApp.style.setProperty('display', 'none', 'important');
+                conteudoPainel.classList.remove('hidden', 'ml-64');
+                conteudoPainel.classList.add('p-4', 'w-full');
+                
+                const btnComp = document.getElementById('btnCompartilharCatalogo');
+                if(btnComp) btnComp.style.display = 'none';
 
-        // CORREÇÃO AQUI: Esconde todas e ativa a correta com a classe 'active'
-        document.querySelectorAll('.aba-conteudo').forEach(aba => {
-            aba.classList.remove('hidden', 'active');
-            aba.style.display = 'none'; // Força o reset visual
-        });
-        
-        const abaPortfolio = document.getElementById('view-portfolio-cliente');
-        abaPortfolio.classList.remove('hidden');
-        abaPortfolio.classList.add('active'); // Adiciona a classe que o teu CSS precisa
-        abaPortfolio.style.display = 'grid'; // Força o display
-        
-        // Dispara o loop para buscar os dados
-        executarCargaPublicaEstavel();
-    }
-}
+                document.querySelectorAll('.aba-conteudo').forEach(aba => {
+                    aba.classList.remove('hidden', 'active');
+                    aba.style.display = 'none'; 
+                });
+                
+                const abaPortfolio = document.getElementById('view-portfolio-cliente');
+                abaPortfolio.classList.remove('hidden');
+                abaPortfolio.classList.add('active'); 
+                abaPortfolio.style.display = 'grid'; 
+                
+                executarCargaPublicaEstavel();
+            }
+        }
 
         function executarCargaPublicaEstavel() {
             let tentativas = 0;
@@ -597,13 +594,9 @@
                 tentativas++;
                 if (typeof _supabase !== 'undefined') {
                     clearInterval(intervalo);
-                    const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false });
-                    if (!error && data) {
-                        projetosCacheLocal = data;
-                        renderizerPortfolioCliente();
-                    }
+                    carregarProjetos3d();
                 }
-                if (tentativas > 20) clearInterval(intervalo); // limite de segurança
+                if (tentativas > 20) clearInterval(intervalo);
             }, 250);
         }
 
@@ -618,7 +611,6 @@
             });
         }
 
-        // Inicializador imediato do modo cliente
         verificarModoPublico();
 
         // --- SIDEBAR CONTROL ---
@@ -660,43 +652,40 @@
             if (abaDestino === 'filamentos') carregarFilamentos();
         }
 
-        // --- SESSION TRACKING COM FLUXO DE RECUPERAÇÃO ---
+        // --- SESSION TRACKING ---
         _supabase.auth.onAuthStateChange(async (event, session) => {
-    // Adicionamos esta lógica para o Modo Público
-    const urlParams = new URLSearchParams(window.location.search);
-    const modoPublicoAtivo = urlParams.get('modo') === 'publico';
+            const urlParams = new URLSearchParams(window.location.search);
+            const modoPublicoAtivo = urlParams.get('modo') === 'publico';
 
-    if (modoPublicoAtivo) {
-        verificarModoPublico(); // Ativa a visão de cliente
-        return; 
-    }
+            if (modoPublicoAtivo) {
+                verificarModoPublico();
+                return; 
+            }
 
-    if (event === 'PASSWORD_RECOVERY') {
-        const novaSenha = prompt("Digite sua nova senha:");
-        if (novaSenha) {
-            await _supabase.auth.updateUser({ password: novaSenha });
-            alert("Senha alterada!");
-        }
-    } 
-    else if (session && event !== 'SIGNED_OUT') {
-        usuarioAtual = session.user;
-        telaAuth.classList.add('hidden');
-        sidebarApp.classList.remove('hidden');
-        conteudoPainel.classList.remove('hidden');
-        usuarioLogadoText.innerText = session.user.email;
-        
-        // Carrega tudo aqui, garantindo que o portfólio cliente também seja preenchido
-        carregarFilamentos();
-        carregarModelos();
-        carregarProjetos3d();
-    } 
-    else {
-        usuarioAtual = null;
-        sidebarApp.classList.add('hidden');
-        conteudoPainel.classList.add('hidden');
-        telaAuth.classList.remove('hidden');
-    }
-});
+            if (event === 'PASSWORD_RECOVERY') {
+                const novaSenha = prompt("Digite sua nova senha:");
+                if (novaSenha) {
+                    await _supabase.auth.updateUser({ password: novaSenha });
+                    alert("Senha alterada!");
+                }
+            } 
+            else if (session && event !== 'SIGNED_OUT') {
+                usuarioAtual = session.user;
+                telaAuth.classList.add('hidden');
+                sidebarApp.classList.remove('hidden');
+                conteudoPainel.classList.remove('hidden');
+                usuarioLogadoText.innerText = session.user.email;
+                carregarFilamentos();
+                carregarModelos();
+                carregarProjetos3d();
+            } 
+            else {
+                usuarioAtual = null;
+                sidebarApp.classList.add('hidden');
+                conteudoPainel.classList.add('hidden');
+                telaAuth.classList.remove('hidden');
+            }
+        });
 
         btnGoogleAuth.addEventListener('click', async () => {
             await _supabase.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: window.location.origin + window.location.pathname } });
@@ -706,7 +695,7 @@
             window.location.href = window.location.origin + window.location.pathname;
         });
 
-        // --- NOVO MÓDULO FINANCEIRO: GERENCIAMENTO DE VENDAS ---
+        // --- MÓDULO FINANCEIRO: VENDAS ---
         function carregarJanelaVendas() {
             carregarDropdownProjetosVenda();
             carregarVendasEfetuadas();
@@ -820,6 +809,17 @@
             }
         };
 
+        // --- VISUALIZAÇÃO PRÉVIA DA IMAGEM ---
+        projImagem.addEventListener('change', function(e) {
+            const file = e.target.files[0]; if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                imagemBase64Projeto = evt.target.result; 
+                imgPreview.src = imagemBase64Projeto; 
+                previewContainer.classList.remove('hidden');
+            }; reader.readAsDataURL(file);
+        });
+
         // --- ENGINE DE COMPONENTES ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
@@ -900,7 +900,7 @@
         }
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
-        // --- SALVAMENTO ---
+        // --- SALVAMENTO ATUALIZADO COM SUPABASE STORAGE (SOLUÇÃO 2 DETALHADA) ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim(); const margem = parseFloat(projMargemPorcentagem.value) || 0; const statusAtual = projStatus.value; const dataConclusao = projDataConclusao.value || null;
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
@@ -912,11 +912,42 @@
             btnSalvarProjetoCompleto.disabled = true;
 
             const linkDownload = projLink3mf.value.trim();
+            let imagemUrlFinal = imagemBase64Projeto; // Mantém o valor anterior caso não envie uma foto nova
+
+            // Captura o arquivo binário real para upload assíncrono no bucket público
+            const inputImagemFisica = document.getElementById('projImagem');
+            if (inputImagemFisica.files && inputImagemFisica.files[0]) {
+                const arquivoImagem = inputImagemFisica.files[0];
+                const extensao = arquivoImagem.name.split('.').pop();
+                const nomeUnicoStorage = `${Date.now()}-${Math.floor(Math.random() * 10000)}.${extensao}`;
+                
+                // Faz o upload físico real eliminando strings pesadas do JSON
+                const { data: uploadData, error: uploadError } = await _supabase.storage
+                    .from('projetos')
+                    .upload(nomeUnicoStorage, arquivoImagem);
+
+                if (!uploadError) {
+                    // Substitui a string base64 gigante por uma URL de poucos bytes extremamente veloz
+                    const { data: publicUrlData } = _supabase.storage.from('projetos').getPublicUrl(nomeUnicoStorage);
+                    imagemUrlFinal = publicUrlData.publicUrl;
+                } else {
+                    alert('Aviso de upload da imagem: ' + uploadError.message);
+                }
+            }
 
             let payload = { 
-                nome_projeto: nomeProjeto, imagem_base64: imagemBase64Projeto, nome_arquivo_3mf: linkDownload, arquivo_3mf_data: null, 
-                pecas: pecasProjetoAtual, margem_lucro_porcentagem: margem, custo_total: custoTotalAcumulado, preco_venda_total: precoVendaFinal, 
-                tempo_total_min: tempoTotalMin, peso_total_g: pesoTotalG, status: statusAtual, data_conclusao: dataConclusao 
+                nome_projeto: nomeProjeto, 
+                imagem_base64: imagemUrlFinal, // Salva a URL curta do Storage mantendo compatibilidade com sua tabela
+                nome_arquivo_3mf: linkDownload, 
+                arquivo_3mf_data: null, 
+                pecas: pecasProjetoAtual, 
+                margem_lucro_porcentagem: margem, 
+                custo_total: custoTotalAcumulado, 
+                preco_venda_total: precoVendaFinal, 
+                tempo_total_min: tempoTotalMin, 
+                peso_total_g: pesoTotalG, 
+                status: statusAtual, 
+                data_conclusao: dataConclusao 
             };
 
             let query = idProjetoEmEdicao 
@@ -942,7 +973,7 @@
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
         window.editarProjeto3d = function(id) {
-            const proj = proyectosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
+            const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; imagemBase64Projeto = proj.imagem_base64;
@@ -994,7 +1025,7 @@
             }).join('');
         }
 
-        // --- ABA DE CLIENTES ---
+        // --- ABA DE CLIENTES (LIVRE DE LENTIDÃO COM CARREGAMENTO ASSÍNCRONO) ---
         function renderizerPortfolioCliente() {
             const containerClientes = document.getElementById('listaPortfolioClientesGrid');
             if (!containerClientes) return;
@@ -1016,54 +1047,16 @@
             }).join('');
         }
 
-        // A função de carga que traz TUDO (sem o .range)
-async function carregarProjetos3d() {
-    const { data, error } = await _supabase
-        .from('projetos_3d')
-        .select('*')
-        .order('created_at', { ascending: false }); 
-
-    if (error) return;
-    
-    projetosCacheLocal = data || [];
-    
-    // Atualiza a visualização interna
-    renderizarProjetosOrdenados();
-    
-    // ATUALIZA A VISÃO DO CLIENTE IMEDIATAMENTE APÓS RECEBER OS DADOS
-    renderizerPortfolioCliente(); 
-    
-    carregarDropdownProjetosVenda();
-}
-
-// A função que desenha os cards para os clientes (sem custos)
-function renderizerPortfolioCliente() {
-    const containerClientes = document.getElementById('listaPortfolioClientesGrid');
-    if (!containerClientes) return;
-    
-    if (projetosCacheLocal.length === 0) {
-        containerClientes.innerHTML = '<p class="text-gray-500 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>';
-        return;
-    }
-
-    containerClientes.innerHTML = projetosCacheLocal.map(proj => {
-        const imgTag = proj.imagem_base64 
-            ? `<div class="bg-gray-900/40 p-2 w-full h-52 flex items-center justify-center border-b border-gray-700/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` 
-            : `<div class="w-full h-52 bg-gray-900 flex items-center justify-center text-gray-600 text-sm font-medium rounded-t-lg border-b border-gray-700/50">Sem Imagem</div>`;
-        
-        return `
-            <div class="bg-gray-800 rounded-xl border border-gray-700 shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
-                ${imgTag}
-                <div class="p-4 flex flex-col justify-between flex-1 gap-3">
-                    <h3 class="font-bold text-white text-base truncate" title="${proj.nome_projeto}">${proj.nome_projeto}</h3>
-                    <div class="flex items-center justify-between mt-1 pt-2 border-t border-gray-700/50">
-                        <span class="text-xs text-gray-400 font-medium uppercase">Preço Final</span>
-                        <span class="text-lg font-black text-green-400">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span>
-                    </div>
-                </div>
-            </div>`;
-    }).join('');
-}
+        // Carga que traz a lista do banco inteira de uma só vez (Garantindo que o Mascote Urubu apareça)
+        async function carregarProjetos3d() {
+            const { data, error } = await _supabase.from('projetos_3d').select('*').order('created_at', { ascending: false }); 
+            if (error) return console.error(error);
+            
+            projetosCacheLocal = data || [];
+            renderizarProjetosOrdenados();
+            carregarDropdownProjetosVenda();
+            renderizerPortfolioCliente();
+        }
 
         // --- ESTOQUE / FILAMENTOS ---
         async function carregarFilamentos() {
@@ -1134,7 +1127,7 @@ function renderizerPortfolioCliente() {
         const btnEsqueciSenha = document.getElementById('btnEsqueciSenha');
 
         btnEsqueciSenha.addEventListener('click', () => {
-            window.modoAbas = 'recuperar'; document.getElementById('tituloAuth').innerText = 'Recuperar Senha';
+            window.modoAbas = 'recuperar'; document.getElementById('tituloAuth').innerText = 'Recover Password';
             btnAuthPrincipal.innerText = 'Enviar Código'; btnAlternarAuth.innerText = 'Voltar ao Login';
             document.getElementById('containerSenha').classList.add('hidden');
         });
