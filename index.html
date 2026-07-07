@@ -1263,6 +1263,50 @@
         }
 
         // --- ESTOQUE / FILAMENTOS ---
+        // --- ESTOQUE DE FILAMENTOS (SALVAR / EXCLUIR) ---
+        btnSalvarFilamento.addEventListener('click', async () => {
+            const nome = filNome.value.trim();
+            const fabricante = filFabricante.value.trim();
+            const cor = filCor.value.trim();
+            const tipo = filTipo.value;
+            const dataCompra = filDataCompra.value || null;
+            const preco = parseFloat(filPreco.value) || 0;
+            const pesoTotal = parseFloat(filPesoTotal.value) || 0;
+            const pesoAtual = parseFloat(filPesoAtual.value) || 0;
+
+            if (!nome || preco <= 0 || pesoTotal <= 0) {
+                return alert('Preencha ao menos o nome, o preço pago e o peso total corretamente.');
+            }
+
+            btnSalvarFilamento.disabled = true;
+            const { error } = await _supabase.from('estoque_materiais').insert([{
+                nome,
+                fabricante,
+                cor,
+                tipo,
+                data_compra: dataCompra,
+                preco_pago: preco,
+                peso_total_g: pesoTotal,
+                peso_atual_g: pesoAtual,
+                user_id: usuarioAtual.id
+            }]);
+            btnSalvarFilamento.disabled = false;
+
+            if (error) { alert('Erro ao salvar no estoque: ' + error.message); return; }
+
+            filNome.value = ''; filFabricante.value = ''; filCor.value = '';
+            filPreco.value = ''; filPesoTotal.value = 1000; filPesoAtual.value = 1000; filDataCompra.value = '';
+            alert('Compra registrada no estoque com sucesso!');
+            carregarFilamentos();
+        });
+
+        window.deletarFilamento = async function(id) {
+            if (confirm('Deseja excluir este lote do estoque permanentemente?')) {
+                const { error } = await _supabase.from('estoque_materiais').delete().eq('id', id);
+                if (error) alert(error.message); else carregarFilamentos();
+            }
+        };
+
         async function carregarFilamentos() {
             const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
             if (error) return; filamentosCache = data || [];
