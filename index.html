@@ -1361,6 +1361,23 @@
         }
 
         // --- CALCULADORA ---
+        function calcularAbaBase() {
+            const custoPorGrama = selectFilamento.value === 'padrao' ? 0.12 : (parseFloat(selectFilamento.value) || 0.12);
+            const peso = parseFloat(pesoInput.value) || 0;
+            const horas = parseFloat(tempoInput.value) || 0;
+            const custoInsumo = peso * custoPorGrama;
+            const custoMaoDeObra = horas * 1.50;
+            const custoTotalCalc = custoInsumo + custoMaoDeObra;
+            const precoSugerido = custoTotalCalc * 3; // Lucro 3x, conforme rótulo da tela
+
+            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
+            custoTexto.innerText = `R$ ${precoSugerido.toFixed(2)}`;
+            return precoSugerido;
+        }
+        pesoInput.addEventListener('input', calcularAbaBase);
+        tempoInput.addEventListener('input', calcularAbaBase);
+        selectFilamento.addEventListener('change', calcularAbaBase);
+
         async function carregarModelos() {
             const { data, error } = await _supabase.from('catalogo_modelos').select('*').order('created_at', { ascending: false });
             if (error) return;
