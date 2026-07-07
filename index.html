@@ -231,6 +231,27 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-surface p-5 rounded-2xl border border-line">
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-display text-base font-bold text-ink">Peso Atual por Filamento</h3>
+                    <button onclick="mudarAba('filamentos')" class="text-xs text-teal2 hover:underline">Ver estoque completo →</button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-inkmute text-[11px] uppercase">
+                            <tr class="border-b border-line">
+                                <th class="py-2 pr-2">Filamento</th>
+                                <th class="py-2 pr-2">Cor</th>
+                                <th class="py-2 pr-2">Peso Atual</th>
+                                <th class="py-2 pr-2">Peso Total</th>
+                                <th class="py-2">Restante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabelaEstoqueDashboard" class="divide-y divide-line"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
         <div id="view-inserir-impressao" class="aba-conteudo grid grid-cols-1 xl:grid-cols-3 gap-6 hidden">
@@ -256,7 +277,7 @@
                         <input type="date" id="projDataConclusao" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm text-white">
                     </div>
                 </div>
-                <div>
+                <div id="secaoCapaProjeto">
                     <label class="block text-sm font-medium mb-1">Imagem do Projeto</label>
                     <input type="file" id="projImagem" accept="image/*" class="w-full text-xs text-inkmute file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-xs file:font-semibold file:bg-surface2 file:text-inkmute hover:file:bg-line">
                     <div id="previewContainer" class="mt-3 hidden bg-base/60 p-1 rounded border border-line">
@@ -481,7 +502,10 @@
                             <input type="number" id="filPesoAtual" value="1000" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none">
                         </div>
                     </div>
-                    <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded transition">Registrar Compra no Estoque</button>
+                    <div class="flex gap-2">
+                        <button id="btnCancelarFilamento" class="bg-surface2 hover:bg-line border border-line text-inkmute font-bold py-2 px-4 rounded-lg text-sm transition hidden">Cancelar</button>
+                        <button id="btnSalvarFilamento" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg transition">Registrar Compra no Estoque</button>
+                    </div>
                 </div>
             </div>
 
@@ -784,6 +808,33 @@
             document.getElementById('dashFaturamento').innerText = `R$ ${faturamento.toFixed(2)}`;
             document.getElementById('dashLucro').innerText = `R$ ${lucro.toFixed(2)}`;
             document.getElementById('dashEstoque').innerText = `R$ ${investEstoque.toFixed(2)}`;
+
+            atualizarTabelaEstoqueDashboard();
+        }
+
+        async function atualizarTabelaEstoqueDashboard() {
+            const tbody = document.getElementById('tabelaEstoqueDashboard');
+            if (!tbody) return;
+            const { data, error } = await _supabase.from('estoque_materiais')
+                .select('nome, cor, tipo, peso_atual_g, peso_total_g')
+                .order('nome', { ascending: true });
+
+            if (error) { tbody.innerHTML = `<tr><td colspan="5" class="py-2 text-red-400 text-xs">Erro ao carregar estoque: ${error.message}</td></tr>`; return; }
+            if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="py-3 text-inkmute/60 text-xs italic">Nenhum filamento cadastrado ainda.</td></tr>'; return; }
+
+            tbody.innerHTML = data.map(item => {
+                const atual = parseFloat(item.peso_atual_g || 0);
+                const total = parseFloat(item.peso_total_g || 0);
+                const percentual = total > 0 ? Math.round((atual / total) * 100) : 0;
+                const cor = percentual <= 15 ? 'text-red-400' : percentual <= 40 ? 'text-gold2' : 'text-teal2';
+                return `<tr>
+                    <td class="py-2 pr-2 text-ink font-medium">${item.nome} <span class="text-[10px] text-inkmute">[${item.tipo || '-'}]</span></td>
+                    <td class="py-2 pr-2 text-inkmute">${item.cor || '-'}</td>
+                    <td class="py-2 pr-2 font-mono2 text-ink">${atual}g</td>
+                    <td class="py-2 pr-2 font-mono2 text-inkmute">${total}g</td>
+                    <td class="py-2 font-mono2 font-bold ${cor}">${percentual}%</td>
+                </tr>`;
+            }).join('');
         }
 
         // --- PERFIS / CONTROLE DE ACESSO (ADMIN) ---
@@ -1186,6 +1237,7 @@
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas || [])); 
             renderizarPecasDoEscopo();
             btnSalvarProjetoCompleto.innerText = '🔄 Atualizar Projeto'; btnCancelarEdicao.classList.remove('hidden');
+            document.getElementById('secaoCapaProjeto').scrollIntoView({ behavior: 'smooth', block: 'center' });
         };
 
         window.duplicarProjeto3d = async function(id) {
@@ -1263,7 +1315,10 @@
         }
 
         // --- ESTOQUE / FILAMENTOS ---
-        // --- ESTOQUE DE FILAMENTOS (SALVAR / EXCLUIR) ---
+        // --- ESTOQUE DE FILAMENTOS (SALVAR / EDITAR / EXCLUIR) ---
+        let idFilamentoEmEdicao = null;
+        const btnCancelarFilamento = document.getElementById('btnCancelarFilamento');
+
         btnSalvarFilamento.addEventListener('click', async () => {
             const nome = filNome.value.trim();
             const fabricante = filFabricante.value.trim();
@@ -1278,8 +1333,7 @@
                 return alert('Preencha ao menos o nome, o preço pago e o peso total corretamente.');
             }
 
-            btnSalvarFilamento.disabled = true;
-            const { error } = await _supabase.from('estoque_materiais').insert([{
+            const payload = {
                 nome,
                 fabricante,
                 cor,
@@ -1287,18 +1341,48 @@
                 data_compra: dataCompra,
                 preco_pago: preco,
                 peso_total_g: pesoTotal,
-                peso_atual_g: pesoAtual,
-                user_id: usuarioAtual.id
-            }]);
+                peso_atual_g: pesoAtual
+            };
+
+            btnSalvarFilamento.disabled = true;
+            const { error } = idFilamentoEmEdicao
+                ? await _supabase.from('estoque_materiais').update(payload).eq('id', idFilamentoEmEdicao)
+                : await _supabase.from('estoque_materiais').insert([Object.assign(payload, { user_id: usuarioAtual.id })]);
             btnSalvarFilamento.disabled = false;
 
             if (error) { alert('Erro ao salvar no estoque: ' + error.message); return; }
 
-            filNome.value = ''; filFabricante.value = ''; filCor.value = '';
-            filPreco.value = ''; filPesoTotal.value = 1000; filPesoAtual.value = 1000; filDataCompra.value = '';
-            alert('Compra registrada no estoque com sucesso!');
+            const mensagemSucesso = idFilamentoEmEdicao ? 'Lote atualizado com sucesso!' : 'Compra registrada no estoque com sucesso!';
+            limparFormularioFilamento();
+            alert(mensagemSucesso);
             carregarFilamentos();
         });
+
+        function limparFormularioFilamento() {
+            idFilamentoEmEdicao = null;
+            filNome.value = ''; filFabricante.value = ''; filCor.value = '';
+            filPreco.value = ''; filPesoTotal.value = 1000; filPesoAtual.value = 1000; filDataCompra.value = '';
+            btnSalvarFilamento.innerText = 'Registrar Compra no Estoque';
+            btnCancelarFilamento.classList.add('hidden');
+        }
+        btnCancelarFilamento.addEventListener('click', limparFormularioFilamento);
+
+        window.editarFilamento = function(id) {
+            const item = filamentosCache.find(f => f.id === id);
+            if (!item) return alert('Lote não localizado.');
+            idFilamentoEmEdicao = id;
+            filNome.value = item.nome || '';
+            filFabricante.value = item.fabricante || '';
+            filCor.value = item.cor || '';
+            filTipo.value = item.tipo || 'PLA';
+            filDataCompra.value = item.data_compra || '';
+            filPreco.value = item.preco_pago;
+            filPesoTotal.value = item.peso_total_g;
+            filPesoAtual.value = item.peso_atual_g;
+            btnSalvarFilamento.innerText = '💾 Salvar Alterações';
+            btnCancelarFilamento.classList.remove('hidden');
+            document.getElementById('view-filamentos').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        };
 
         window.deletarFilamento = async function(id) {
             if (confirm('Deseja excluir este lote do estoque permanentemente?')) {
@@ -1315,8 +1399,8 @@
                 return;
             }
             filamentosCache = data || [];
-            console.log('Estoque: registros recebidos do Supabase:', filamentosCache.length, filamentosCache);
             atualizarDropdownsDeUso(); atualizarDropdownsFiltros(); filtrarERenderizarFilamentos();
+            atualizarTabelaEstoqueDashboard();
         }
 
         function atualizarDropdownsDeUso() {
@@ -1356,7 +1440,24 @@
             const targetLista = document.getElementById('listaFilamentos');
             if (dadosFiltrados.length === 0) { targetLista.innerHTML = '<p class="text-inkmute/60 text-sm text-center p-4">Nenhum lote corresponde.</p>'; return; }
             targetLista.innerHTML = dadosFiltrados.map(item => {
-                return `<div class="bg-surface2 p-3 rounded border border-line flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-white">${item.nome} <span class="text-xs text-teal2">[${item.tipo}]</span></h3><p class="text-xs text-inkmute">Cor: ${item.cor}</p></div><div class="text-right"><span class="text-emerald-400 font-semibold text-sm block">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span><button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button></div></div>`;
+                const pesoAtual = parseFloat(item.peso_atual_g || 0);
+                const pesoTotalItem = parseFloat(item.peso_total_g || 0);
+                const percentualRestante = pesoTotalItem > 0 ? Math.round((pesoAtual / pesoTotalItem) * 100) : 0;
+                const corBarra = percentualRestante <= 15 ? 'text-red-400' : percentualRestante <= 40 ? 'text-gold2' : 'text-teal2';
+                return `<div class="bg-surface2 p-3 rounded border border-line flex justify-between items-center shadow-sm">
+                    <div>
+                        <h3 class="font-bold text-white">${item.nome} <span class="text-xs text-teal2">[${item.tipo}]</span></h3>
+                        <p class="text-xs text-inkmute">Cor: ${item.cor}</p>
+                        <p class="text-xs font-mono2 ${corBarra} mt-0.5">${pesoAtual}g / ${pesoTotalItem}g restante (${percentualRestante}%)</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-emerald-400 font-semibold text-sm block font-mono2">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
+                        <div class="flex gap-2 justify-end mt-1">
+                            <button onclick="editarFilamento('${item.id}')" class="text-xs text-teal2 hover:underline">✏️ Editar</button>
+                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-400 hover:underline">Excluir</button>
+                        </div>
+                    </div>
+                </div>`;
             }).join('');
         }
 
