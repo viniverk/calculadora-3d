@@ -1,42 +1,43 @@
-Gestor 3D - Zweck 3D Print
-Sistema de gestão operacional e financeira desenvolvido para otimizar o fluxo de trabalho da Zweck 3D Print. O projeto integra um front-end hospedado no GitHub Pages com um back-end serverless no Supabase.
+# Gestor 3D — Guia de Atualização
 
-🚀 Tecnologias Utilizadas
-Front-end: HTML5, Tailwind CSS, JavaScript (Vanilla).
+## O que mudou
+- **Visual**: nova identidade (dark/tech refinado), tipografia própria (Space Grotesk + Inter + JetBrains Mono para números), cores consistentes.
+- **Novo**: aba **Dashboard** com visão geral (projetos, faturamento, lucro, estoque).
+- **Novo**: painel **Gerenciar Usuários** de fato funcional — lista todos os usuários, permite promover/remover admin e bloquear/desbloquear acesso.
+- **Bug corrigido**: ao editar um projeto existente, o salvamento estava indo para o Supabase de forma errada (`update([payload])` em vez de `update(payload)`), o que podia falhar silenciosamente.
+- **Nada mudou** nas tabelas `projetos_3d`, `vendas_3d`, `estoque_materiais`, `catalogo_modelos` — seus dados continuam exatamente como estão.
 
-Back-end/Database: Supabase (PostgreSQL).
+## Passo 1 — Rodar o script SQL no Supabase (só uma vez)
+1. Acesse seu projeto em https://supabase.com/dashboard
+2. Vá em **SQL Editor** → **New query**
+3. Copie e cole o conteúdo do arquivo `setup_admin.sql`
+4. **Antes de rodar**, troque `SEU_EMAIL_AQUI@exemplo.com` na última linha pelo seu e-mail de login real (é assim que você vira o primeiro administrador)
+5. Clique em **Run**
 
-Autenticação: Supabase Auth (Social Provider: Google).
+Isso cria a tabela `profiles` (não mexe nas suas tabelas existentes) e te torna admin.
 
-Hospedagem: GitHub Pages.
+## Passo 2 — Subir o novo `index.html` no GitHub
+Como você já tem o repositório:
+1. Substitua o arquivo `index.html` do seu repositório pelo novo (mesmo nome, mesma pasta)
+2. Faça commit e push:
+   ```bash
+   git add index.html
+   git commit -m "Redesign do Gestor 3D + painel admin funcional"
+   git push
+   ```
 
-🛠 Arquitetura do Banco de Dados
-A infraestrutura de dados é versionada através de scripts SQL salvos no SQL Editor do Supabase. Abaixo, a ordem de execução para reconstrução do ambiente:
+## Passo 3 — Publicar no GitHub Pages
+1. No repositório, vá em **Settings** → **Pages**
+2. Em "Source", selecione a branch (geralmente `main`) e a pasta `/ (root)`
+3. Salve — em alguns minutos o site fica disponível em algo como:
+   `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`
 
-Create Core Tables & RLS Init: Define a espinha dorsal (estoque, modelos, impressões, vendas, perfis) e as políticas de segurança RLS.
+Se o GitHub Pages já estava configurado antes, nada muda aqui — o novo `index.html` substitui o antigo automaticamente após o push.
 
-Fix Estoque Materiais RLS: Ajuste fino das permissões de segurança para o estoque de insumos.
+## Passo 4 — Testar
+1. Acesse o site publicado e faça login normalmente — seus projetos, vendas e estoque devem aparecer normalmente
+2. Vá até "Gerenciar Usuários" na barra lateral (só aparece pra quem é admin) e confirme que sua conta aparece como `admin`
 
-Add Custom Columns to Registro Impressoes: Inclusão de métricas de negócio na tabela de jobs.
-
-Add Cor and Data Compra to Estoque Materiais: Evolução incremental dos campos de controle de estoque.
-
-Add Data Conclusao to Projetos: Atualização da estrutura de portfólio para controle de cronograma.
-
-🔑 Configuração de Autenticação
-O sistema utiliza OAuth 2.0 com o Google.
-
-Callback URL: [https://tacxvkvpnialzdhbhffc.supabase.co/auth/v1/callback](https://tacxvkvpnialzdhbhffc.supabase.co/auth/v1/callback)
-
-Site URL: [https://viniverk.github.io/calculadora-3d/](https://viniverk.github.io/calculadora-3d/)
-
-📊 Funcionalidades
-Gestão de Estoque: Controle de peso/gramatura de filamentos com filtros por tipo, fornecedor e cor.
-
-Portfólio & Calculadora: Estimativa de custos (insumos + taxa de máquina) com cálculo automático de margem de lucro sugerida.
-
-Gestor Comercial: Módulo de vendas com baixa automática de status e cálculo de lucro líquido real (Faturamento Bruto - Custo Retido).
-
-Painel Administrativo: Controle de acesso por usuário via tabela perfis.
-
-Desenvolvido por Vinícios - Senior BI Developer
+## Observações de segurança
+- A chave que aparece no HTML (`SUPABASE_KEY`) é a chave pública (**anon key**) — é normal e seguro ela ficar visível no código do site. Quem protege seus dados é a política de RLS (Row Level Security) do banco, não o sigilo dessa chave.
+- Nunca coloque a **service_role key** (chave secreta/admin) em um arquivo HTML público — ela nunca deveria sair do backend.
