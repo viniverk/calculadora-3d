@@ -1309,7 +1309,13 @@
 
         async function carregarFilamentos() {
             const { data, error } = await _supabase.from('estoque_materiais').select('*').order('data_compra', { ascending: false });
-            if (error) return; filamentosCache = data || [];
+            if (error) {
+                console.error('Erro ao carregar estoque:', error);
+                document.getElementById('listaFilamentos').innerHTML = `<p class="text-red-400 text-sm p-3">Erro ao carregar estoque: ${error.message}</p>`;
+                return;
+            }
+            filamentosCache = data || [];
+            console.log('Estoque: registros recebidos do Supabase:', filamentosCache.length, filamentosCache);
             atualizarDropdownsDeUso(); atualizarDropdownsFiltros(); filtrarERenderizarFilamentos();
         }
 
