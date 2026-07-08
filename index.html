@@ -69,6 +69,19 @@
 </head>
 <body class="bg-base text-ink min-h-screen font-sans flex">
 
+    <header id="mobileTopBar" class="md:hidden fixed top-0 left-0 right-0 h-14 bg-surface border-b border-line flex items-center justify-between px-4 z-20 hidden">
+        <div class="flex items-center gap-2">
+            <span class="text-xl">🖨️</span>
+            <span class="font-display font-bold text-ink text-sm">Gestor 3D</span>
+        </div>
+        <button id="btnAbrirMenuMobile" class="p-2 rounded-lg bg-surface2 text-ink border border-line">
+            <span class="text-xl leading-none">☰</span>
+        </button>
+    </header>
+
+    <div id="overlayMobile" class="md:hidden fixed inset-0 bg-black/60 z-10 hidden"></div>
+
+
     <div id="telaAutenticacao" class="max-w-md mx-auto mt-16 sm:mt-24 w-full px-4">
         <div class="text-center mb-6">
             <span class="text-4xl">🖨️</span>
@@ -128,7 +141,7 @@
         </div>
     </div>
 
-    <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-surface border-r border-line flex flex-col justify-between transition-sidebar w-64 z-30 hidden">
+    <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-surface border-r border-line flex flex-col justify-between transition-sidebar w-64 z-30 hidden -translate-x-full md:translate-x-0 transition-transform duration-300">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-line layer-lines">
                 <div class="flex items-center gap-2 overflow-hidden">
@@ -190,7 +203,7 @@
         </div>
     </aside>
 
-    <main id="conteudoPainel" class="flex-1 p-4 md:p-8 transition-sidebar ml-64 hidden w-full">
+    <main id="conteudoPainel" class="flex-1 p-4 md:p-8 mt-14 md:mt-0 transition-sidebar md:ml-64 hidden w-full">
         
         <div id="view-dashboard" class="aba-conteudo grid grid-cols-1 gap-6">
             <div>
@@ -350,7 +363,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center pt-2 border-t border-line">
+                <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-2 border-t border-line">
                     <div>
                         <span class="text-xs text-inkmute uppercase font-bold block">Preço Final de Venda Sugerido:</span>
                         <span id="resumoPrecoVenda" class="text-2xl font-black text-green-400 font-mono2">R$ 0,00</span>
@@ -488,7 +501,7 @@
                             <input type="date" id="filDataCompra" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none text-white">
                         </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
+                    <div class="grid grid-cols-2 sm:grid-cols-3 gap-2">
                         <div>
                             <label class="block text-sm font-medium mb-1">Preço Pago (R$)</label>
                             <input type="number" id="filPreco" placeholder="100.00" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none">
@@ -626,6 +639,9 @@
         const conteudoPainel = document.getElementById('conteudoPainel');
         const btnToggleSidebar = document.getElementById('btnToggleSidebar');
         const iconeSeta = document.getElementById('iconeSeta');
+        const mobileTopBar = document.getElementById('mobileTopBar');
+        const btnAbrirMenuMobile = document.getElementById('btnAbrirMenuMobile');
+        const overlayMobile = document.getElementById('overlayMobile');
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
         const projNome = document.getElementById('projNome');
@@ -704,7 +720,8 @@
             if (modoPublicoAtivo) {
                 telaAuth.style.setProperty('display', 'none', 'important');
                 sidebarApp.style.setProperty('display', 'none', 'important');
-                conteudoPainel.classList.remove('hidden', 'ml-64');
+                if (mobileTopBar) mobileTopBar.style.setProperty('display', 'none', 'important');
+                conteudoPainel.classList.remove('hidden', 'md:ml-64', 'mt-14', 'md:mt-0');
                 conteudoPainel.classList.add('p-4', 'w-full');
                 
                 const btnComp = document.getElementById('btnCompartilharCatalogo');
@@ -755,21 +772,41 @@
             sidebarExpandido = !sidebarExpandido;
             if (sidebarExpandido) {
                 sidebarApp.classList.replace('w-20', 'w-64');
-                conteudoPainel.classList.replace('ml-20', 'ml-64');
+                conteudoPainel.classList.replace('md:ml-20', 'md:ml-64');
                 iconeSeta.innerText = '◀';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.remove('hidden'));
             } else {
                 sidebarApp.classList.replace('w-64', 'w-20');
-                conteudoPainel.classList.replace('ml-64', 'ml-20');
+                conteudoPainel.classList.replace('md:ml-64', 'md:ml-20');
                 iconeSeta.innerText = '▶';
                 document.querySelectorAll('.label-texto').forEach(el => el.classList.add('hidden'));
             }
         });
 
+        // --- MENU MOBILE (GAVETA) ---
+        let menuMobileAberto = false;
+        function abrirMenuMobile() {
+            menuMobileAberto = true;
+            sidebarApp.classList.remove('-translate-x-full');
+            overlayMobile.classList.remove('hidden');
+            btnAbrirMenuMobile.innerHTML = '<span class="text-xl leading-none">✕</span>';
+        }
+        function fecharMenuMobile() {
+            menuMobileAberto = false;
+            sidebarApp.classList.add('-translate-x-full');
+            overlayMobile.classList.add('hidden');
+            btnAbrirMenuMobile.innerHTML = '<span class="text-xl leading-none">☰</span>';
+        }
+        btnAbrirMenuMobile.addEventListener('click', () => {
+            menuMobileAberto ? fecharMenuMobile() : abrirMenuMobile();
+        });
+        overlayMobile.addEventListener('click', fecharMenuMobile);
+
         function mudarAba(abaDestino) {
             if (modoPublicoAtivo) return; 
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
+            fecharMenuMobile();
 
             document.querySelectorAll('.item-menu-btn').forEach(btn => {
                 if (btn.getAttribute('data-aba') === abaDestino) {
@@ -928,6 +965,7 @@
                 telaAuth.classList.add('hidden');
                 sidebarApp.classList.remove('hidden');
                 conteudoPainel.classList.remove('hidden');
+                mobileTopBar.classList.remove('hidden');
                 usuarioLogadoText.innerText = session.user.email;
                 carregarDashboard();
                 carregarFilamentos();
@@ -938,6 +976,7 @@
                 usuarioAtual = null;
                 sidebarApp.classList.add('hidden');
                 conteudoPainel.classList.add('hidden');
+                mobileTopBar.classList.add('hidden');
                 telaAuth.classList.remove('hidden');
             }
         });
@@ -1082,14 +1121,15 @@
             const horas = parseFloat(pecaTempoHoras.value) || 0;
             const minutos = parseFloat(pecaTempoMinutos.value) || 0;
             const tempoTotalH = horas + (minutos / 60);
-            const custoPorGrama = parseFloat(pecaSelectFilamento.value);
+            const chaveFilamentoSelecionado = pecaSelectFilamento.value;
+            const custoPorGrama = mapaCustoPorChaveFilamento[chaveFilamentoSelecionado] ?? 0.12;
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
             
             if (!nome || peso <= 0 || tempoTotalH <= 0) return alert('Informe os parâmetros da peça corretamente.');
             const custoComponente = (peso * custoPorGrama) + (tempoTotalH * 1.50);
             
             const dadosPeca = { 
-                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, filamento_label: textoFilamento 
+                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado
             };
 
             if (idPecaEmEdicaoIndex !== null) {
@@ -1136,6 +1176,9 @@
         window.editarComponenteDoEscopo = function(index) {
             const p = pecasProjetoAtual[index]; idPecaEmEdicaoIndex = index;
             pecaNome.value = p.nome_peca; pecaPeso.value = p.peso_g;
+            if (p.filamento_chave && mapaCustoPorChaveFilamento.hasOwnProperty(p.filamento_chave)) {
+                pecaSelectFilamento.value = p.filamento_chave;
+            }
             const totalMins = Math.round(p.tempo_h * 60);
             pecaTempoHoras.value = Math.floor(totalMins / 60); pecaTempoMinutos.value = totalMins % 60;
             btnIncluirPeca.innerText = '💾 Salvar Peça'; pecaNome.focus();
@@ -1209,13 +1252,57 @@
                 ? _supabase.from('projetos_3d').update(payload).eq('id', idProjetoEmEdicao)
                 : _supabase.from('projetos_3d').insert([Object.assign(payload, { user_id: usuarioAtual.id })]);
 
+            const eraProjetoNovo = !idProjetoEmEdicao;
             const { error } = await query; btnSalvarProjetoCompleto.disabled = false;
             if (error) alert('Falha ao salvar dados: ' + error.message);
             else { 
+                if (eraProjetoNovo) await descontarEstoquePelasPecas(pecasProjetoAtual);
                 alert('Projeto registrado com sucesso!'); 
                 limparFormularioProjeto(); carregarProjetos3d(); 
             }
         });
+
+        // --- DESCONTO AUTOMÁTICO DE ESTOQUE ---
+        // Só roda ao criar um projeto novo (não em edições, pra não descontar 2x o mesmo material).
+        async function descontarEstoquePelasPecas(pecas) {
+            const consumoPorChave = {};
+            (pecas || []).forEach(p => {
+                const chave = p.filamento_chave;
+                if (!chave || chave === 'padrao') return; // "Preço Padrão" não está ligado a um lote físico do estoque
+                consumoPorChave[chave] = (consumoPorChave[chave] || 0) + (parseFloat(p.peso_g) || 0);
+            });
+
+            const chaves = Object.keys(consumoPorChave);
+            if (chaves.length === 0) return;
+
+            const avisos = [];
+            for (const chave of chaves) {
+                let restante = consumoPorChave[chave];
+                const lotes = filamentosCache
+                    .filter(item => `${(item.fabricante || 'Desconhecido').trim()} | ${item.tipo} | ${(item.cor || 'Incolor').trim()}`.toLowerCase() === chave)
+                    .sort((a, b) => new Date(a.data_compra || a.created_at) - new Date(b.data_compra || b.created_at));
+
+                if (lotes.length === 0) { avisos.push(`Nenhum lote em estoque bate com "${chave}" — não foi possível descontar.`); continue; }
+
+                for (const lote of lotes) {
+                    if (restante <= 0) break;
+                    const atual = parseFloat(lote.peso_atual_g || 0);
+                    if (atual <= 0) continue;
+                    const desconto = Math.min(atual, restante);
+                    const novoValor = Math.max(0, atual - desconto);
+                    await _supabase.from('estoque_materiais').update({ peso_atual_g: novoValor }).eq('id', lote.id);
+                    lote.peso_atual_g = novoValor;
+                    restante -= desconto;
+                }
+
+                if (restante > 0) {
+                    avisos.push(`Estoque de "${chave}" insuficiente: faltaram ${restante.toFixed(1)}g (peso negativo evitado, ficou zerado).`);
+                }
+            }
+
+            if (avisos.length > 0) alert('Atenção no desconto de estoque:\n\n' + avisos.join('\n'));
+            await carregarFilamentos();
+        }
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
@@ -1242,14 +1329,16 @@
 
         window.duplicarProjeto3d = async function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return;
-            if (confirm(`Deseja duplicar o projeto "${proj.nome_projeto}"?`)) {
+            if (confirm(`Deseja duplicar o projeto "${proj.nome_projeto}"? Isso também vai descontar o material do estoque, como se fosse uma nova impressão.`)) {
                 const { error } = await _supabase.from('projetos_3d').insert([{ 
                     nome_projeto: `${proj.nome_projeto} (Cópia)`, imagem_base64: proj.imagem_base64, nome_arquivo_3mf: proj.nome_arquivo_3mf, 
                     pecas: proj.pecas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total, 
                     preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g, 
                     status: 'Aguardando Impressão', user_id: usuarioAtual.id 
                 }]);
-                if (error) alert(error.message); else carregarProjetos3d();
+                if (error) { alert(error.message); return; }
+                await descontarEstoquePelasPecas(proj.pecas);
+                carregarProjetos3d();
             }
         };
 
@@ -1403,16 +1492,20 @@
             atualizarTabelaEstoqueDashboard();
         }
 
+        let mapaCustoPorChaveFilamento = { 'padrao': 0.12 };
+
         function atualizarDropdownsDeUso() {
             selectFilamento.innerHTML = '<option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>';
-            pecaSelectFilamento.innerHTML = '<option value="0.12">Preço Padrão (R$ 0,12 /g)</option>';
+            pecaSelectFilamento.innerHTML = '<option value="padrao">Preço Padrão (R$ 0,12 /g)</option>';
+            mapaCustoPorChaveFilamento = { 'padrao': 0.12 };
             const chavesRegistradas = new Set();
             filamentosCache.forEach(item => {
                 const fab = (item.fabricante || 'Desconhecido').trim(); const cor = (item.cor || 'Incolor').trim(); const chaveUnica = `${fab} | ${item.tipo} | ${cor}`.toLowerCase();
                 if (!chavesRegistradas.has(chaveUnica)) {
                     chavesRegistradas.add(chaveUnica); const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
+                    mapaCustoPorChaveFilamento[chaveUnica] = custoPorGramaItem;
                     const opt1 = document.createElement('option'); opt1.value = custoPorGramaItem; opt1.textContent = `${fab} - ${item.tipo} (${cor})`; selectFilamento.appendChild(opt1);
-                    const opt2 = document.createElement('option'); opt2.value = custoPorGramaItem; opt2.textContent = `${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
+                    const opt2 = document.createElement('option'); opt2.value = chaveUnica; opt2.textContent = `${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
                 }
             });
             calcularAbaBase(); atualizarAcumuladoresMaster();
