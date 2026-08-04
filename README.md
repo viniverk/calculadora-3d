@@ -1,43 +1,35 @@
-# Gestor 3D — Guia de Atualização
+# Gestor 3D — Migração Supabase → Firebase
 
 ## O que mudou
-- **Visual**: nova identidade (dark/tech refinado), tipografia própria (Space Grotesk + Inter + JetBrains Mono para números), cores consistentes.
-- **Novo**: aba **Dashboard** com visão geral (projetos, faturamento, lucro, estoque).
-- **Novo**: painel **Gerenciar Usuários** de fato funcional — lista todos os usuários, permite promover/remover admin e bloquear/desbloquear acesso.
-- **Bug corrigido**: ao editar um projeto existente, o salvamento estava indo para o Supabase de forma errada (`update([payload])` em vez de `update(payload)`), o que podia falhar silenciosamente.
-- **Nada mudou** nas tabelas `projetos_3d`, `vendas_3d`, `estoque_materiais`, `catalogo_modelos` — seus dados continuam exatamente como estão.
+- O site (`index.html`) agora usa **Firebase** (Authentication + Firestore) em vez de Supabase.
+- **Imagens de projeto**: em vez de fazer upload de arquivo, agora você **cola o link** de uma imagem já hospedada (Makerworld, Imgur, etc.) — o Firebase Storage deixou de ser gratuito em fev/2026, então evitamos essa dependência.
+- Todas as funcionalidades continuam as mesmas: Dashboard, Impressões, Portfólio, Vendas, Estoque (com edição e desconto automático), Calculadora e Painel Admin.
 
-## Passo 1 — Rodar o script SQL no Supabase (só uma vez)
-1. Acesse seu projeto em https://supabase.com/dashboard
-2. Vá em **SQL Editor** → **New query**
-3. Copie e cole o conteúdo do arquivo `setup_admin.sql`
-4. **Antes de rodar**, troque `SEU_EMAIL_AQUI@exemplo.com` na última linha pelo seu e-mail de login real (é assim que você vira o primeiro administrador)
-5. Clique em **Run**
+## Passo 1 — Preparar o Firebase (uma vez só)
+No [Firebase Console](https://console.firebase.google.com) → projeto "Gestor 3D":
 
-Isso cria a tabela `profiles` (não mexe nas suas tabelas existentes) e te torna admin.
+1. **Authentication → Sign-in method** → ative **E-mail/Senha** e **Google**
+2. **Firestore Database** → crie o banco em modo produção (se ainda não criou)
+3. **Firestore Database → Regras** → cole o conteúdo do arquivo `firestore.rules` (te mandei antes) → **Publicar**
 
-## Passo 2 — Subir o novo `index.html` no GitHub
-Como você já tem o repositório:
-1. Substitua o arquivo `index.html` do seu repositório pelo novo (mesmo nome, mesma pasta)
-2. Faça commit e push:
-   ```bash
-   git add index.html
-   git commit -m "Redesign do Gestor 3D + painel admin funcional"
-   git push
-   ```
+## Passo 2 — Migrar os dados antigos (uma vez só)
+1. Abra o arquivo `migracao.html` direto no navegador (dá pra abrir localmente, sem precisar subir no GitHub)
+2. **Login no Supabase**: use o e-mail e senha da sua conta atual (a mesma que você já usa pra logar no site antigo)
+3. **Login no Firebase**: crie/entre com a conta que você quer usar dali pra frente (pode ser a mesma conta Google de sempre)
+4. Clique em **"Iniciar Migração"** e acompanhe o log — ele mostra quantos registros foram copiados de cada tabela
+5. Ao final, confira: os números de "estoque_materiais", "projetos_3d", "vendas_3d" e "catalogo_modelos" devem bater com o que você tinha no Supabase
 
-## Passo 3 — Publicar no GitHub Pages
-1. No repositório, vá em **Settings** → **Pages**
-2. Em "Source", selecione a branch (geralmente `main`) e a pasta `/ (root)`
-3. Salve — em alguns minutos o site fica disponível em algo como:
-   `https://SEU-USUARIO.github.io/NOME-DO-REPOSITORIO/`
+**Importante:** essa ferramenta é de uso único. Depois de confirmar que os dados migraram certo, pode fechar essa página — ela não faz parte do site final e não precisa ser publicada no GitHub.
 
-Se o GitHub Pages já estava configurado antes, nada muda aqui — o novo `index.html` substitui o antigo automaticamente após o push.
+## Passo 3 — Publicar o novo site
+1. Suba o novo `index.html` no seu repositório do GitHub (mesmo processo de sempre: substituir o arquivo, commit, push)
+2. Aguarde o GitHub Pages atualizar
+3. Acesse o site publicado e logue com a **mesma conta do Firebase** usada no Passo 2
 
-## Passo 4 — Testar
-1. Acesse o site publicado e faça login normalmente — seus projetos, vendas e estoque devem aparecer normalmente
-2. Vá até "Gerenciar Usuários" na barra lateral (só aparece pra quem é admin) e confirme que sua conta aparece como `admin`
+## Passo 4 — Conferir tudo
+- Confira se os projetos, vendas e estoque aparecem certinho
+- Teste cadastrar um projeto novo, colando um link de imagem
+- Vá em "Gerenciar Usuários" e confirme que sua conta aparece como `admin`
 
-## Observações de segurança
-- A chave que aparece no HTML (`SUPABASE_KEY`) é a chave pública (**anon key**) — é normal e seguro ela ficar visível no código do site. Quem protege seus dados é a política de RLS (Row Level Security) do banco, não o sigilo dessa chave.
-- Nunca coloque a **service_role key** (chave secreta/admin) em um arquivo HTML público — ela nunca deveria sair do backend.
+## E o Supabase antigo?
+Pode deixar o projeto Supabase existir por um tempo como backup (sem custo, só não vai mais ser usado pelo site). Quando tiver certeza de que está tudo certo no Firebase, pode até excluir o projeto Supabase — mas não tem pressa nenhuma pra isso.
