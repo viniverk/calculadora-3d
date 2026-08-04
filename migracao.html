@@ -77,6 +77,7 @@
     firebase.initializeApp(firebaseConfig);
     const fbAuth = firebase.auth();
     const db = firebase.firestore();
+    db.settings({ experimentalForceLongPolling: true, merge: true });
     const googleProvider = new firebase.auth.GoogleAuthProvider();
 
     let supaLogado = false;
@@ -148,7 +149,7 @@
         log(`\n📦 Lendo "${nomeTabela}" do Supabase...`);
         let data, error;
         try {
-            ({ data, error } = await comTimeout(_supabase.from(nomeTabela).select('*'), 15000, nomeTabela));
+            ({ data, error } = await comTimeout(_supabase.from(nomeTabela).select('*'), 30000, nomeTabela));
         } catch (e) {
             log(`✗ Tempo esgotado lendo ${nomeTabela}: ${e.message}. Pulando esta tabela.`, 'erro');
             return 0;
@@ -160,7 +161,7 @@
         for (const row of data) {
             try {
                 const doc = transformar(row);
-                await comTimeout(db.collection(nomeTabela).doc(row.id).set(doc, { merge: true }), 15000, `gravar ${row.id}`);
+                await comTimeout(db.collection(nomeTabela).doc(row.id).set(doc, { merge: true }), 30000, `gravar ${row.id}`);
                 ok++;
             } catch (e) {
                 log(`  ✗ Falha no registro ${row.id}: ${e.message}`, 'erro');
@@ -185,7 +186,7 @@
                     banido: false,
                     created_at: new Date().toISOString()
                 }, { merge: true }),
-                15000, 'gravar perfil'
+                30000, "gravar perfil"
             );
             log('✓ Perfil migrado (papel: admin).', 'ok');
         } catch (e) { log('✗ Erro ao migrar perfil: ' + e.message + ' — seguindo com o resto da migração mesmo assim.', 'erro'); }
