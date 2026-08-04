@@ -137,9 +137,22 @@
         }
     });
 
+    function comTimeout(promessa, ms, rotulo) {
+        return Promise.race([
+            promessa,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tempo esgotado (${rotulo}) após ${ms/1000}s`)), ms))
+        ]);
+    }
+
     async function migrarTabela(nomeTabela, transformar) {
         log(`\n📦 Lendo "${nomeTabela}" do Supabase...`);
-        const { data, error } = await _supabase.from(nomeTabela).select('*');
+        let data, error;
+        try {
+            ({ data, error } = await comTimeout(_supabase.from(nomeTabela).select('*'), 15000, nomeTabela));
+        } catch (e) {
+            log(`✗ Tempo esgotado lendo ${nomeTabela}: ${e.message}. Pulando esta tabela.`, 'erro');
+            return 0;
+        }
         if (error) { log(`✗ Erro ao ler ${nomeTabela}: ${error.message}`, 'erro'); return 0; }
         log(`  ${data.length} registro(s) encontrado(s).`);
 
@@ -147,7 +160,7 @@
         for (const row of data) {
             try {
                 const doc = transformar(row);
-                await db.collection(nomeTabela).doc(row.id).set(doc, { merge: true });
+                await comTimeout(db.collection(nomeTabela).doc(row.id).set(doc, { merge: true }), 15000, `gravar ${row.id}`);
                 ok++;
             } catch (e) {
                 log(`  ✗ Falha no registro ${row.id}: ${e.message}`, 'erro');
@@ -162,18 +175,20 @@
         const novoUid = fbAuth.currentUser.uid;
         log('Iniciando migração. Todos os registros ficarão associados à conta: ' + fbAuth.currentUser.email);
 
-        // Perfil do próprio usuário (mantém papel de admin se já for)
+        // Perfil do próprio usuário (você é quem está rodando a migração, então já entra como admin)
         log('\n👤 Migrando perfil...');
         try {
-            const { data: perfilAntigo } = await _supabase.from('profiles').select('*').eq('email', document.getElementById('supaEmail').value.trim()).maybeSingle();
-            await db.collection('profiles').doc(novoUid).set({
-                email: fbAuth.currentUser.email,
-                role: (perfilAntigo && perfilAntigo.role) || 'admin',
-                banido: false,
-                created_at: new Date().toISOString()
-            }, { merge: true });
-            log('✓ Perfil migrado (papel: ' + ((perfilAntigo && perfilAntigo.role) || 'admin') + ').', 'ok');
-        } catch (e) { log('✗ Erro ao migrar perfil: ' + e.message, 'erro'); }
+            await comTimeout(
+                db.collection('profiles').doc(novoUid).set({
+                    email: fbAuth.currentUser.email,
+                    role: 'admin',
+                    banido: false,
+                    created_at: new Date().toISOString()
+                }, { merge: true }),
+                15000, 'gravar perfil'
+            );
+            log('✓ Perfil migrado (papel: admin).', 'ok');
+        } catch (e) { log('✗ Erro ao migrar perfil: ' + e.message + ' — seguindo com o resto da migração mesmo assim.', 'erro'); }
 
         await migrarTabela('estoque_materiais', (row) => ({
             nome: row.nome, tipo: row.tipo, fabricante: row.fabricante,
