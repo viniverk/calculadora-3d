@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Migração Gestor 3D: Supabase → Firebase</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+    body { font-family: system-ui, sans-serif; background:#F4F5F7; color:#111827; max-width:680px; margin:40px auto; padding:0 16px; }
+    h1 { font-size:1.4rem; margin-bottom:4px; }
+    .sub { color:#6B7280; font-size:0.85rem; margin-bottom:24px; }
+    .card { background:#fff; border:1px solid #E3E6EB; border-radius:12px; padding:20px; margin-bottom:16px; }
+    label { display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#374151; }
+    input { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #E3E6EB; border-radius:8px; margin-bottom:10px; font-size:0.9rem; }
+    button { background:#EA580C; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.9rem; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    button.secundario { background:#fff; color:#111827; border:1px solid #E3E6EB; }
+    .status { font-size:0.8rem; margin-top:6px; }
+    .ok { color:#059669; } .erro { color:#DC2626; } .info { color:#6B7280; }
+    #log { background:#111827; color:#D1FAE5; font-family:monospace; font-size:0.78rem; padding:14px; border-radius:8px; height:260px; overflow-y:auto; white-space:pre-wrap; margin-top:16px; }
+    .passo-titulo { font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .badge { font-size:0.7rem; padding:2px 8px; border-radius:99px; background:#F1F2F5; color:#6B7280; }
+    .badge.feito { background:#DCFCE7; color:#059669; }
+</style>
+</head>
+<body>
+
+<h1>🔄 Migração: Supabase → Firebase</h1>
+<p class="sub">Ferramenta de uso único. Rode isso uma vez para copiar seus dados do Supabase para o novo banco no Firestore. Depois de confirmar que tudo migrou certo, você pode fechar esta página — ela não precisa ficar no ar.</p>
+
+<div class="card">
+    <div class="passo-titulo">1. Login no Supabase (dados antigos) <span id="badgeSupabase" class="badge">pendente</span></div>
+    <label>E-mail</label>
+    <input type="email" id="supaEmail" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" id="supaSenha">
+    <button id="btnLoginSupabase">Entrar no Supabase</button>
+    <div id="statusSupabase" class="status"></div>
+</div>
+
+<div class="card">
+    <div class="passo-titulo">2. Login no Firebase (dados novos) <span id="badgeFirebase" class="badge">pendente</span></div>
+    <label>E-mail</label>
+    <input type="email" id="fbEmail" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" id="fbSenha">
+    <button id="btnLoginFirebase">Entrar no Firebase</button>
+    <button id="btnGoogleFirebase" class="secundario">Entrar com Google</button>
+    <div id="statusFirebase" class="status"></div>
+</div>
+
+<div class="card">
+    <div class="passo-titulo">3. Migrar os dados</div>
+    <p class="sub" style="margin-bottom:12px;">Todos os registros migrados ficam associados à conta do Firebase logada no passo 2. Rodar mais de uma vez não duplica nada (os IDs originais são preservados).</p>
+    <button id="btnMigrar" disabled>Iniciar Migração</button>
+    <div id="log"></div>
+</div>
+
+<script>
+    // --- Config Supabase (mesma anon key pública já usada no site antigo) ---
+    const SUPABASE_URL = "https://tacxvkvpnialzdhbhffc.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRhY3h2a3ZwbmlhbHpkaGJoZmZjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk0MDAxOTIsImV4cCI6MjA5NDk3NjE5Mn0.KXZ6WqAcFtCciTnfD11hGzFMd-rW8x-bBKhppDt2vV0";
+    const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    // --- Config Firebase ---
+    const firebaseConfig = {
+        apiKey: "AIzaSyCZ25rjO_9cRHvj6woT_QwcPnM5a8q-7ds",
+        authDomain: "gestor-3d-dc685.firebaseapp.com",
+        projectId: "gestor-3d-dc685",
+        storageBucket: "gestor-3d-dc685.firebasestorage.app",
+        messagingSenderId: "209613649992",
+        appId: "1:209613649992:web:246827c84d2b21120d007d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const fbAuth = firebase.auth();
+    const db = firebase.firestore();
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    let supaLogado = false;
+    let fbLogado = false;
+
+    function log(msg, tipo) {
+        const el = document.getElementById('log');
+        const cor = tipo === 'erro' ? '#FCA5A5' : tipo === 'ok' ? '#6EE7B7' : '#D1FAE5';
+        el.innerHTML += `<div style="color:${cor}">${msg}</div>`;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function atualizarBotaoMigrar() {
+        document.getElementById('btnMigrar').disabled = !(supaLogado && fbLogado);
+    }
+
+    document.getElementById('btnLoginSupabase').addEventListener('click', async () => {
+        const email = document.getElementById('supaEmail').value.trim();
+        const password = document.getElementById('supaSenha').value;
+        const statusEl = document.getElementById('statusSupabase');
+        statusEl.innerText = 'Entrando...'; statusEl.className = 'status info';
+        const { error } = await _supabase.auth.signInWithPassword({ email, password });
+        if (error) { statusEl.innerText = 'Erro: ' + error.message; statusEl.className = 'status erro'; return; }
+        supaLogado = true;
+        statusEl.innerText = '✓ Logado no Supabase.'; statusEl.className = 'status ok';
+        document.getElementById('badgeSupabase').innerText = 'feito'; document.getElementById('badgeSupabase').classList.add('feito');
+        atualizarBotaoMigrar();
+    });
+
+    async function marcarFirebaseLogado(user) {
+        fbLogado = true;
+        const statusEl = document.getElementById('statusFirebase');
+        statusEl.innerText = '✓ Logado no Firebase como ' + user.email; statusEl.className = 'status ok';
+        document.getElementById('badgeFirebase').innerText = 'feito'; document.getElementById('badgeFirebase').classList.add('feito');
+        atualizarBotaoMigrar();
+    }
+
+    document.getElementById('btnLoginFirebase').addEventListener('click', async () => {
+        const email = document.getElementById('fbEmail').value.trim();
+        const password = document.getElementById('fbSenha').value;
+        const statusEl = document.getElementById('statusFirebase');
+        statusEl.innerText = 'Entrando...'; statusEl.className = 'status info';
+        try {
+            const cred = await fbAuth.signInWithEmailAndPassword(email, password);
+            await marcarFirebaseLogado(cred.user);
+        } catch (error) {
+            statusEl.innerText = 'Erro: ' + error.message; statusEl.className = 'status erro';
+        }
+    });
+
+    document.getElementById('btnGoogleFirebase').addEventListener('click', async () => {
+        const statusEl = document.getElementById('statusFirebase');
+        try {
+            const cred = await fbAuth.signInWithPopup(googleProvider);
+            await marcarFirebaseLogado(cred.user);
+        } catch (error) {
+            statusEl.innerText = 'Erro: ' + error.message; statusEl.className = 'status erro';
+        }
+    });
+
+    async function migrarTabela(nomeTabela, transformar) {
+        log(`\n📦 Lendo "${nomeTabela}" do Supabase...`);
+        const { data, error } = await _supabase.from(nomeTabela).select('*');
+        if (error) { log(`✗ Erro ao ler ${nomeTabela}: ${error.message}`, 'erro'); return 0; }
+        log(`  ${data.length} registro(s) encontrado(s).`);
+
+        let ok = 0;
+        for (const row of data) {
+            try {
+                const doc = transformar(row);
+                await db.collection(nomeTabela).doc(row.id).set(doc, { merge: true });
+                ok++;
+            } catch (e) {
+                log(`  ✗ Falha no registro ${row.id}: ${e.message}`, 'erro');
+            }
+        }
+        log(`✓ ${ok}/${data.length} registro(s) gravados no Firestore.`, 'ok');
+        return ok;
+    }
+
+    document.getElementById('btnMigrar').addEventListener('click', async () => {
+        document.getElementById('btnMigrar').disabled = true;
+        const novoUid = fbAuth.currentUser.uid;
+        log('Iniciando migração. Todos os registros ficarão associados à conta: ' + fbAuth.currentUser.email);
+
+        // Perfil do próprio usuário (mantém papel de admin se já for)
+        log('\n👤 Migrando perfil...');
+        try {
+            const { data: perfilAntigo } = await _supabase.from('profiles').select('*').eq('email', document.getElementById('supaEmail').value.trim()).maybeSingle();
+            await db.collection('profiles').doc(novoUid).set({
+                email: fbAuth.currentUser.email,
+                role: (perfilAntigo && perfilAntigo.role) || 'admin',
+                banido: false,
+                created_at: new Date().toISOString()
+            }, { merge: true });
+            log('✓ Perfil migrado (papel: ' + ((perfilAntigo && perfilAntigo.role) || 'admin') + ').', 'ok');
+        } catch (e) { log('✗ Erro ao migrar perfil: ' + e.message, 'erro'); }
+
+        await migrarTabela('estoque_materiais', (row) => ({
+            nome: row.nome, tipo: row.tipo, fabricante: row.fabricante,
+            peso_total_g: row.peso_total_g, peso_atual_g: row.peso_atual_g, preco_pago: row.preco_pago,
+            cor: row.cor, data_compra: row.data_compra, user_id: novoUid,
+            created_at: row.created_at || new Date().toISOString()
+        }));
+
+        await migrarTabela('projetos_3d', (row) => ({
+            nome_projeto: row.nome_projeto, imagem_base64: row.imagem_base64, nome_arquivo_3mf: row.nome_arquivo_3mf,
+            pecas: row.pecas || [], margem_lucro_porcentagem: row.margem_lucro_porcentagem, custo_total: row.custo_total,
+            preco_venda_total: row.preco_venda_total, tempo_total_min: row.tempo_total_min, peso_total_g: row.peso_total_g,
+            status: row.status, data_conclusao: row.data_conclusao, user_id: novoUid,
+            created_at: row.created_at || new Date().toISOString()
+        }));
+
+        await migrarTabela('vendas_3d', (row) => ({
+            projeto_id: row.projeto_id, nome_projeto: row.nome_projeto, cliente: row.cliente,
+            preco_venda_final: row.preco_venda_final, custo_producao_retido: row.custo_producao_retido,
+            lucro_liquido: row.lucro_liquido, data_venda: row.data_venda, user_id: novoUid,
+            created_at: row.created_at || new Date().toISOString()
+        }));
+
+        await migrarTabela('catalogo_modelos', (row) => ({
+            nome_modelo: row.nome_modelo, tempo_estimado_min: row.tempo_estimado_min,
+            peso_estimado_g: row.peso_estimado_g, preco_venda_sugerido: row.preco_venda_sugerido,
+            link_fatiador: row.link_fatiador || null, user_id: novoUid,
+            created_at: row.created_at || new Date().toISOString()
+        }));
+
+        log('\n🎉 Migração concluída! Abra o novo site (index.html com Firebase), logue com a mesma conta do Firebase usada aqui, e confira se os dados aparecem.', 'ok');
+        document.getElementById('btnMigrar').disabled = false;
+    });
+</script>
+</body>
+</html>
