@@ -295,6 +295,14 @@
                     </div>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium mb-1">Visibilidade no Portfólio (Clientes)</label>
+                    <select id="projVisibilidadePortfolio" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm text-ink">
+                        <option value="auto">Automático (só aparece quando Finalizado/Vendido)</option>
+                        <option value="mostrar">Sempre mostrar (mesmo antes de finalizar)</option>
+                        <option value="esconder">Nunca mostrar (mesmo finalizado)</option>
+                    </select>
+                </div>
+                <div>
                     <label class="block text-sm font-medium mb-1">Link de Download do Arquivo (.3mf)</label>
                     <input type="url" id="projLink3mf" placeholder="https://drive.google.com/..." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
                 </div>
@@ -665,6 +673,7 @@
         const imgPreview = document.getElementById('imgPreview');
         const previewContainer = document.getElementById('previewContainer');
         const projLink3mf = document.getElementById('projLink3mf');
+        const projVisibilidadePortfolio = document.getElementById('projVisibilidadePortfolio');
 
         const pecaNome = document.getElementById('pecaNome');
         const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
@@ -1238,7 +1247,8 @@
                 tempo_total_min: tempoTotalMin, 
                 peso_total_g: pesoTotalG, 
                 status: statusAtual, 
-                data_conclusao: dataConclusao 
+                data_conclusao: dataConclusao,
+                visibilidade_portfolio: projVisibilidadePortfolio.value
             };
 
             const eraProjetoNovo = !idProjetoEmEdicao;
@@ -1307,7 +1317,7 @@
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
             projNome.value = ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
-            projImagemUrl.value = ''; projLink3mf.value = ''; 
+            projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto';
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
             btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
@@ -1319,6 +1329,7 @@
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
+            projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
             if (proj.imagem_base64) { imgPreview.src = proj.imagem_base64; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             projLink3mf.value = proj.nome_arquivo_3mf || '';
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas || [])); 
@@ -1366,18 +1377,27 @@
                 const tag3mf = proj.nome_arquivo_3mf ? `<a href="${proj.nome_arquivo_3mf}" target="_blank" class="text-[10px] text-sky-600 mt-1 truncate hover:underline block font-semibold">🔗 Acessar download .3mf ⬇️</a>` : `<span class="text-[10px] text-inkmute/60 mt-1 block">Nenhum link fornecido</span>`;
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-600' : proj.status === 'Vendido' ? 'bg-blue-500/20 text-teal2' : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-600' : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-600 border border-purple-500/30' : 'bg-surface2 text-inkmute';                
                 const subPecasHtml = proj.pecas ? proj.pecas.map(p => `<div class="flex justify-between text-[11px] text-inkmute bg-base/40 px-1.5 py-0.5 rounded"><span>${p.nome_peca}</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`).join('') : '';
+                const badgePortfolio = deveAparecerNoPortfolio(proj) ? `<span class="text-[9px] bg-teal2/15 text-teal2 px-1.5 py-0.5 rounded font-bold" title="Aparece no Portfólio de Clientes">👁️ No Portfólio</span>` : `<span class="text-[9px] bg-surface2 text-inkmute/70 px-1.5 py-0.5 rounded font-bold" title="Não aparece no Portfólio de Clientes">🙈 Oculto</span>`;
 
-                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><p class="text-[11px] text-amber-600 font-semibold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
+                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]">${proj.nome_projeto}</h3><span class="text-xs bg-emerald-500/20 text-emerald-600 px-1.5 py-0.5 rounded font-bold">R$ ${parseFloat(proj.preco_venda_total || 0).toFixed(2)}</span></div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1">${badgePortfolio}</div><p class="text-[11px] text-amber-600 font-semibold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
             }).join('');
         }
 
         // --- ABA DE CLIENTES (LIVRE DE LENTIDÃO COM CARREGAMENTO ASSÍNCRONO) ---
+        function deveAparecerNoPortfolio(proj) {
+            if (proj.visibilidade_portfolio === 'mostrar') return true;
+            if (proj.visibilidade_portfolio === 'esconder') return false;
+            // 'auto' (ou não definido): só aparece quando o projeto está pronto
+            return proj.status === 'Projeto Finalizado' || proj.status === 'Vendido';
+        }
+
         function renderizerPortfolioCliente() {
             const containerClientes = document.getElementById('listaPortfolioClientesGrid');
             if (!containerClientes) return;
-            if (projetosCacheLocal.length === 0) { containerClientes.innerHTML = '<p class="text-inkmute/60 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
+            const projetosVisiveis = projetosCacheLocal.filter(deveAparecerNoPortfolio);
+            if (projetosVisiveis.length === 0) { containerClientes.innerHTML = '<p class="text-inkmute/60 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
 
-            containerClientes.innerHTML = projetosCacheLocal.map(proj => {
+            containerClientes.innerHTML = projetosVisiveis.map(proj => {
                 const imgTag = proj.imagem_base64 ? `<div class="bg-base/40 p-2 w-full h-52 flex items-center justify-center border-b border-line/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` : `<div class="w-full h-52 bg-base flex items-center justify-center text-inkmute/60 text-sm font-medium border-b border-line/50">Gestor 3D</div>`;
                 return `
                     <div class="bg-surface rounded-xl border border-line shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
