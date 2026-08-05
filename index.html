@@ -387,7 +387,16 @@
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit xl:col-span-3">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-line pb-2 gap-2">
                     <h2 class="font-display text-xl font-semibold text-teal-600">Projetos em Portfólio Interno</h2>
-                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
+                        <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Filtrar por Status:</label>
+                        <select id="selectFiltroStatusPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
+                            <option value="Todos">Todos</option>
+                            <option value="Aguardando Impressão">Aguardando Impressão</option>
+                            <option value="Imprimindo">Imprimindo</option>
+                            <option value="Montagem">Montagem</option>
+                            <option value="Projeto Finalizado">Projeto Finalizado</option>
+                            <option value="Vendido">Vendido</option>
+                        </select>
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Ordenar por:</label>
                         <select id="selectOrdenacaoPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
                             <option value="created_at">Data de Cadastro</option>
@@ -692,6 +701,7 @@
         const btnCancelarEdicao = document.getElementById('btnCancelarEdicao');
         const listaProjetosSalvos = document.getElementById('listaProjetosSalvos');
         const selectOrdenacaoPortfolio = document.getElementById('selectOrdenacaoPortfolio');
+        const selectFiltroStatusPortfolio = document.getElementById('selectFiltroStatusPortfolio');
 
         // Mapeamento Elementos Aba Vendas
         const vendaSelectProjeto = document.getElementById('vendaSelectProjeto');
@@ -1363,14 +1373,16 @@
 
         // --- SISTEMAS DE RENDERIZAÇÃO ---
         selectOrdenacaoPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
+        selectFiltroStatusPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
 
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
-            let projetosOrdenados = [...projetosCacheLocal];
+            const filtroStatus = selectFiltroStatusPortfolio.value;
+            let projetosOrdenados = filtroStatus === 'Todos' ? [...projetosCacheLocal] : projetosCacheLocal.filter(p => p.status === filtroStatus);
             projetosOrdenados.sort((a, b) => typeof a[criterio] === 'string' ? a[criterio].localeCompare(b[criterio]) : b[criterio] - a[criterio]);
 
             const container = document.getElementById('listaProjetosSalvos');
-            if (projetosOrdenados.length === 0) { container.innerHTML = '<p class="text-sm italic">Nenhum projeto gravado.</p>'; return; }
+            if (projetosOrdenados.length === 0) { container.innerHTML = '<p class="text-sm italic">Nenhum projeto encontrado com esse filtro.</p>'; return; }
 
             container.innerHTML = projetosOrdenados.map(proj => {
                 const imgTag = proj.imagem_base64 ? `<div class="bg-base/60 p-1 w-full border-b border-line"><img src="${proj.imagem_base64}" loading="lazy" class="w-full h-44 object-contain rounded-t-lg"></div>` : `<div class="w-full h-44 bg-base flex items-center justify-center text-inkmute/50 text-xs border-b border-line">Sem Imagem</div>`;
