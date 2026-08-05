@@ -157,7 +157,7 @@
             if (!linha.id) continue;
             try {
                 const doc = transformar(linha);
-                await comTimeout(db.collection(nomeTabela).doc(linha.id).set(doc, { merge: true }), 20000, `gravar ${linha.id}`);
+                await comTimeout(db.collection(nomeTabela).doc(linha.id).set(doc, { merge: true }), 40000, `gravar ${linha.id}`);
                 ok++;
                 log(`  ✓ ${linha.id}`, 'ok');
             } catch (e) {
@@ -200,17 +200,28 @@
 
         if (fileProjetos) {
             const linhas = await lerCsv(fileProjetos);
+            const projetosSemImagem = [];
             await importarLinhas('projetos_3d', linhas, (l) => {
                 let pecas = [];
                 try { pecas = l.pecas ? JSON.parse(l.pecas) : []; } catch (e) { pecas = []; }
+                let imagem = strOuNull(l.imagem_base64);
+                // Imagens antigas guardadas como base64 direto no banco estouram o limite do Firestore (1MB).
+                // A versão nova do site usa link, então removemos o base64 e avisamos pra você colar um link depois.
+                if (imagem && imagem.length > 400000) {
+                    projetosSemImagem.push(l.nome_projeto || l.id);
+                    imagem = null;
+                }
                 return {
-                    nome_projeto: l.nome_projeto, imagem_base64: strOuNull(l.imagem_base64), nome_arquivo_3mf: strOuNull(l.nome_arquivo_3mf),
+                    nome_projeto: l.nome_projeto, imagem_base64: imagem, nome_arquivo_3mf: strOuNull(l.nome_arquivo_3mf),
                     pecas: pecas, margem_lucro_porcentagem: numOuNull(l.margem_lucro_porcentagem), custo_total: numOuNull(l.custo_total),
                     preco_venda_total: numOuNull(l.preco_venda_total), tempo_total_min: numOuNull(l.tempo_total_min), peso_total_g: numOuNull(l.peso_total_g),
                     status: l.status, data_conclusao: strOuNull(l.data_conclusao), user_id: novoUid,
                     created_at: strOuNull(l.created_at) || new Date().toISOString()
                 };
             });
+            if (projetosSemImagem.length > 0) {
+                log(`\n⚠️ ${projetosSemImagem.length} projeto(s) tinham imagem grande demais pro Firestore e foram importados SEM imagem (cole um link novo depois): ${projetosSemImagem.join(', ')}`, 'erro');
+            }
         } else { log('\n⚠️ Nenhum arquivo de projetos_3d selecionado, pulando.'); }
 
         if (fileVendas) {
