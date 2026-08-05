@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Importar CSV → Firebase</title>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+<style>
+    body { font-family: system-ui, sans-serif; background:#F4F5F7; color:#111827; max-width:680px; margin:40px auto; padding:0 16px; }
+    h1 { font-size:1.4rem; margin-bottom:4px; }
+    .sub { color:#6B7280; font-size:0.85rem; margin-bottom:24px; }
+    .card { background:#fff; border:1px solid #E3E6EB; border-radius:12px; padding:20px; margin-bottom:16px; }
+    label { display:block; font-size:0.8rem; font-weight:600; margin-bottom:4px; color:#374151; }
+    input[type=email], input[type=password] { width:100%; box-sizing:border-box; padding:8px 10px; border:1px solid #E3E6EB; border-radius:8px; margin-bottom:10px; font-size:0.9rem; }
+    input[type=file] { width:100%; margin-bottom:10px; font-size:0.82rem; }
+    button { background:#EA580C; color:#fff; border:none; padding:10px 16px; border-radius:8px; font-weight:700; cursor:pointer; font-size:0.9rem; }
+    button:disabled { opacity:0.5; cursor:not-allowed; }
+    button.secundario { background:#fff; color:#111827; border:1px solid #E3E6EB; }
+    .status { font-size:0.8rem; margin-top:6px; }
+    .ok { color:#059669; } .erro { color:#DC2626; } .info { color:#6B7280; }
+    #log { background:#111827; color:#D1FAE5; font-family:monospace; font-size:0.78rem; padding:14px; border-radius:8px; height:280px; overflow-y:auto; white-space:pre-wrap; margin-top:16px; }
+    .passo-titulo { font-weight:700; margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .badge { font-size:0.7rem; padding:2px 8px; border-radius:99px; background:#F1F2F5; color:#6B7280; }
+    .badge.feito { background:#DCFCE7; color:#059669; }
+    .linha-arquivo { margin-bottom:12px; }
+</style>
+</head>
+<body>
+
+<h1>📂 Importar CSV → Firebase</h1>
+<p class="sub">Alternativa sem Supabase (só Firebase), usando os arquivos CSV que você já exportou do painel do Supabase. Se esta ferramenta funcionar onde a outra travava, confirma que o problema era o Supabase e o Firebase disputando a mesma conexão na mesma página.</p>
+
+<div class="card">
+    <div class="passo-titulo">1. Login no Firebase <span id="badgeFirebase" class="badge">pendente</span></div>
+    <label>E-mail</label>
+    <input type="email" id="fbEmail" placeholder="seu@email.com">
+    <label>Senha</label>
+    <input type="password" id="fbSenha">
+    <button id="btnLoginFirebase">Entrar</button>
+    <button id="btnGoogleFirebase" class="secundario">Entrar com Google</button>
+    <div id="statusFirebase" class="status"></div>
+</div>
+
+<div class="card">
+    <div class="passo-titulo">2. Selecione os arquivos CSV exportados do Supabase</div>
+    <div class="linha-arquivo">
+        <label>estoque_materiais.csv</label>
+        <input type="file" id="fileEstoque" accept=".csv">
+    </div>
+    <div class="linha-arquivo">
+        <label>projetos_3d.csv</label>
+        <input type="file" id="fileProjetos" accept=".csv">
+    </div>
+    <div class="linha-arquivo">
+        <label>vendas_3d.csv</label>
+        <input type="file" id="fileVendas" accept=".csv">
+    </div>
+    <div class="linha-arquivo">
+        <label>catalogo_modelos.csv (opcional)</label>
+        <input type="file" id="fileCatalogo" accept=".csv">
+    </div>
+</div>
+
+<div class="card">
+    <div class="passo-titulo">3. Importar</div>
+    <button id="btnImportar" disabled>Iniciar Importação</button>
+    <div id="log"></div>
+</div>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCZ25rjO_9cRHvj6woT_QwcPnM5a8q-7ds",
+        authDomain: "gestor-3d-dc685.firebaseapp.com",
+        projectId: "gestor-3d-dc685",
+        storageBucket: "gestor-3d-dc685.firebasestorage.app",
+        messagingSenderId: "209613649992",
+        appId: "1:209613649992:web:246827c84d2b21120d007d"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const fbAuth = firebase.auth();
+    const db = firebase.firestore();
+    db.settings({ experimentalForceLongPolling: true });
+    const googleProvider = new firebase.auth.GoogleAuthProvider();
+
+    let fbLogado = false;
+
+    function log(msg, tipo) {
+        const el = document.getElementById('log');
+        const cor = tipo === 'erro' ? '#FCA5A5' : tipo === 'ok' ? '#6EE7B7' : '#D1FAE5';
+        el.innerHTML += `<div style="color:${cor}">${msg}</div>`;
+        el.scrollTop = el.scrollHeight;
+    }
+
+    function atualizarBotaoImportar() {
+        document.getElementById('btnImportar').disabled = !fbLogado;
+    }
+
+    async function marcarFirebaseLogado(user) {
+        fbLogado = true;
+        const statusEl = document.getElementById('statusFirebase');
+        statusEl.innerText = '✓ Logado como ' + user.email; statusEl.className = 'status ok';
+        document.getElementById('badgeFirebase').innerText = 'feito'; document.getElementById('badgeFirebase').classList.add('feito');
+        atualizarBotaoImportar();
+    }
+
+    document.getElementById('btnLoginFirebase').addEventListener('click', async () => {
+        const email = document.getElementById('fbEmail').value.trim();
+        const password = document.getElementById('fbSenha').value;
+        const statusEl = document.getElementById('statusFirebase');
+        statusEl.innerText = 'Entrando...'; statusEl.className = 'status info';
+        try {
+            const cred = await fbAuth.signInWithEmailAndPassword(email, password);
+            await marcarFirebaseLogado(cred.user);
+        } catch (error) {
+            statusEl.innerText = 'Erro: ' + error.message; statusEl.className = 'status erro';
+        }
+    });
+
+    document.getElementById('btnGoogleFirebase').addEventListener('click', async () => {
+        const statusEl = document.getElementById('statusFirebase');
+        try {
+            const cred = await fbAuth.signInWithPopup(googleProvider);
+            await marcarFirebaseLogado(cred.user);
+        } catch (error) {
+            statusEl.innerText = 'Erro: ' + error.message; statusEl.className = 'status erro';
+        }
+    });
+
+    function lerCsv(arquivo) {
+        return new Promise((resolve, reject) => {
+            Papa.parse(arquivo, {
+                header: true,
+                skipEmptyLines: true,
+                complete: (resultado) => resolve(resultado.data),
+                error: (err) => reject(err)
+            });
+        });
+    }
+
+    function comTimeout(promessa, ms, rotulo) {
+        return Promise.race([
+            promessa,
+            new Promise((_, reject) => setTimeout(() => reject(new Error(`Tempo esgotado (${rotulo}) após ${ms/1000}s`)), ms))
+        ]);
+    }
+
+    function numOuNull(v) { if (v === undefined || v === null || v === '') return null; const n = parseFloat(v); return isNaN(n) ? null : n; }
+    function strOuNull(v) { return (v === undefined || v === null || v === '') ? null : v; }
+
+    async function importarLinhas(nomeTabela, linhas, transformar) {
+        log(`\n📦 Importando "${nomeTabela}" (${linhas.length} linha(s))...`);
+        let ok = 0;
+        for (const linha of linhas) {
+            if (!linha.id) continue;
+            try {
+                const doc = transformar(linha);
+                await comTimeout(db.collection(nomeTabela).doc(linha.id).set(doc, { merge: true }), 20000, `gravar ${linha.id}`);
+                ok++;
+                log(`  ✓ ${linha.id}`, 'ok');
+            } catch (e) {
+                log(`  ✗ Falha em ${linha.id}: ${e.message}`, 'erro');
+            }
+        }
+        log(`✓ ${ok}/${linhas.length} registro(s) importados em "${nomeTabela}".`, 'ok');
+    }
+
+    document.getElementById('btnImportar').addEventListener('click', async () => {
+        document.getElementById('btnImportar').disabled = true;
+        const novoUid = fbAuth.currentUser.uid;
+        log('Iniciando importação. Registros ficarão associados à conta: ' + fbAuth.currentUser.email);
+
+        // Perfil (você é quem está importando, então já entra como admin)
+        try {
+            await comTimeout(
+                db.collection('profiles').doc(novoUid).set({
+                    email: fbAuth.currentUser.email, role: 'admin', banido: false, created_at: new Date().toISOString()
+                }, { merge: true }),
+                20000, 'gravar perfil'
+            );
+            log('\n👤 Perfil migrado (papel: admin).', 'ok');
+        } catch (e) { log('\n✗ Erro ao migrar perfil: ' + e.message, 'erro'); }
+
+        const fileEstoque = document.getElementById('fileEstoque').files[0];
+        const fileProjetos = document.getElementById('fileProjetos').files[0];
+        const fileVendas = document.getElementById('fileVendas').files[0];
+        const fileCatalogo = document.getElementById('fileCatalogo').files[0];
+
+        if (fileEstoque) {
+            const linhas = await lerCsv(fileEstoque);
+            await importarLinhas('estoque_materiais', linhas, (l) => ({
+                nome: l.nome, tipo: l.tipo, fabricante: l.fabricante,
+                peso_total_g: numOuNull(l.peso_total_g), peso_atual_g: numOuNull(l.peso_atual_g), preco_pago: numOuNull(l.preco_pago),
+                cor: l.cor, data_compra: strOuNull(l.data_compra), user_id: novoUid,
+                created_at: strOuNull(l.created_at) || new Date().toISOString()
+            }));
+        } else { log('\n⚠️ Nenhum arquivo de estoque_materiais selecionado, pulando.'); }
+
+        if (fileProjetos) {
+            const linhas = await lerCsv(fileProjetos);
+            await importarLinhas('projetos_3d', linhas, (l) => {
+                let pecas = [];
+                try { pecas = l.pecas ? JSON.parse(l.pecas) : []; } catch (e) { pecas = []; }
+                return {
+                    nome_projeto: l.nome_projeto, imagem_base64: strOuNull(l.imagem_base64), nome_arquivo_3mf: strOuNull(l.nome_arquivo_3mf),
+                    pecas: pecas, margem_lucro_porcentagem: numOuNull(l.margem_lucro_porcentagem), custo_total: numOuNull(l.custo_total),
+                    preco_venda_total: numOuNull(l.preco_venda_total), tempo_total_min: numOuNull(l.tempo_total_min), peso_total_g: numOuNull(l.peso_total_g),
+                    status: l.status, data_conclusao: strOuNull(l.data_conclusao), user_id: novoUid,
+                    created_at: strOuNull(l.created_at) || new Date().toISOString()
+                };
+            });
+        } else { log('\n⚠️ Nenhum arquivo de projetos_3d selecionado, pulando.'); }
+
+        if (fileVendas) {
+            const linhas = await lerCsv(fileVendas);
+            await importarLinhas('vendas_3d', linhas, (l) => ({
+                projeto_id: strOuNull(l.projeto_id), nome_projeto: l.nome_projeto, cliente: l.cliente,
+                preco_venda_final: numOuNull(l.preco_venda_final), custo_producao_retido: numOuNull(l.custo_producao_retido),
+                lucro_liquido: numOuNull(l.lucro_liquido), data_venda: strOuNull(l.data_venda), user_id: novoUid,
+                created_at: strOuNull(l.created_at) || new Date().toISOString()
+            }));
+        } else { log('\n⚠️ Nenhum arquivo de vendas_3d selecionado, pulando.'); }
+
+        if (fileCatalogo) {
+            const linhas = await lerCsv(fileCatalogo);
+            await importarLinhas('catalogo_modelos', linhas, (l) => ({
+                nome_modelo: l.nome_modelo, tempo_estimado_min: numOuNull(l.tempo_estimado_min),
+                peso_estimado_g: numOuNull(l.peso_estimado_g), preco_venda_sugerido: numOuNull(l.preco_venda_sugerido),
+                link_fatiador: strOuNull(l.link_fatiador), user_id: novoUid,
+                created_at: strOuNull(l.created_at) || new Date().toISOString()
+            }));
+        }
+
+        log('\n🎉 Importação concluída! Confira no site novo se os dados aparecem.', 'ok');
+        document.getElementById('btnImportar').disabled = false;
+    });
+</script>
+</body>
+</html>
