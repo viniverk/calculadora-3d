@@ -659,6 +659,16 @@
         // Helpers para deixar as chamadas do Firestore parecidas com as do Supabase,
         // reduzindo a quantidade de código reescrito abaixo.
         function colecao(nome) { return db.collection(nome); }
+        function ordenarPor(arr, campo, dir) {
+            const f = dir === 'desc' ? -1 : 1;
+            return arr.sort((a, b) => {
+                const x = a[campo], y = b[campo];
+                if (x == null && y == null) return 0;
+                if (x == null) return 1;
+                if (y == null) return -1;
+                return (typeof x === 'string' ? x.localeCompare(y) : (x - y)) * f;
+            });
+        }
         function snapshotParaArray(snapshot) {
             return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         }
@@ -898,8 +908,8 @@
             const tbody = document.getElementById('tabelaEstoqueDashboard');
             if (!tbody) return;
             try {
-                const snap = await colecao('estoque_materiais').where('user_id', '==', usuarioAtual.uid).orderBy('nome', 'asc').get();
-                const data = snapshotParaArray(snap);
+                const snap = await colecao('estoque_materiais').where('user_id', '==', usuarioAtual.uid).get();
+                const data = ordenarPor(snapshotParaArray(snap), 'nome', 'asc');
                 if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="5" class="py-3 text-inkmute/60 text-xs italic">Nenhum filamento cadastrado ainda.</td></tr>'; return; }
 
                 tbody.innerHTML = data.map(item => {
@@ -1117,8 +1127,8 @@
         async function carregarVendasEfetuadas() {
             let data;
             try {
-                const snap = await colecao('vendas_3d').where('user_id', '==', usuarioAtual.uid).orderBy('data_venda', 'desc').get();
-                data = snapshotParaArray(snap);
+                const snap = await colecao('vendas_3d').where('user_id', '==', usuarioAtual.uid).get();
+                data = ordenarPor(snapshotParaArray(snap), 'data_venda', 'desc');
             } catch (error) { return; }
             if (!data || data.length === 0) {
                 listaVendasEfetuadas.innerHTML = '<p class="text-inkmute/60 text-sm italic">Nenhum faturamento registrado.</p>';
@@ -1472,8 +1482,8 @@
         async function carregarProjetos3d() {
             try {
                 const uidAlvo = modoPublicoAtivo ? uidCatalogoPublico : usuarioAtual.uid;
-                const snap = await colecao('projetos_3d').where('user_id', '==', uidAlvo).orderBy('created_at', 'desc').get();
-                projetosCacheLocal = snapshotParaArray(snap);
+                const snap = await colecao('projetos_3d').where('user_id', '==', uidAlvo).get();
+                projetosCacheLocal = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
             } catch (error) { console.error(error); return; }
             
             renderizarProjetosOrdenados();
@@ -1568,8 +1578,8 @@
 
         async function carregarFilamentos() {
             try {
-                const snap = await colecao('estoque_materiais').where('user_id', '==', usuarioAtual.uid).orderBy('data_compra', 'desc').get();
-                filamentosCache = snapshotParaArray(snap);
+                const snap = await colecao('estoque_materiais').where('user_id', '==', usuarioAtual.uid).get();
+                filamentosCache = ordenarPor(snapshotParaArray(snap), 'data_compra', 'desc');
             } catch (error) {
                 console.error('Erro ao carregar estoque:', error);
                 document.getElementById('listaFilamentos').innerHTML = `<p class="text-red-600 text-sm p-3">Erro ao carregar estoque: ${error.message}</p>`;
@@ -1661,8 +1671,8 @@
 
         async function carregarModelos() {
             try {
-                const snap = await colecao('catalogo_modelos').where('user_id', '==', usuarioAtual.uid).orderBy('created_at', 'desc').get();
-                const data = snapshotParaArray(snap);
+                const snap = await colecao('catalogo_modelos').where('user_id', '==', usuarioAtual.uid).get();
+                const data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
                 listaContainer.innerHTML = data.map(item => `<div class="bg-surface2 p-3 rounded border border-line flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-ink">${item.nome_modelo}</h3><p class="text-xs text-inkmute">${item.peso_estimado_g}g</p></div><div class="text-right"><span class="text-green-600 font-bold block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span><button onclick="deletarModelo('${item.id}')" class="text-xs text-red-600 hover:underline">Excluir</button></div></div>`).join('');
             } catch (error) { console.error(error); }
         }
