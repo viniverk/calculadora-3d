@@ -651,6 +651,7 @@
             <h2 class="font-display text-xl font-semibold mb-1 text-gold2 border-b border-line pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <p class="text-xs text-inkmute mt-2">Libere o acesso de cada usuário depois de confirmar o PIX, ou bloqueie quem não deve usar o sistema. Cada usuário só vê os próprios dados.</p>
             <div class="flex items-center justify-between gap-2 mb-4 mt-1">
+                <p id="diagAdmin" class="hidden"></p>
                 <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700"></p>
                 <button onclick="carregarAdminUsuarios()" class="text-xs bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink font-bold px-3 py-1.5 rounded-lg">🔄 Atualizar lista</button>
             </div>
@@ -1030,6 +1031,8 @@
 
         async function carregarAdminUsuarios() {
             const tbody = document.getElementById('tabelaAdminUsuarios');
+            const diag = document.getElementById('diagAdmin');
+            if (diag) { diag.classList.remove('hidden'); diag.className = 'text-[10px] text-inkmute font-mono2 w-full'; diag.innerText = `v2026.10.21-c • conta: ${usuarioAtual.email} • role: ${perfilAtual ? perfilAtual.role : '?'} • acesso: ${perfilAtual ? perfilAtual.acesso_liberado : '?'}`; }
             try {
                 tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
                 const snap = await colecao('profiles').get();
