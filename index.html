@@ -650,7 +650,10 @@
         <div id="view-admin" class="aba-conteudo bg-surface p-6 rounded-2xl shadow-sm border border-line hidden">
             <h2 class="font-display text-xl font-semibold mb-1 text-gold2 border-b border-line pb-2">🛡️ Painel Administrativo de Usuários</h2>
             <p class="text-xs text-inkmute mt-2">Libere o acesso de cada usuário depois de confirmar o PIX, ou bloqueie quem não deve usar o sistema. Cada usuário só vê os próprios dados.</p>
-            <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700 mb-4 mt-1"></p>
+            <div class="flex items-center justify-between gap-2 mb-4 mt-1">
+                <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700"></p>
+                <button onclick="carregarAdminUsuarios()" class="text-xs bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink font-bold px-3 py-1.5 rounded-lg">🔄 Atualizar lista</button>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-max text-sm text-left text-ink">
                     <thead class="bg-surface2 text-inkmute uppercase text-xs">
@@ -1028,14 +1031,15 @@
         async function carregarAdminUsuarios() {
             const tbody = document.getElementById('tabelaAdminUsuarios');
             try {
-                const snap = await colecao('profiles').orderBy('created_at', 'desc').get();
-                const data = snapshotParaArray(snap);
+                tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
+                const snap = await colecao('profiles').get();
+                const data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
                 if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
 
                 data.sort((x, y) => (x.acesso_liberado === true) - (y.acesso_liberado === true)); // pendentes primeiro
                 const pendentes = data.filter(u => u.role !== 'admin' && u.acesso_liberado !== true).length;
                 const resumo = document.getElementById('resumoAdminUsuarios');
-                if (resumo) resumo.innerText = pendentes > 0 ? `${pendentes} usuário(s) aguardando liberação (PIX)` : 'Nenhum usuário aguardando liberação.';
+                if (resumo) resumo.innerText = `${data.length} usuário(s) • ` + (pendentes > 0 ? `${pendentes} aguardando liberação (PIX)` : 'nenhum aguardando liberação');
 
                 tbody.innerHTML = data.map(u => {
                     const liberado = u.role === 'admin' || u.acesso_liberado === true;
@@ -1061,7 +1065,9 @@
                     </tr>`;
                 }).join('');
             } catch (error) {
-                tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-red-600 text-xs">Erro ao carregar: ${error.message}</td></tr>`;
+                const dica = (error.code === 'permission-denied' || /permission/i.test(error.message))
+                    ? ' — Publique as regras novas do Firestore (arquivo firestore.rules) e saia/entre de novo com o e-mail do administrador.' : '';
+                tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-red-600 text-xs">Erro ao carregar usuários: ${error.message}${dica}</td></tr>`;
             }
         }
 
