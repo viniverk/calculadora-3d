@@ -40,6 +40,8 @@
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
     <style>
+        html { scroll-behavior: smooth; }
+        #modalAuth.aberto { display: flex; }
         .transition-sidebar { transition: width 0.3s ease, margin-left 0.3s ease; }
         .aba-conteudo { display: none; }
         .aba-conteudo.active { display: grid; }
@@ -84,14 +86,167 @@
     <div id="overlayMobile" class="md:hidden fixed inset-0 bg-black/60 z-10 hidden"></div>
 
 
-    <div id="telaAutenticacao" class="max-w-md mx-auto mt-16 sm:mt-24 w-full px-4">
-        <div class="text-center mb-6">
-            <h1 class="sr-only">Gestor 3D</h1>
-            <img src="logo-gestor3d.png" alt="Gestor 3D" class="h-40 sm:h-48 w-auto mx-auto object-contain">
-            <p class="text-xs text-inkmute mt-1 uppercase tracking-widest">Controle de Produção &amp; Orçamento</p>
-        </div>
+    <div id="telaAutenticacao" class="w-full min-h-screen bg-white text-ink">
 
-        <div class="layer-lines bg-surface p-8 rounded-2xl shadow-lg border border-line w-full">
+        <!-- NAVBAR -->
+        <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-line">
+            <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
+                <a href="#inicio" class="flex items-center gap-2 shrink-0">
+                    <img src="icone-gestor3d.png" alt="" class="h-9 w-9 object-contain">
+                    <span class="font-display font-bold text-lg tracking-tight">Gestor 3D</span>
+                </a>
+                <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-ink">
+                    <a href="#funcionalidades" class="hover:text-accent transition">Funcionalidades</a>
+                    <a href="#como-funciona" class="hover:text-accent transition">Como funciona</a>
+                    <a href="#planos" class="hover:text-accent transition">Planos</a>
+                    <a href="#faq" class="hover:text-accent transition">Dúvidas</a>
+                </nav>
+                <div class="flex items-center gap-2 sm:gap-4">
+                    <button onclick="abrirAuth('login')" class="text-sm font-bold text-blue-600 hover:text-blue-800 px-2">Entrar ›</button>
+                    <button onclick="abrirAuth('cadastro')" class="btn-cta text-sm font-bold px-4 sm:px-5 py-2.5 rounded-full shadow-sm transition whitespace-nowrap">Criar conta ›</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- HERO -->
+        <section id="inicio" class="relative overflow-hidden" style="background:linear-gradient(180deg,#F4F8FF 0%,#FFFFFF 100%);">
+            <div class="max-w-6xl mx-auto px-4 pt-12 pb-16 md:pt-20 md:pb-24 grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <span class="inline-flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">🖨️ Feito para quem vive de impressão 3D</span>
+                    <h1 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-5 leading-[1.08]">Controle sua produção 3D <span class="text-blue-600">do orçamento à venda</span></h1>
+                    <p class="text-base sm:text-lg text-inkmute mt-5 max-w-xl">Calcule o preço certo de cada peça, controle o estoque de filamento com desconto automático, registre vendas e mostre seu portfólio aos clientes. Tudo em um só lugar, no computador ou no celular.</p>
+                    <div class="flex flex-wrap items-center gap-3 mt-8">
+                        <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-7 py-3.5 rounded-full shadow-md transition">Quero meu acesso ›</button>
+                        <a href="#funcionalidades" class="font-bold text-ink border border-line bg-white hover:bg-surface2 px-7 py-3.5 rounded-full transition">Ver funcionalidades</a>
+                    </div>
+                    <p class="text-sm text-inkmute mt-5">✔ Pagamento único de <strong class="text-ink">R$ 99,00</strong> &nbsp;•&nbsp; ✔ Acesso vitalício &nbsp;•&nbsp; ✔ Seus dados só você vê</p>
+                </div>
+
+                <!-- Mock do painel -->
+                <div class="relative">
+                    <div class="absolute -inset-4 bg-gradient-to-tr from-blue-200/60 via-sky-100/40 to-orange-100/60 blur-2xl rounded-[2rem]"></div>
+                    <div class="relative bg-white border border-line rounded-2xl shadow-xl p-4 sm:p-5">
+                        <div class="flex items-center gap-1.5 mb-4"><span class="w-2.5 h-2.5 rounded-full bg-red-300"></span><span class="w-2.5 h-2.5 rounded-full bg-amber-300"></span><span class="w-2.5 h-2.5 rounded-full bg-green-300"></span><span class="ml-3 text-[11px] text-inkmute font-mono2">Dashboard</span></div>
+                        <div class="grid grid-cols-3 gap-3">
+                            <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute">Faturamento</p><p class="font-display font-bold text-lg text-green-600">R$ 1.840</p></div>
+                            <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute">Custo</p><p class="font-display font-bold text-lg text-amber-600">R$ 612</p></div>
+                            <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute">Lucro</p><p class="font-display font-bold text-lg text-blue-600">R$ 1.228</p></div>
+                        </div>
+                        <div class="mt-4 bg-surface2 rounded-xl p-3">
+                            <p class="text-[10px] uppercase text-inkmute mb-2">Filamentos em estoque</p>
+                            <div class="space-y-2">
+                                <div><div class="flex justify-between text-[11px]"><span>PLA Preto</span><span class="font-mono2">820g</span></div><div class="h-1.5 bg-white rounded-full"><div class="h-1.5 bg-green-500 rounded-full" style="width:82%"></div></div></div>
+                                <div><div class="flex justify-between text-[11px]"><span>PETG Azul</span><span class="font-mono2">310g</span></div><div class="h-1.5 bg-white rounded-full"><div class="h-1.5 bg-amber-500 rounded-full" style="width:31%"></div></div></div>
+                                <div><div class="flex justify-between text-[11px]"><span>PLA Branco</span><span class="font-mono2">90g</span></div><div class="h-1.5 bg-white rounded-full"><div class="h-1.5 bg-red-500 rounded-full" style="width:9%"></div></div></div>
+                            </div>
+                        </div>
+                        <div class="mt-4 grid grid-cols-2 gap-3">
+                            <div class="border border-line rounded-xl p-3"><div class="h-14 rounded-lg bg-gradient-to-br from-blue-100 to-sky-50 flex items-center justify-center text-2xl">🦉</div><p class="text-xs font-bold mt-2">Coruja Decorativa</p><span class="inline-block mt-1 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">3 peças em estoque</span></div>
+                            <div class="border border-line rounded-xl p-3"><div class="h-14 rounded-lg bg-gradient-to-br from-orange-100 to-amber-50 flex items-center justify-center text-2xl">🧩</div><p class="text-xs font-bold mt-2">Suporte de Headset</p><span class="inline-block mt-1 text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">Sob encomenda</span></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FUNCIONALIDADES -->
+        <section id="funcionalidades" class="py-16 md:py-24 bg-white scroll-mt-16">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="text-center max-w-2xl mx-auto">
+                    <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Funcionalidades</p>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Tudo que sua oficina 3D precisa</h2>
+                    <p class="text-inkmute mt-3">Da primeira peça à venda final, sem planilhas e sem conta de cabeça.</p>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-xl">🧮</div><h3 class="font-display font-bold text-lg mt-4">Calculadora de orçamento</h3><p class="text-sm text-inkmute mt-2">Informe peso, tempo e margem de lucro e veja o custo e o preço de venda certos. Salve modelos no seu catálogo de preços.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center text-xl">🚀</div><h3 class="font-display font-bold text-lg mt-4">Projetos e impressões</h3><p class="text-sm text-inkmute mt-2">Cadastre cada projeto com suas peças, status (imprimindo, montagem, finalizado), capa, link do arquivo .3mf, filtros e busca.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center text-xl">🧵</div><h3 class="font-display font-bold text-lg mt-4">Estoque de filamento automático</h3><p class="text-sm text-inkmute mt-2">Histórico de compras e peso atual de cada rolo. Ao registrar uma impressão, o material é descontado sozinho do estoque.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center text-xl">💰</div><h3 class="font-display font-bold text-lg mt-4">Vendas e lucro real</h3><p class="text-sm text-inkmute mt-2">Registre cada venda e acompanhe faturamento, custo de produção e lucro líquido. Estorne quando precisar.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-sky-100 flex items-center justify-center text-xl">🖼️</div><h3 class="font-display font-bold text-lg mt-4">Portfólio para clientes</h3><p class="text-sm text-inkmute mt-2">Um catálogo online com link para compartilhar, sem precisar de login. Mostra quantas peças estão em estoque ou "sob encomenda".</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center text-xl">📦</div><h3 class="font-display font-bold text-lg mt-4">Peças prontas em estoque</h3><p class="text-sm text-inkmute mt-2">Controle quantas peças de cada projeto você tem. Cada venda desconta automaticamente e o portfólio se atualiza sozinho.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-rose-100 flex items-center justify-center text-xl">📊</div><h3 class="font-display font-bold text-lg mt-4">Dashboard</h3><p class="text-sm text-inkmute mt-2">Visão geral do negócio e tabela com o peso atual de cada filamento, com alerta de cores para estoque baixo.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-xl">🔒</div><h3 class="font-display font-bold text-lg mt-4">Dados só seus</h3><p class="text-sm text-inkmute mt-2">Cada usuário tem a própria conta e só enxerga as próprias informações. Ninguém vê os dados de outro.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-teal-100 flex items-center justify-center text-xl">📱</div><h3 class="font-display font-bold text-lg mt-4">Funciona no celular</h3><p class="text-sm text-inkmute mt-2">Layout pensado para telas pequenas. Consulte estoque e registre vendas de onde estiver.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- COMO FUNCIONA -->
+        <section id="como-funciona" class="py-16 md:py-24 scroll-mt-16" style="background:#F4F8FF;">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="text-center max-w-2xl mx-auto">
+                    <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Como funciona</p>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Comece em 4 passos simples</h2>
+                </div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">1</div><h3 class="font-display font-bold mt-4">Crie sua conta</h3><p class="text-sm text-inkmute mt-2">Cadastre-se com e-mail e senha ou entre com sua conta Google.</p></div>
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">2</div><h3 class="font-display font-bold mt-4">Pague via PIX</h3><p class="text-sm text-inkmute mt-2">Faça o PIX de R$ 99,00. A chave aparece na tela logo após criar a conta.</p></div>
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">3</div><h3 class="font-display font-bold mt-4">Acesso liberado</h3><p class="text-sm text-inkmute mt-2">Enviado o comprovante, o administrador libera o seu acesso vitalício.</p></div>
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">4</div><h3 class="font-display font-bold mt-4">Gerencie tudo</h3><p class="text-sm text-inkmute mt-2">Cadastre filamentos, projetos e vendas e deixe o sistema calcular por você.</p></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PLANOS -->
+        <section id="planos" class="py-16 md:py-24 bg-white scroll-mt-16">
+            <div class="max-w-6xl mx-auto px-4">
+                <div class="text-center max-w-2xl mx-auto">
+                    <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Planos</p>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Pague uma vez, use para sempre</h2>
+                    <p class="text-inkmute mt-3">Sem mensalidade e sem surpresa.</p>
+                </div>
+                <div class="max-w-md mx-auto mt-12">
+                    <div class="relative rounded-3xl border-2 border-blue-600 bg-white shadow-xl p-8">
+                        <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full">ACESSO VITALÍCIO</span>
+                        <div class="text-center">
+                            <p class="font-display text-5xl font-bold tracking-tight mt-2">R$ 99<span class="text-2xl">,00</span></p>
+                            <p class="text-sm text-inkmute mt-1">pagamento único via PIX</p>
+                        </div>
+                        <ul class="mt-6 space-y-3 text-sm">
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades, sem limites de projetos</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Calculadora, estoque de filamento e vendas</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público para clientes</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Seus dados privados, só você acessa</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Funciona no computador e no celular</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Acesso vitalício, sem mensalidade</li>
+                        </ul>
+                        <button onclick="abrirAuth('cadastro')" class="w-full btn-cta font-bold py-3.5 rounded-full shadow-md transition mt-8">Criar conta e pagar via PIX ›</button>
+                        <p class="text-xs text-inkmute text-center mt-3">O acesso é liberado após a confirmação do pagamento.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ -->
+        <section id="faq" class="py-16 md:py-20 scroll-mt-16" style="background:#F4F8FF;">
+            <div class="max-w-3xl mx-auto px-4">
+                <h2 class="font-display text-3xl font-bold tracking-tight text-center">Perguntas frequentes</h2>
+                <div class="mt-10 space-y-3">
+                    <details class="bg-white border border-line rounded-xl p-4 group"><summary class="font-bold cursor-pointer">O pagamento é mensal?</summary><p class="text-sm text-inkmute mt-2">Não. É um pagamento único de R$ 99,00 e o acesso é vitalício.</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Quanto tempo leva para liberar meu acesso?</summary><p class="text-sm text-inkmute mt-2">Assim que o pagamento for confirmado e o comprovante enviado ao administrador, o acesso é liberado. Na tela de espera, toque em "Já paguei, verificar".</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Outras pessoas veem meus dados?</summary><p class="text-sm text-inkmute mt-2">Não. Cada conta tem os próprios dados, protegidos. Só o link do portfólio, se você compartilhar, mostra seus modelos aos clientes.</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Posso usar no celular?</summary><p class="text-sm text-inkmute mt-2">Sim. Basta abrir o site no navegador do celular e entrar com sua conta.</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Como funciona o desconto de filamento?</summary><p class="text-sm text-inkmute mt-2">Você cadastra suas compras de filamento. Ao salvar uma impressão com o fabricante, tipo e cor usados, o sistema desconta o peso do rolo correspondente.</p></details>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA FINAL + FOOTER -->
+        <section class="py-16 bg-ink text-white text-center">
+            <div class="max-w-2xl mx-auto px-4">
+                <h2 class="font-display text-3xl font-bold tracking-tight">Pronto para organizar sua produção?</h2>
+                <p class="text-white/70 mt-3">Crie sua conta e tenha acesso vitalício por R$ 99,00.</p>
+                <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-8 py-3.5 rounded-full shadow-md transition mt-7">Começar agora ›</button>
+            </div>
+        </section>
+        <footer class="bg-ink border-t border-white/10 text-white/50 text-xs text-center py-6">© Gestor 3D • Controle de Produção &amp; Orçamento</footer>
+
+        <!-- MODAL DE LOGIN / CADASTRO -->
+        <div id="modalAuth" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 overflow-y-auto">
+            <div class="w-full max-w-md my-auto">
+            <div class="layer-lines bg-surface p-8 rounded-2xl shadow-2xl border border-line w-full relative">
+            <button onclick="fecharAuth()" aria-label="Fechar" class="absolute top-3 right-4 text-inkmute hover:text-ink text-2xl leading-none">×</button>
+            <img src="icone-gestor3d.png" alt="" class="h-12 w-12 object-contain mx-auto mb-2">
             <h2 id="tituloAuth" class="font-display text-xl font-bold text-center text-ink mb-6">Entrar no Sistema</h2>
 
             <div class="space-y-4">
@@ -136,6 +291,8 @@
                 <div class="text-center mt-4">
                     <button id="btnAlternarAuth" class="text-sm text-inkmute hover:text-ink hover:underline">Não tem conta? Cadastre-se</button>
                 </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -1107,6 +1264,7 @@
                 usuarioAtual = user;
                 const perfilOk = await sincronizarPerfil();
                 if (!perfilOk) return;
+                fecharAuth();
                 if (!usuarioTemAcesso()) { mostrarTelaAcessoPendente(); return; }
                 telaAuth.classList.add('hidden');
                 sidebarApp.classList.remove('hidden');
@@ -1801,6 +1959,23 @@
                 document.getElementById('containerSenha').classList.remove('hidden');
             }
         });
+
+
+        // --- LANDING PAGE: abrir/fechar modal de login ---
+        function abrirAuth(modo) {
+            window.modoAbas = modo;
+            const cadastro = modo === 'cadastro';
+            document.getElementById('tituloAuth').innerText = cadastro ? 'Criar Nova Conta' : 'Entrar no Sistema';
+            btnAuthPrincipal.innerText = cadastro ? 'Cadastrar' : 'Entrar';
+            btnAlternarAuth.innerText = cadastro ? 'Já tem conta? Entre aqui' : 'Não tem conta? Cadastre-se';
+            document.getElementById('containerSenha').classList.remove('hidden');
+            const m = document.getElementById('modalAuth');
+            m.classList.add('aberto');
+            setTimeout(() => document.getElementById('authEmail').focus(), 50);
+        }
+        function fecharAuth() { document.getElementById('modalAuth').classList.remove('aberto'); }
+        document.getElementById('modalAuth').addEventListener('click', (e) => { if (e.target.id === 'modalAuth') fecharAuth(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharAuth(); });
 
         btnAuthPrincipal.addEventListener('click', async () => {
             const email = document.getElementById('authEmail').value.trim(); const password = document.getElementById('authSenha').value;
