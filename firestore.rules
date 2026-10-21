@@ -26,33 +26,77 @@ service cloud.firestore {
          meuPerfil().role == 'admin');
     }
 
-    // Acesso pago: admin ou perfil liberado, não banido e dentro do vencimento
+    // Perfil com acesso: não banido E (plano pago dentro do vencimento OU teste grátis vigente)
+    function perfilAtivo(p) {
+      return p.get('banido', false) == false &&
+        (
+          (p.get('acesso_liberado', false) == true &&
+            (p.get('acesso_expira_em', null) == null || p.acesso_expira_em > request.time))
+          ||
+          (p.get('trial_expira_em', null) != null && p.trial_expira_em > request.time)
+        );
+    }
+
     function temAcesso() {
       return ehAdmin() ||
         (logado() &&
          exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
-         meuPerfil().acesso_liberado == true &&
-         meuPerfil().get('banido', false) == false &&
-         // sem vencimento = vitalício; com vencimento, precisa estar no futuro
-         (meuPerfil().get('acesso_expira_em', null) == null ||
-          meuPerfil().acesso_expira_em > request.time));
+         perfilAtivo(meuPerfil()));
+    }
+
+    // Criação do próprio perfil:
+    //  - sempre como "user", sem acesso pago liberado, não banido;
+    //  - nome completo e telefone (10-11 dígitos) obrigatórios;
+    //  - teste grátis (trial_expira_em, no máx. ~5 dias) só se NEM o e-mail NEM o telefone
+    //    constarem no registro de testes já usados, e registrando os dois no mesmo lote.
+    function perfilNovoOk(d) {
+      return d.role == 'user' &&
+        d.acesso_liberado == false &&
+        d.banido == false &&
+        d.nome_completo is string && d.nome_completo.size() >= 5 &&
+        d.telefone_digitos is string && d.telefone_digitos.matches('^[0-9]{10,11}$') &&
+        d.email.lower() == request.auth.token.email.lower() &&
+        (
+          !('trial_expira_em' in d) || d.trial_expira_em == null ||
+          (
+            d.trial_expira_em <= request.time + duration.value(6, 'd') &&
+            !exists(/databases/$(database)/documents/trial_emails/$(request.auth.token.email.lower())) &&
+            !exists(/databases/$(database)/documents/trial_telefones/$(d.telefone_digitos)) &&
+            existsAfter(/databases/$(database)/documents/trial_emails/$(request.auth.token.email.lower())) &&
+            existsAfter(/databases/$(database)/documents/trial_telefones/$(d.telefone_digitos))
+          )
+        );
     }
 
     // Perfis: cada um lê o próprio; admin lê e edita todos.
-    // Ao criar o próprio perfil, só pode nascer como "user" SEM acesso liberado
-    // (ninguém consegue se promover ou se liberar sozinho).
     match /profiles/{uid} {
       allow read: if logado() && (request.auth.uid == uid || ehAdmin());
       allow create: if logado() && request.auth.uid == uid &&
-        (ehDonoSistema() ||
-         (request.resource.data.role == 'user' &&
-          request.resource.data.acesso_liberado == false &&
-          request.resource.data.banido == false));
-      allow update: if ehAdmin();
+        (ehDonoSistema() || perfilNovoOk(request.resource.data));
+      // O próprio usuário só pode preencher nome/telefone de um perfil antigo que ainda não os tem
+      allow update: if ehAdmin() ||
+        (logado() && request.auth.uid == uid &&
+         !('telefone_digitos' in resource.data) &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['nome_completo', 'telefone', 'telefone_digitos']) &&
+         request.resource.data.nome_completo is string && request.resource.data.nome_completo.size() >= 5 &&
+         request.resource.data.telefone_digitos is string &&
+         request.resource.data.telefone_digitos.matches('^[0-9]{10,11}$'));
+    }
+
+    // Registro permanente dos testes grátis já usados (não pode ser alterado nem apagado
+    // pelo usuário; sobrevive à exclusão da conta). Leitura só por ID exato (sem listar).
+    match /trial_emails/{em} {
+      allow get: if logado();
+      allow create: if logado() && em == request.auth.token.email.lower();
+    }
+    match /trial_telefones/{tel} {
+      allow get: if logado();
+      allow create: if logado() &&
+        getAfter(/databases/$(database)/documents/profiles/$(request.auth.uid)).data.telefone_digitos == tel;
     }
 
     // Estoque, Vendas, Catálogo: cada usuário só lê e mexe nos próprios dados
-    // e só enquanto tiver acesso liberado.
+    // e só enquanto tiver acesso (plano pago vigente ou teste grátis).
     match /estoque_materiais/{id} {
       allow read: if ehDono(resource.data) && temAcesso();
       allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
@@ -60,7 +104,7 @@ service cloud.firestore {
     }
 
     // Projetos: leitura pública (sem login) só para o link "Compartilhar Catálogo".
-    // Escrita só do dono com acesso liberado.
+    // Escrita só do dono com acesso.
     match /projetos_3d/{id} {
       allow read: if true;
       allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
