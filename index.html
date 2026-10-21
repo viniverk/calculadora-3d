@@ -140,6 +140,28 @@
         </div>
     </div>
 
+    <div id="telaAcessoPendente" class="max-w-md mx-auto mt-10 sm:mt-16 w-full px-4 hidden">
+        <div class="text-center mb-4">
+            <img src="logo-gestor3d.png" alt="Gestor 3D" class="h-32 w-auto mx-auto object-contain">
+        </div>
+        <div class="bg-surface p-6 rounded-2xl shadow-lg border border-line w-full space-y-4">
+            <div class="text-center">
+                <h2 class="font-display text-xl font-bold text-ink">Acesso aguardando pagamento</h2>
+                <p class="text-sm text-inkmute mt-1">Sua conta <strong id="pendenteEmail" class="text-ink"></strong> foi criada. O acesso é liberado após o pagamento via PIX.</p>
+            </div>
+            <div class="bg-surface2 border border-line rounded-xl p-4 space-y-2 text-sm">
+                <div class="flex justify-between gap-3"><span class="text-inkmute">Chave PIX (CPF)</span><span id="pixChave" class="font-mono2 font-bold text-ink">07216976908</span></div>
+                <div class="flex justify-between gap-3"><span class="text-inkmute">Favorecido</span><span class="font-bold text-ink text-right">VINICIOS VERKRUESSEN</span></div>
+                <button id="btnCopiarPix" class="w-full btn-cta font-bold py-2 rounded-lg transition mt-2">📋 Copiar chave PIX</button>
+            </div>
+            <p class="text-xs text-inkmute">Depois de pagar, envie o comprovante ao administrador informando o e-mail da sua conta. Assim que ele liberar, toque em "Já paguei, verificar".</p>
+            <div class="flex gap-2">
+                <button id="btnVerificarAcesso" class="flex-1 bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink text-sm font-bold py-2 rounded-lg transition">🔄 Já paguei, verificar</button>
+                <button id="btnSairPendente" class="flex-1 bg-transparent hover:bg-red-50 border border-red-200 text-red-600 text-sm font-bold py-2 rounded-lg transition">Sair</button>
+            </div>
+        </div>
+    </div>
+
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-surface border-r border-line flex flex-col justify-between transition-sidebar w-64 z-30 hidden -translate-x-full md:translate-x-0 transition-transform duration-300">
         <div>
             <div class="p-4 flex items-center justify-between border-b border-line layer-lines">
@@ -626,7 +648,8 @@
 
         <div id="view-admin" class="aba-conteudo bg-surface p-6 rounded-2xl shadow-sm border border-line hidden">
             <h2 class="font-display text-xl font-semibold mb-1 text-gold2 border-b border-line pb-2">🛡️ Painel Administrativo de Usuários</h2>
-            <p class="text-xs text-inkmute mb-4 mt-2">Gerencie permissões e bloqueie acessos de usuários cadastrados no sistema.</p>
+            <p class="text-xs text-inkmute mt-2">Libere o acesso de cada usuário depois de confirmar o PIX, ou bloqueie quem não deve usar o sistema. Cada usuário só vê os próprios dados.</p>
+            <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700 mb-4 mt-1"></p>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-max text-sm text-left text-ink">
                     <thead class="bg-surface2 text-inkmute uppercase text-xs">
@@ -934,15 +957,24 @@
         // --- PERFIS / CONTROLE DE ACESSO (ADMIN) ---
         let perfilAtual = null;
 
+        const ADMIN_EMAIL = 'viniciosv@gmail.com';
+
         async function sincronizarPerfil() {
             const ref = db.collection('profiles').doc(usuarioAtual.uid);
+            const ehDonoSistema = (usuarioAtual.email || '').toLowerCase() === ADMIN_EMAIL;
             let snap = await ref.get();
             let perfil = snap.exists ? { id: snap.id, ...snap.data() } : null;
 
             if (!perfil) {
-                const novo = { email: usuarioAtual.email, role: 'user', banido: false, created_at: new Date().toISOString() };
+                const novo = ehDonoSistema
+                    ? { email: usuarioAtual.email, role: 'admin', banido: false, acesso_liberado: true, created_at: new Date().toISOString() }
+                    : { email: usuarioAtual.email, role: 'user', banido: false, acesso_liberado: false, created_at: new Date().toISOString() };
                 await ref.set(novo);
                 perfil = { id: usuarioAtual.uid, ...novo };
+            } else if (ehDonoSistema && (perfil.role !== 'admin' || perfil.acesso_liberado !== true)) {
+                // Conta do dono do sistema: sempre admin com acesso liberado
+                try { await ref.update({ role: 'admin', acesso_liberado: true, banido: false }); } catch (e) { console.error(e); }
+                perfil.role = 'admin'; perfil.acesso_liberado = true; perfil.banido = false;
             }
             perfilAtual = perfil;
 
@@ -960,6 +992,38 @@
             return true;
         }
 
+        function usuarioTemAcesso() {
+            return !!perfilAtual && (perfilAtual.role === 'admin' || perfilAtual.acesso_liberado === true);
+        }
+
+        function mostrarTelaAcessoPendente() {
+            telaAuth.classList.add('hidden');
+            sidebarApp.classList.add('hidden');
+            conteudoPainel.classList.add('hidden');
+            mobileTopBar.classList.add('hidden');
+            document.getElementById('pendenteEmail').innerText = usuarioAtual.email || '';
+            document.getElementById('telaAcessoPendente').classList.remove('hidden');
+        }
+
+        document.getElementById('btnCopiarPix').addEventListener('click', async () => {
+            const btn = document.getElementById('btnCopiarPix');
+            try { await navigator.clipboard.writeText('07216976908'); btn.innerText = '✅ Chave copiada!'; }
+            catch (e) { btn.innerText = 'Chave: 07216976908'; }
+            setTimeout(() => { btn.innerText = '📋 Copiar chave PIX'; }, 2500);
+        });
+        document.getElementById('btnVerificarAcesso').addEventListener('click', async () => {
+            const btn = document.getElementById('btnVerificarAcesso');
+            btn.disabled = true; btn.innerText = 'Verificando...';
+            try { await sincronizarPerfil(); } catch (e) { alert('Erro: ' + e.message); }
+            btn.disabled = false; btn.innerText = '🔄 Já paguei, verificar';
+            if (usuarioTemAcesso()) { window.location.reload(); }
+            else { alert('Pagamento ainda não identificado. Assim que o administrador liberar, tente novamente.'); }
+        });
+        document.getElementById('btnSairPendente').addEventListener('click', async () => {
+            await auth.signOut();
+            window.location.href = window.location.origin + window.location.pathname;
+        });
+
         async function carregarAdminUsuarios() {
             const tbody = document.getElementById('tabelaAdminUsuarios');
             try {
@@ -967,27 +1031,44 @@
                 const data = snapshotParaArray(snap);
                 if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
 
-                tbody.innerHTML = data.map(u => `
+                data.sort((x, y) => (x.acesso_liberado === true) - (y.acesso_liberado === true)); // pendentes primeiro
+                const pendentes = data.filter(u => u.role !== 'admin' && u.acesso_liberado !== true).length;
+                const resumo = document.getElementById('resumoAdminUsuarios');
+                if (resumo) resumo.innerText = pendentes > 0 ? `${pendentes} usuário(s) aguardando liberação (PIX)` : 'Nenhum usuário aguardando liberação.';
+
+                tbody.innerHTML = data.map(u => {
+                    const liberado = u.role === 'admin' || u.acesso_liberado === true;
+                    const euMesmo = u.id === usuarioAtual.uid;
+                    return `
                     <tr>
                         <td class="p-3">
                             <span class="text-ink">${u.email}</span>
-                            ${u.id === usuarioAtual.uid ? '<span class="text-[10px] text-inkmute ml-1">(você)</span>' : ''}
+                            ${euMesmo ? '<span class="text-[10px] text-inkmute ml-1">(você)</span>' : ''}
                         </td>
-                        <td class="p-3">
+                        <td class="p-3 whitespace-nowrap">
                             <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${u.role === 'admin' ? 'bg-gold2/15 text-gold2' : 'bg-surface2 text-inkmute'}">${u.role || 'user'}</span>
+                            ${liberado ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-green-100 text-green-700 ml-1">Liberado</span>' : '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-700 ml-1">Aguardando PIX</span>'}
                             ${u.banido ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500/15 text-red-600 ml-1">Bloqueado</span>' : ''}
                         </td>
                         <td class="p-3">
-                            <div class="flex gap-3">
+                            <div class="flex gap-3 flex-wrap">
+                                ${euMesmo ? '' : `<button onclick="alternarAcessoUsuario('${u.id}', ${u.acesso_liberado === true})" class="text-xs font-bold ${u.acesso_liberado === true ? 'text-amber-600' : 'text-green-600'} hover:underline">${u.acesso_liberado === true ? 'Revogar acesso' : '✅ Liberar acesso'}</button>`}
                                 <button onclick="alternarRoleUsuario('${u.id}', '${u.role}')" class="text-xs text-teal2 hover:underline">${u.role === 'admin' ? 'Remover admin' : 'Tornar admin'}</button>
                                 <button onclick="alternarBanimentoUsuario('${u.id}', ${!!u.banido})" class="text-xs ${u.banido ? 'text-emerald-600' : 'text-red-600'} hover:underline">${u.banido ? 'Desbloquear' : 'Bloquear'}</button>
                             </div>
                         </td>
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
             } catch (error) {
                 tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-red-600 text-xs">Erro ao carregar: ${error.message}</td></tr>`;
             }
         }
+
+        window.alternarAcessoUsuario = async function(id, liberadoAtual) {
+            if (id === usuarioAtual.uid) return alert('Você não pode alterar o próprio acesso.');
+            try { await colecao('profiles').doc(id).update({ acesso_liberado: !liberadoAtual, acesso_liberado_em: !liberadoAtual ? new Date().toISOString() : null }); carregarAdminUsuarios(); }
+            catch (error) { alert(error.message); }
+        };
 
         window.alternarRoleUsuario = async function(id, roleAtual) {
             if (id === usuarioAtual.uid) return alert('Você não pode alterar sua própria permissão.');
@@ -1016,6 +1097,7 @@
                 usuarioAtual = user;
                 const perfilOk = await sincronizarPerfil();
                 if (!perfilOk) return;
+                if (!usuarioTemAcesso()) { mostrarTelaAcessoPendente(); return; }
                 telaAuth.classList.add('hidden');
                 sidebarApp.classList.remove('hidden');
                 conteudoPainel.classList.remove('hidden');
@@ -1028,6 +1110,7 @@
             } 
             else {
                 usuarioAtual = null;
+                document.getElementById('telaAcessoPendente').classList.add('hidden');
                 sidebarApp.classList.add('hidden');
                 conteudoPainel.classList.add('hidden');
                 mobileTopBar.classList.add('hidden');

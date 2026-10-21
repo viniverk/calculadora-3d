@@ -1,0 +1,79 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function logado() {
+      return request.auth != null;
+    }
+
+    function ehDono(dados) {
+      return logado() && request.auth.uid == dados.user_id;
+    }
+
+    // Dono do sistema (sempre admin, mesmo sem perfil prévio)
+    function ehDonoSistema() {
+      return logado() && request.auth.token.email == 'viniciosv@gmail.com';
+    }
+
+    function meuPerfil() {
+      return get(/databases/$(database)/documents/profiles/$(request.auth.uid)).data;
+    }
+
+    function ehAdmin() {
+      return ehDonoSistema() ||
+        (logado() &&
+         exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
+         meuPerfil().role == 'admin');
+    }
+
+    // Acesso pago: admin ou perfil com acesso_liberado == true (e não banido)
+    function temAcesso() {
+      return ehAdmin() ||
+        (logado() &&
+         exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
+         meuPerfil().acesso_liberado == true &&
+         meuPerfil().get('banido', false) == false);
+    }
+
+    // Perfis: cada um lê o próprio; admin lê e edita todos.
+    // Ao criar o próprio perfil, só pode nascer como "user" SEM acesso liberado
+    // (ninguém consegue se promover ou se liberar sozinho).
+    match /profiles/{uid} {
+      allow read: if logado() && (request.auth.uid == uid || ehAdmin());
+      allow create: if logado() && request.auth.uid == uid &&
+        (ehDonoSistema() ||
+         (request.resource.data.role == 'user' &&
+          request.resource.data.acesso_liberado == false &&
+          request.resource.data.banido == false));
+      allow update: if ehAdmin();
+    }
+
+    // Estoque, Vendas, Catálogo: cada usuário só lê e mexe nos próprios dados
+    // e só enquanto tiver acesso liberado.
+    match /estoque_materiais/{id} {
+      allow read: if ehDono(resource.data) && temAcesso();
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+
+    // Projetos: leitura pública (sem login) só para o link "Compartilhar Catálogo".
+    // Escrita só do dono com acesso liberado.
+    match /projetos_3d/{id} {
+      allow read: if true;
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+
+    match /vendas_3d/{id} {
+      allow read: if ehDono(resource.data) && temAcesso();
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+
+    match /catalogo_modelos/{id} {
+      allow read: if ehDono(resource.data) && temAcesso();
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+  }
+}
