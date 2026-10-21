@@ -26,13 +26,16 @@ service cloud.firestore {
          meuPerfil().role == 'admin');
     }
 
-    // Acesso pago: admin ou perfil com acesso_liberado == true (e não banido)
+    // Acesso pago: admin ou perfil liberado, não banido e dentro do vencimento
     function temAcesso() {
       return ehAdmin() ||
         (logado() &&
          exists(/databases/$(database)/documents/profiles/$(request.auth.uid)) &&
          meuPerfil().acesso_liberado == true &&
-         meuPerfil().get('banido', false) == false);
+         meuPerfil().get('banido', false) == false &&
+         // sem vencimento = vitalício; com vencimento, precisa estar no futuro
+         (meuPerfil().get('acesso_expira_em', null) == null ||
+          meuPerfil().acesso_expira_em > request.time));
     }
 
     // Perfis: cada um lê o próprio; admin lê e edita todos.

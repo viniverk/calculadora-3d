@@ -119,7 +119,7 @@
                         <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-7 py-3.5 rounded-full shadow-md transition">Quero meu acesso ›</button>
                         <a href="#funcionalidades" class="font-bold text-ink border border-line bg-white hover:bg-surface2 px-7 py-3.5 rounded-full transition">Ver funcionalidades</a>
                     </div>
-                    <p class="text-sm text-inkmute mt-5">✔ Pagamento único de <strong class="text-ink">R$ 99,00</strong> &nbsp;•&nbsp; ✔ Acesso vitalício &nbsp;•&nbsp; ✔ Seus dados só você vê</p>
+                    <p class="text-sm text-inkmute mt-5">✔ A partir de <strong class="text-ink">R$ 19,90/mês</strong> &nbsp;•&nbsp; ✔ Ou acesso vitalício &nbsp;•&nbsp; ✔ Seus dados só você vê</p>
                 </div>
 
                 <!-- Mock do painel -->
@@ -180,8 +180,8 @@
                 </div>
                 <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-5 mt-12">
                     <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">1</div><h3 class="font-display font-bold mt-4">Crie sua conta</h3><p class="text-sm text-inkmute mt-2">Cadastre-se com e-mail e senha ou entre com sua conta Google.</p></div>
-                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">2</div><h3 class="font-display font-bold mt-4">Pague via PIX</h3><p class="text-sm text-inkmute mt-2">Faça o PIX de R$ 99,00. A chave aparece na tela logo após criar a conta.</p></div>
-                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">3</div><h3 class="font-display font-bold mt-4">Acesso liberado</h3><p class="text-sm text-inkmute mt-2">Enviado o comprovante, o administrador libera o seu acesso vitalício.</p></div>
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">2</div><h3 class="font-display font-bold mt-4">Escolha o plano e pague via PIX</h3><p class="text-sm text-inkmute mt-2">Mensal, trimestral ou vitalício. A chave PIX aparece na tela logo após criar a conta.</p></div>
+                    <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">3</div><h3 class="font-display font-bold mt-4">Acesso liberado</h3><p class="text-sm text-inkmute mt-2">Enviado o comprovante, o administrador libera o seu acesso pelo plano escolhido.</p></div>
                     <div class="bg-white rounded-2xl border border-line p-6"><div class="w-10 h-10 rounded-full bg-blue-600 text-white font-display font-bold flex items-center justify-center">4</div><h3 class="font-display font-bold mt-4">Gerencie tudo</h3><p class="text-sm text-inkmute mt-2">Cadastre filamentos, projetos e vendas e deixe o sistema calcular por você.</p></div>
                 </div>
             </div>
@@ -192,28 +192,52 @@
             <div class="max-w-6xl mx-auto px-4">
                 <div class="text-center max-w-2xl mx-auto">
                     <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Planos</p>
-                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Pague uma vez, use para sempre</h2>
-                    <p class="text-inkmute mt-3">Sem mensalidade e sem surpresa.</p>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Planos simples, sem surpresa</h2>
+                    <p class="text-inkmute mt-3">Escolha o plano que cabe no seu momento. Todos incluem todas as funcionalidades.</p>
                 </div>
-                <div class="max-w-md mx-auto mt-12">
-                    <div class="relative rounded-3xl border-2 border-blue-600 bg-white shadow-xl p-8">
-                        <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full">ACESSO VITALÍCIO</span>
-                        <div class="text-center">
-                            <p class="font-display text-5xl font-bold tracking-tight mt-2">R$ 99<span class="text-2xl">,00</span></p>
-                            <p class="text-sm text-inkmute mt-1">pagamento único via PIX</p>
-                        </div>
-                        <ul class="mt-6 space-y-3 text-sm">
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades, sem limites de projetos</li>
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Calculadora, estoque de filamento e vendas</li>
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público para clientes</li>
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Seus dados privados, só você acessa</li>
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Funciona no computador e no celular</li>
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Acesso vitalício, sem mensalidade</li>
+                <div class="grid md:grid-cols-3 gap-6 mt-12 items-stretch">
+
+                    <div class="rounded-3xl border border-line bg-white shadow-sm p-7 flex flex-col">
+                        <h3 class="font-display font-bold text-lg">Mensal</h3>
+                        <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 19<span class="text-xl">,90</span><span class="text-sm font-medium text-inkmute"> /mês</span></p>
+                        <p class="text-sm text-inkmute mt-1">Renovação manual via PIX a cada mês</p>
+                        <ul class="mt-6 space-y-2.5 text-sm flex-1">
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Cancele quando quiser</li>
                         </ul>
-                        <button onclick="abrirAuth('cadastro')" class="w-full btn-cta font-bold py-3.5 rounded-full shadow-md transition mt-8">Criar conta e pagar via PIX ›</button>
-                        <p class="text-xs text-inkmute text-center mt-3">O acesso é liberado após a confirmação do pagamento.</p>
+                        <button onclick="abrirAuth('cadastro')" class="w-full font-bold py-3 rounded-full border border-line bg-white hover:bg-surface2 transition mt-7">Começar no mensal</button>
+                    </div>
+
+                    <div class="rounded-3xl border border-line bg-white shadow-sm p-7 flex flex-col">
+                        <h3 class="font-display font-bold text-lg">Trimestral</h3>
+                        <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 49<span class="text-xl">,90</span><span class="text-sm font-medium text-inkmute"> /3 meses</span></p>
+                        <p class="text-sm text-inkmute mt-1">Equivale a R$ 16,63/mês • <strong class="text-green-600">16% de desconto</strong></p>
+                        <ul class="mt-6 space-y-2.5 text-sm flex-1">
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> 3 meses de uso por um preço menor</li>
+                        </ul>
+                        <button onclick="abrirAuth('cadastro')" class="w-full font-bold py-3 rounded-full border border-line bg-white hover:bg-surface2 transition mt-7">Começar no trimestral</button>
+                    </div>
+
+                    <div class="relative rounded-3xl border-2 border-blue-600 bg-white shadow-xl p-7 flex flex-col">
+                        <span class="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-blue-600 text-white text-xs font-bold px-4 py-1 rounded-full whitespace-nowrap">MELHOR CUSTO-BENEFÍCIO</span>
+                        <h3 class="font-display font-bold text-lg">Vitalício</h3>
+                        <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 149<span class="text-xl">,00</span></p>
+                        <p class="text-sm text-inkmute mt-1">Pagamento único, sem mensalidade</p>
+                        <ul class="mt-6 space-y-2.5 text-sm flex-1">
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Acesso para sempre, sem renovar</li>
+                        </ul>
+                        <button onclick="abrirAuth('cadastro')" class="w-full btn-cta font-bold py-3 rounded-full shadow-md transition mt-7">Quero o vitalício ›</button>
                     </div>
                 </div>
+                <p class="text-xs text-inkmute text-center mt-6">Pagamento via PIX. O acesso é liberado após a confirmação do pagamento. Nos planos mensal e trimestral, a renovação é feita por um novo PIX.</p>
             </div>
         </section>
 
@@ -222,8 +246,8 @@
             <div class="max-w-3xl mx-auto px-4">
                 <h2 class="font-display text-3xl font-bold tracking-tight text-center">Perguntas frequentes</h2>
                 <div class="mt-10 space-y-3">
-                    <details class="bg-white border border-line rounded-xl p-4 group"><summary class="font-bold cursor-pointer">O pagamento é mensal?</summary><p class="text-sm text-inkmute mt-2">Não. É um pagamento único de R$ 99,00 e o acesso é vitalício.</p></details>
-                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Quanto tempo leva para liberar meu acesso?</summary><p class="text-sm text-inkmute mt-2">Assim que o pagamento for confirmado e o comprovante enviado ao administrador, o acesso é liberado. Na tela de espera, toque em "Já paguei, verificar".</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4 group"><summary class="font-bold cursor-pointer">Preciso pagar todo mês?</summary><p class="text-sm text-inkmute mt-2">Só se escolher o plano mensal. O trimestral vale por 3 meses e o vitalício é um pagamento único de R$ 149,00, sem renovação. Nos planos mensal e trimestral, a renovação é feita por um novo PIX; não há cobrança automática.</p></details>
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Quanto tempo leva para liberar meu acesso?</summary><p class="text-sm text-inkmute mt-2">Assim que o pagamento for confirmado e o comprovante enviado ao administrador (informando o plano escolhido), o acesso é liberado. Na tela de espera, toque em "Já paguei, verificar".</p></details>
                     <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Outras pessoas veem meus dados?</summary><p class="text-sm text-inkmute mt-2">Não. Cada conta tem os próprios dados, protegidos. Só o link do portfólio, se você compartilhar, mostra seus modelos aos clientes.</p></details>
                     <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Posso usar no celular?</summary><p class="text-sm text-inkmute mt-2">Sim. Basta abrir o site no navegador do celular e entrar com sua conta.</p></details>
                     <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Como funciona o desconto de filamento?</summary><p class="text-sm text-inkmute mt-2">Você cadastra suas compras de filamento. Ao salvar uma impressão com o fabricante, tipo e cor usados, o sistema desconta o peso do rolo correspondente.</p></details>
@@ -235,7 +259,7 @@
         <section class="py-16 bg-ink text-white text-center">
             <div class="max-w-2xl mx-auto px-4">
                 <h2 class="font-display text-3xl font-bold tracking-tight">Pronto para organizar sua produção?</h2>
-                <p class="text-white/70 mt-3">Crie sua conta e tenha acesso vitalício por R$ 99,00.</p>
+                <p class="text-white/70 mt-3">Crie sua conta e comece a partir de R$ 19,90 por mês, ou garanta o vitalício por R$ 149,00.</p>
                 <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-8 py-3.5 rounded-full shadow-md transition mt-7">Começar agora ›</button>
             </div>
         </section>
@@ -303,16 +327,21 @@
         </div>
         <div class="bg-surface p-6 rounded-2xl shadow-lg border border-line w-full space-y-4">
             <div class="text-center">
-                <h2 class="font-display text-xl font-bold text-ink">Acesso aguardando pagamento</h2>
-                <p class="text-sm text-inkmute mt-1">Sua conta <strong id="pendenteEmail" class="text-ink"></strong> foi criada. O acesso vitalício de <strong class="text-ink">R$ 99,00</strong> é liberado após o pagamento via PIX.</p>
+                <h2 id="pendenteTitulo" class="font-display text-xl font-bold text-ink">Acesso aguardando pagamento</h2>
+                <p id="pendenteTexto" class="text-sm text-inkmute mt-1">Sua conta <strong id="pendenteEmail" class="text-ink"></strong> foi criada. Escolha um plano, pague via PIX e envie o comprovante.</p>
             </div>
             <div class="bg-surface2 border border-line rounded-xl p-4 space-y-2 text-sm">
                 <div class="flex justify-between gap-3"><span class="text-inkmute">Chave PIX (CPF)</span><span id="pixChave" class="font-mono2 font-bold text-ink">07216976908</span></div>
                 <div class="flex justify-between gap-3"><span class="text-inkmute">Favorecido</span><span class="font-bold text-ink text-right">VINICIOS VERKRUESSEN</span></div>
-                <div class="flex justify-between gap-3 border-t border-line pt-2"><span class="text-inkmute">Valor do acesso</span><span class="font-bold text-green-600 text-right">R$ 99,00 <span class="text-xs text-inkmute font-medium">(vitalício)</span></span></div>
+                <div class="border-t border-line pt-2 space-y-1.5">
+                    <p class="text-inkmute text-xs uppercase tracking-wide">Planos</p>
+                    <div class="flex justify-between"><span>Mensal</span><span class="font-bold text-green-600">R$ 19,90</span></div>
+                    <div class="flex justify-between"><span>Trimestral</span><span class="font-bold text-green-600">R$ 49,90</span></div>
+                    <div class="flex justify-between"><span>Vitalício</span><span class="font-bold text-green-600">R$ 149,00</span></div>
+                </div>
                 <button id="btnCopiarPix" class="w-full btn-cta font-bold py-2 rounded-lg transition mt-2">📋 Copiar chave PIX</button>
             </div>
-            <p class="text-xs text-inkmute">Depois de pagar, envie o comprovante ao administrador informando o e-mail da sua conta. Assim que ele liberar, toque em "Já paguei, verificar".</p>
+            <p class="text-xs text-inkmute">Depois de pagar, envie o comprovante ao administrador informando o e-mail da sua conta e o plano escolhido. Assim que ele liberar, toque em "Já paguei, verificar".</p>
             <div class="flex gap-2">
                 <button id="btnVerificarAcesso" class="flex-1 bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink text-sm font-bold py-2 rounded-lg transition">🔄 Já paguei, verificar</button>
                 <button id="btnSairPendente" class="flex-1 bg-transparent hover:bg-red-50 border border-red-200 text-red-600 text-sm font-bold py-2 rounded-lg transition">Sair</button>
@@ -1154,8 +1183,24 @@
             return true;
         }
 
+        // Converte Timestamp do Firestore / string ISO em Date (ou null)
+        function dataDeCampo(v) {
+            if (!v) return null;
+            if (typeof v.toDate === 'function') return v.toDate();
+            const d = new Date(v); return isNaN(d) ? null : d;
+        }
+        function acessoExpirado(perfil) {
+            const exp = dataDeCampo(perfil && perfil.acesso_expira_em);
+            return !!exp && exp.getTime() <= Date.now();
+        }
+        function diasRestantes(perfil) {
+            const exp = dataDeCampo(perfil && perfil.acesso_expira_em);
+            return exp ? Math.ceil((exp.getTime() - Date.now()) / 86400000) : null;
+        }
         function usuarioTemAcesso() {
-            return !!perfilAtual && (perfilAtual.role === 'admin' || perfilAtual.acesso_liberado === true);
+            if (!perfilAtual) return false;
+            if (perfilAtual.role === 'admin') return true;
+            return perfilAtual.acesso_liberado === true && !acessoExpirado(perfilAtual);
         }
 
         function mostrarTelaAcessoPendente() {
@@ -1164,6 +1209,11 @@
             conteudoPainel.classList.add('hidden');
             mobileTopBar.classList.add('hidden');
             document.getElementById('pendenteEmail').innerText = usuarioAtual.email || '';
+            if (perfilAtual && perfilAtual.acesso_liberado === true && acessoExpirado(perfilAtual)) {
+                const exp = dataDeCampo(perfilAtual.acesso_expira_em);
+                document.getElementById('pendenteTitulo').innerText = 'Seu acesso expirou';
+                document.getElementById('pendenteTexto').innerHTML = `Seu plano ${perfilAtual.plano || ''} venceu em <strong class="text-ink">${exp.toLocaleDateString('pt-BR')}</strong>. Seus dados continuam guardados: renove via PIX e envie o comprovante para voltar a usar.`;
+            }
             document.getElementById('telaAcessoPendente').classList.remove('hidden');
         }
 
@@ -1194,32 +1244,52 @@
                 tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
                 const snap = await colecao('profiles').get();
                 const data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
+                window.__usuariosAdmin = {}; data.forEach(u => { window.__usuariosAdmin[u.id] = u; });
                 if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
 
-                data.sort((x, y) => (x.acesso_liberado === true) - (y.acesso_liberado === true)); // pendentes primeiro
-                const pendentes = data.filter(u => u.role !== 'admin' && u.acesso_liberado !== true).length;
+                const semAcesso = (u) => u.role !== 'admin' && (u.acesso_liberado !== true || acessoExpirado(u));
+                data.sort((x, y) => semAcesso(y) - semAcesso(x)); // pendentes/expirados primeiro
+                const pendentes = data.filter(semAcesso).length;
                 const resumo = document.getElementById('resumoAdminUsuarios');
-                if (resumo) resumo.innerText = `${data.length} usuário(s) • ` + (pendentes > 0 ? `${pendentes} aguardando liberação (PIX)` : 'nenhum aguardando liberação');
+                if (resumo) resumo.innerText = `${data.length} usuário(s) • ` + (pendentes > 0 ? `${pendentes} aguardando liberação ou renovação (PIX)` : 'nenhum aguardando liberação');
 
                 tbody.innerHTML = data.map(u => {
-                    const liberado = u.role === 'admin' || u.acesso_liberado === true;
+                    const ehAdm = u.role === 'admin';
+                    const expirado = u.acesso_liberado === true && acessoExpirado(u);
+                    const ativo = ehAdm || (u.acesso_liberado === true && !expirado);
                     const euMesmo = u.id === usuarioAtual.uid;
+                    const dias = diasRestantes(u);
+                    const exp = dataDeCampo(u.acesso_expira_em);
+                    let statusHtml;
+                    if (ehAdm) statusHtml = '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-green-100 text-green-700">Admin</span>';
+                    else if (expirado) statusHtml = `<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-100 text-red-700">Expirado</span><span class="block text-[10px] text-inkmute mt-1">${u.plano || ''} • venceu em ${exp.toLocaleDateString('pt-BR')}</span>`;
+                    else if (ativo) statusHtml = `<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-green-100 text-green-700">Liberado</span><span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-blue-100 text-blue-700 ml-1">${u.plano || 'vitalício'}</span>` + (exp ? `<span class="block text-[10px] mt-1 ${dias <= 7 ? 'text-red-600 font-bold' : 'text-inkmute'}">vence em ${exp.toLocaleDateString('pt-BR')} (${dias} dia${dias === 1 ? '' : 's'})</span>` : '<span class="block text-[10px] text-inkmute mt-1">sem vencimento</span>');
+                    else statusHtml = '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-700">Aguardando PIX</span>';
+                    if (u.banido) statusHtml += '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500/15 text-red-600 ml-1">Bloqueado</span>';
+                    const acoesAcesso = (ehAdm || euMesmo) ? '' : `
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <select id="plano-${u.id}" class="text-xs bg-surface2 border border-line rounded px-1.5 py-1 text-ink">
+                                <option value="mensal">Mensal (+1 mês)</option>
+                                <option value="trimestral">Trimestral (+3 meses)</option>
+                                <option value="vitalicio">Vitalício</option>
+                            </select>
+                            <button onclick="liberarAcessoUsuario('${u.id}')" class="text-xs font-bold text-green-600 hover:underline">${ativo || expirado ? '🔄 Renovar' : '✅ Liberar'}</button>
+                            ${ativo ? `<button onclick="revogarAcessoUsuario('${u.id}')" class="text-xs text-amber-600 hover:underline">Revogar</button>` : ''}
+                        </div>`;
                     return `
                     <tr>
                         <td class="p-3">
                             <span class="text-ink">${u.email}</span>
                             ${euMesmo ? '<span class="text-[10px] text-inkmute ml-1">(você)</span>' : ''}
                         </td>
-                        <td class="p-3 whitespace-nowrap">
-                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded ${u.role === 'admin' ? 'bg-gold2/15 text-gold2' : 'bg-surface2 text-inkmute'}">${u.role || 'user'}</span>
-                            ${liberado ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-green-100 text-green-700 ml-1">Liberado</span>' : '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-700 ml-1">Aguardando PIX</span>'}
-                            ${u.banido ? '<span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded bg-red-500/15 text-red-600 ml-1">Bloqueado</span>' : ''}
-                        </td>
+                        <td class="p-3">${statusHtml}</td>
                         <td class="p-3">
-                            <div class="flex gap-3 flex-wrap">
-                                ${euMesmo ? '' : `<button onclick="alternarAcessoUsuario('${u.id}', ${u.acesso_liberado === true})" class="text-xs font-bold ${u.acesso_liberado === true ? 'text-amber-600' : 'text-green-600'} hover:underline">${u.acesso_liberado === true ? 'Revogar acesso' : '✅ Liberar acesso'}</button>`}
-                                <button onclick="alternarRoleUsuario('${u.id}', '${u.role}')" class="text-xs text-teal2 hover:underline">${u.role === 'admin' ? 'Remover admin' : 'Tornar admin'}</button>
-                                <button onclick="alternarBanimentoUsuario('${u.id}', ${!!u.banido})" class="text-xs ${u.banido ? 'text-emerald-600' : 'text-red-600'} hover:underline">${u.banido ? 'Desbloquear' : 'Bloquear'}</button>
+                            <div class="flex flex-col gap-2">
+                                ${acoesAcesso}
+                                <div class="flex gap-3 flex-wrap">
+                                    <button onclick="alternarRoleUsuario('${u.id}', '${u.role}')" class="text-xs text-teal2 hover:underline">${ehAdm ? 'Remover admin' : 'Tornar admin'}</button>
+                                    <button onclick="alternarBanimentoUsuario('${u.id}', ${!!u.banido})" class="text-xs ${u.banido ? 'text-emerald-600' : 'text-red-600'} hover:underline">${u.banido ? 'Desbloquear' : 'Bloquear'}</button>
+                                </div>
                             </div>
                         </td>
                     </tr>`;
@@ -1231,9 +1301,30 @@
             }
         }
 
-        window.alternarAcessoUsuario = async function(id, liberadoAtual) {
+        window.liberarAcessoUsuario = async function(id) {
             if (id === usuarioAtual.uid) return alert('Você não pode alterar o próprio acesso.');
-            try { await colecao('profiles').doc(id).update({ acesso_liberado: !liberadoAtual, acesso_liberado_em: !liberadoAtual ? new Date().toISOString() : null }); carregarAdminUsuarios(); }
+            const plano = document.getElementById('plano-' + id).value;
+            const u = (window.__usuariosAdmin || {})[id] || {};
+            let expira = null;
+            if (plano !== 'vitalicio') {
+                // Renovação soma a partir do vencimento atual (se ainda válido); senão, a partir de hoje
+                let base = new Date();
+                const atual = dataDeCampo(u.acesso_expira_em);
+                if (u.acesso_liberado === true && atual && atual.getTime() > Date.now()) base = atual;
+                const d = new Date(base);
+                d.setMonth(d.getMonth() + (plano === 'mensal' ? 1 : 3));
+                expira = firebase.firestore.Timestamp.fromDate(d);
+            }
+            try {
+                await colecao('profiles').doc(id).update({ acesso_liberado: true, plano: plano === 'vitalicio' ? 'vitalício' : plano, acesso_expira_em: expira, acesso_liberado_em: new Date().toISOString() });
+                carregarAdminUsuarios();
+            } catch (error) { alert(error.message); }
+        };
+
+        window.revogarAcessoUsuario = async function(id) {
+            if (id === usuarioAtual.uid) return alert('Você não pode alterar o próprio acesso.');
+            if (!confirm('Revogar o acesso deste usuário? Os dados dele são mantidos.')) return;
+            try { await colecao('profiles').doc(id).update({ acesso_liberado: false }); carregarAdminUsuarios(); }
             catch (error) { alert(error.message); }
         };
 
