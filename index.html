@@ -763,6 +763,23 @@
                 </div>
                 <p id="resumoDetalheCustos" class="text-xs text-inkmute"></p>
 
+                <div class="bg-base p-4 rounded-xl border border-line space-y-3">
+                    <div>
+                        <label class="block text-sm font-bold text-ink mb-1">Valor de venda (R$) <span class="text-inkmute font-normal text-xs">— aparece no Portfólio</span></label>
+                        <input type="number" id="projPrecoVenda" step="0.01" placeholder="Digite o valor ou use uma sugestão abaixo" class="w-full bg-surface2 p-2.5 rounded border border-line focus:outline-none focus:border-emerald-600 text-ink font-bold">
+                        <p class="text-[11px] text-inkmute mt-1">Em branco: o app calcula sozinho a partir do custo.</p>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-2">
+                        <button type="button" id="sugDireta" class="text-left rounded-lg border border-line bg-surface hover:border-emerald-500 px-3 py-2 transition"><span class="block text-[11px] text-inkmute">Sugerido • Venda direta (margem 100%)</span><span id="sugDiretaValor" class="font-mono2 font-bold text-emerald-700">R$ 0,00</span></button>
+                        <div class="rounded-lg border border-line bg-surface px-3 py-2">
+                            <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-inkmute">Sugerido • Venda marketplace</span><select id="sugCanal" class="text-[11px] bg-surface2 border border-line rounded px-1.5 py-0.5 text-ink"><option value="shopee">Shopee</option><option value="ml_classico">ML Clássico</option><option value="ml_premium">ML Premium</option></select></div>
+                            <button type="button" id="sugMarket" class="font-mono2 font-bold text-emerald-700 hover:underline text-left"><span id="sugMarketValor">R$ 0,00</span></button>
+                            <span class="block text-[10px] text-inkmute">já cobre as taxas do canal</span>
+                        </div>
+                    </div>
+                    <button type="button" id="sugSoma" class="hidden w-full text-left rounded-lg border border-line bg-surface hover:border-emerald-500 px-3 py-2 transition"><span class="block text-[11px] text-inkmute">Soma dos valores das peças</span><span id="sugSomaValor" class="font-mono2 font-bold text-emerald-700">R$ 0,00</span></button>
+                </div>
+
                 <div class="flex flex-col sm:flex-row sm:justify-end sm:items-center gap-3 pt-2 border-t border-line">
                     <div class="hidden">
                         <span class="text-xs text-inkmute uppercase font-bold block">Preço Final de Venda Sugerido:</span>
@@ -1236,6 +1253,7 @@
         const projNome = document.getElementById('projNome');
         const projCor = document.getElementById('projCor');
         const projMaquina = document.getElementById('projMaquina');
+        const projPrecoVenda = document.getElementById('projPrecoVenda');
         const projStatus = document.getElementById('projStatus'); 
         const projDataConclusao = document.getElementById('projDataConclusao');
         const projImagemUrl = document.getElementById('projImagemUrl');
@@ -2913,7 +2931,24 @@
             if (fin.fixo > 0) partes.push(`embalagem/frete: ${brl(fin.fixo)}`);
             partes.push(`<strong class="text-amber-600">custo total: ${brl(fin.custoTotal)}</strong> — preço, canal e lucro você define na aba Vendas`);
             document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
+            atualizarSugestoesPreco();
         }
+        function atualizarSugestoesPreco() {
+            let custoPecas = 0; pecasProjetoAtual.forEach(p => { custoPecas += p.custo_calculado; });
+            const custo = custoPecas + num(configCustos.custo_fixo_projeto, 0);
+            const direta = custo * 2;                               // margem 100% sobre o custo
+            const mkt = precoParaCanal(custo * 2, document.getElementById('sugCanal').value);   // mesmo lucro, já pagando as taxas do canal
+            document.getElementById('sugDiretaValor').innerText = brl(direta);
+            document.getElementById('sugMarketValor').innerText = brl(mkt);
+            const soma = pecasProjetoAtual.reduce((a, pc) => a + (pc.preco_venda || 0), 0);
+            document.getElementById('sugSoma').classList.toggle('hidden', soma <= 0);
+            document.getElementById('sugSomaValor').innerText = brl(soma);
+            return { direta, mkt, soma };
+        }
+        document.getElementById('sugDireta').addEventListener('click', () => { projMargemPorcentagem.value = 100; projCanalVenda.value = 'direta'; projPrecoVenda.value = atualizarSugestoesPreco().direta.toFixed(2); });
+        document.getElementById('sugMarket').addEventListener('click', () => { projMargemPorcentagem.value = 100; projCanalVenda.value = document.getElementById('sugCanal').value; projPrecoVenda.value = atualizarSugestoesPreco().mkt.toFixed(2); });
+        document.getElementById('sugSoma').addEventListener('click', () => { projPrecoVenda.value = atualizarSugestoesPreco().soma.toFixed(2); });
+        document.getElementById('sugCanal').addEventListener('change', atualizarSugestoesPreco);
         projCanalVenda.addEventListener('change', atualizarAcumuladoresMaster);
         document.getElementById('btnRecalcularCustos').addEventListener('click', () => {
             if (pecasProjetoAtual.length === 0) return alert('Este projeto ainda não tem peças.');
@@ -2938,7 +2973,8 @@
             const custoTotalAcumulado = finProj.custoTotal;
             // Se todas as peças têm valor de venda manual, o preço do projeto no portfólio é a soma delas
             const todasComPreco = pecasProjetoAtual.length > 0 && pecasProjetoAtual.every(pc => (pc.preco_venda || 0) > 0);
-            const precoVendaFinal = todasComPreco ? pecasProjetoAtual.reduce((a, pc) => a + pc.preco_venda, 0) : finProj.preco;
+            const precoManual = parseFloat(projPrecoVenda.value) || 0;
+            const precoVendaFinal = precoManual > 0 ? precoManual : todasComPreco ? pecasProjetoAtual.reduce((a, pc) => a + pc.preco_venda, 0) : finProj.preco;
             btnSalvarProjetoCompleto.disabled = true;
 
             const linkDownload = projLink3mf.value.trim();
@@ -2955,7 +2991,7 @@
                 pecas: pecasProjetoAtual, 
                 margem_lucro_porcentagem: margem, 
                 custo_total: custoTotalAcumulado, 
-                preco_venda_total: precoVendaFinal, 
+                preco_venda_total: precoVendaFinal, preco_manual: precoManual > 0,
                 tempo_total_min: tempoTotalMin, 
                 peso_total_g: pesoTotalG, 
                 status: statusAtual, 
@@ -3033,7 +3069,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projCor.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -3043,7 +3079,7 @@
 
         window.editarProjeto3d = function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projMaquina.value = proj.maquina_id || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
