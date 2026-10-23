@@ -875,7 +875,8 @@
                         <div><label class="ped-lbl">Status</label><select id="pedStatus" class="ped-inp"><option value="Aguardando">Pendente (aguardando)</option><option value="Imprimindo">Imprimindo</option><option value="Pronto">Pronto</option></select></div>
                         <div><label class="ped-lbl">Contato (WhatsApp, opcional)</label><input type="text" id="pedContato" placeholder="(11) 99999-9999" class="ped-inp"></div>
                         <div><label class="ped-lbl">Prazo de entrega</label><input type="date" id="pedPrazo" class="ped-inp"></div>
-                        <div><label class="ped-lbl">Adicionar produto</label><select id="pedProdutoAdd" class="ped-inp"><option value="">Selecione um produto</option></select></div>
+                        <div class="relative"><label class="ped-lbl">Adicionar produto</label><input type="text" id="pedProdutoBusca" autocomplete="off" placeholder="🔍 Pesquisar produto pelo nome..." class="ped-inp">
+                            <div id="pedProdutoLista" class="hidden absolute left-0 right-0 top-full mt-1 z-20 max-h-72 overflow-y-auto rounded-xl border border-line bg-surface shadow-xl"></div></div>
                         <div><label class="ped-lbl">Valor de venda</label><select id="pedTipoValor" class="ped-inp"><option value="catalogo">Preço do catálogo (aba Vendas)</option><option value="usuario">Valor definido por mim</option></select></div>
                         <div><label class="ped-lbl">Tipo de pagamento</label><select id="pedTipoPagamento" class="ped-inp"><option value="">Selecione o tipo de pagamento</option><option>PIX</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>Transferência</option><option>Outro</option></select></div>
                         <div><label class="ped-lbl">Status do pagamento</label><select id="pedStatusPag" class="ped-inp"><option value="Pendente">Pendente</option><option value="Sinal pago">Sinal pago</option><option value="Pago">Pago</option></select></div>
@@ -2371,7 +2372,8 @@
         const pedContato = document.getElementById('pedContato');
         const pedStatus = document.getElementById('pedStatus');
         const pedPrazo = document.getElementById('pedPrazo');
-        const pedProdutoAdd = document.getElementById('pedProdutoAdd');
+        const pedProdutoBusca = document.getElementById('pedProdutoBusca');
+        const pedProdutoLista = document.getElementById('pedProdutoLista');
         const pedTipoValor = document.getElementById('pedTipoValor');
         const pedTipoPagamento = document.getElementById('pedTipoPagamento');
         const pedStatusPag = document.getElementById('pedStatusPag');
@@ -2438,7 +2440,7 @@
             pedItens.innerHTML = pedItensAtuais.map((it, i) => {
                 const avulso = !it.projeto_id;
                 return `<div class="grid grid-cols-12 gap-2 items-end bg-surface2 rounded-xl p-2.5">
-                    <div class="col-span-12 sm:col-span-${avulso ? 4 : 6}">${avulso ? `<label class="ped-lbl">Item</label><input data-i="${i}" data-campo="nome" value="${escHtml(it.nome)}" placeholder="Descrição" class="ped-inp">` : `<p class="text-sm font-semibold text-ink">${escHtml(it.nome)}</p><p class="text-[11px] text-inkmute">Custo ${brl(custoUnitarioItem(it))} cada</p>`}</div>
+                    <div class="col-span-12 sm:col-span-${avulso ? 4 : 6}">${avulso ? `<label class="ped-lbl">Item</label><input data-i="${i}" data-campo="nome" value="${escHtml(it.nome)}" placeholder="Descrição" class="ped-inp">` : `<div class="flex items-center gap-3">${miniaturaProjeto(projPorId(it.projeto_id), 'h-12 w-12')}<div class="min-w-0"><p class="text-sm font-semibold text-ink">${escHtml(it.nome)}</p><p class="text-[11px] text-inkmute">Custo ${brl(custoUnitarioItem(it))} cada</p></div></div>`}</div>
                     <div class="col-span-3 sm:col-span-2"><label class="ped-lbl">Qtd</label><input type="number" min="1" data-i="${i}" data-campo="quantidade" value="${it.quantidade}" class="ped-inp"></div>
                     <div class="col-span-4 sm:col-span-2"><label class="ped-lbl">Preço un.</label><input type="number" step="0.01" data-i="${i}" data-campo="preco_unitario" value="${it.preco_unitario === '' ? '' : it.preco_unitario}" class="ped-inp"></div>
                     ${avulso ? `<div class="col-span-4 sm:col-span-3"><label class="ped-lbl">Custo un.</label><input type="number" step="0.01" data-i="${i}" data-campo="custo_unitario" value="${it.custo_unitario || ''}" class="ped-inp"></div>` : ''}
@@ -2457,21 +2459,40 @@
             const t = totaisItens(pedItensAtuais);
             pedTotais.innerHTML = `Total de vendas: <strong class="text-ink">${brl(t.vendas)}</strong> &nbsp; Custo: <strong class="text-ink">${brl(t.custo)}</strong> &nbsp; Lucro estimado: <strong class="${t.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">${brl(t.lucro)}</strong>`;
         }
-        pedProdutoAdd.addEventListener('change', () => {
-            const pr = projPorId(pedProdutoAdd.value); if (!pr) return;
+        function adicionarProdutoAoPedido(id) {
+            const pr = projPorId(id); if (!pr) return;
             const existente = pedItensAtuais.find(x => x.projeto_id === pr.id);
             if (existente) existente.quantidade = (parseInt(existente.quantidade) || 0) + 1;
             else pedItensAtuais.push({ projeto_id: pr.id, nome: rotuloProjeto(pr), quantidade: 1, preco_unitario: pedTipoValor.value === 'catalogo' ? +(parseFloat(pr.preco_venda_total) || 0).toFixed(2) : '', custo_unitario: 0 });
-            pedProdutoAdd.value = '';
+            pedProdutoBusca.value = ''; fecharListaProdutos();
             renderizarItensPedido();
-        });
+        }
+        const semAcento = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+        function miniaturaProjeto(pr, tam) {
+            return pr && pr.imagem_base64 ? `<img src="${escHtml(pr.imagem_base64)}" loading="lazy" alt="" class="${tam} rounded-lg object-cover bg-surface2 border border-line shrink-0">` : `<div class="${tam} rounded-lg bg-surface2 border border-line flex items-center justify-center text-inkmute shrink-0">🖼️</div>`;
+        }
+        function renderizarListaProdutos() {
+            const termo = semAcento(pedProdutoBusca.value.trim());
+            const lista = [...projetosCacheLocal].sort((a, b) => rotuloProjeto(a).localeCompare(rotuloProjeto(b), 'pt-BR', { sensitivity: 'base' }))
+                .filter(p => !termo || semAcento(rotuloProjeto(p)).includes(termo));
+            pedProdutoLista.innerHTML = lista.length ? lista.map(p => `
+                <button type="button" data-id="${p.id}" class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-surface2 border-b border-line/50 last:border-0">
+                    ${miniaturaProjeto(p, 'h-12 w-12')}
+                    <span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-ink truncate">${escHtml(p.nome_projeto)}</span><span class="block text-[11px] text-inkmute truncate">${p.cor ? '🎨 ' + escHtml(p.cor) + ' • ' : ''}${(parseInt(p.quantidade_estoque) || 0) > 0 ? (parseInt(p.quantidade_estoque)) + ' em estoque' : 'sob encomenda'}</span></span>
+                    <span class="font-mono2 text-xs font-bold text-emerald-700 whitespace-nowrap">${brl(parseFloat(p.preco_venda_total) || 0)}</span>
+                </button>`).join('') : '<p class="px-3 py-4 text-sm text-inkmute text-center">Nenhum produto encontrado.</p>';
+            pedProdutoLista.classList.remove('hidden');
+            pedProdutoLista.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('mousedown', (e) => { e.preventDefault(); adicionarProdutoAoPedido(b.dataset.id); }));
+        }
+        function fecharListaProdutos() { pedProdutoLista.classList.add('hidden'); }
+        pedProdutoBusca.addEventListener('focus', renderizarListaProdutos);
+        pedProdutoBusca.addEventListener('input', renderizarListaProdutos);
+        pedProdutoBusca.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharListaProdutos(); });
+        pedProdutoBusca.addEventListener('blur', () => setTimeout(fecharListaProdutos, 150));
         btnItemBranco.addEventListener('click', () => { pedItensAtuais.push({ projeto_id: null, nome: '', quantidade: 1, preco_unitario: '', custo_unitario: '' }); renderizarItensPedido(); });
         pedStatusPag.addEventListener('change', () => pedBoxSinal.classList.toggle('hidden', pedStatusPag.value !== 'Sinal pago'));
 
         function preencherListasPedido() {
-            const atual = pedProdutoAdd.value;
-            pedProdutoAdd.innerHTML = '<option value="">Selecione um produto</option>' + projetosCacheLocal.map(p => `<option value="${p.id}">${escHtml(rotuloProjeto(p))}</option>`).join('');
-            pedProdutoAdd.value = atual;
             const nomes = [...new Set(pedidosCache.map(o => o.cliente).filter(Boolean))];
             listaClientesPedidos.innerHTML = nomes.map(n => `<option value="${escHtml(n)}"></option>`).join('');
         }
