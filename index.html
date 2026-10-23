@@ -698,7 +698,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3 items-end">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-3 items-end">
                         <div>
                             <label class="block text-xs font-medium mb-1 text-inkmute">Peso Utilizado (g)</label>
                             <input type="number" id="pecaPeso" value="30" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none text-sm">
@@ -710,6 +710,10 @@
                         <div>
                             <label class="block text-xs font-medium mb-1 text-inkmute">Minutos</label>
                             <input type="number" id="pecaTempoMinutos" value="0" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium mb-1 text-emerald-700">Valor de venda (R$)</label>
+                            <input type="number" id="pecaPrecoVenda" step="0.01" placeholder="Portfólio" class="w-full bg-surface2 p-2 rounded border border-emerald-300 focus:outline-none text-sm">
                         </div>
                         <button id="btnIncluirPeca" class="w-full bg-surface2 hover:bg-[#E3E6EB] text-sky-600 border border-sky-500/30 font-bold py-2 px-2 rounded text-sm transition">
                             + Incluir
@@ -1202,6 +1206,7 @@
         const pecaPeso = document.getElementById('pecaPeso');
         const pecaTempoHoras = document.getElementById('pecaTempoHoras');
         const pecaTempoMinutos = document.getElementById('pecaTempoMinutos');
+        const pecaPrecoVenda = document.getElementById('pecaPrecoVenda');
         const btnIncluirPeca = document.getElementById('btnIncluirPeca');
         const gridPecasProjeto = document.getElementById('gridPecasProjeto');
 
@@ -2663,7 +2668,8 @@
             const custoComponente = calcPeca.total;
             
             const dadosPeca = { 
-                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado
+                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado,
+                preco_venda: parseFloat(pecaPrecoVenda.value) || 0
             };
 
             if (idPecaEmEdicaoIndex !== null) {
@@ -2673,7 +2679,7 @@
             } else {
                 pecasProjetoAtual.push(dadosPeca);
             }
-            pecaNome.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0;
+            pecaNome.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0; pecaPrecoVenda.value = '';
             renderizarPecasDoEscopo();
         });
 
@@ -2691,7 +2697,7 @@
                             <span class="text-[10px] text-inkmute">${p.peso_g}g | ${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m | ${p.filamento_label.split('-')[0]}</span>
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-amber-500 font-medium">R$ ${p.custo_calculado.toFixed(2)}</span>
+                            <span class="text-amber-500 font-medium" title="Custo">R$ ${p.custo_calculado.toFixed(2)}</span>${p.preco_venda > 0 ? `<span class="text-emerald-700 font-bold" title="Valor de venda (portfólio)">💲 ${p.preco_venda.toFixed(2)}</span>` : ''}
                             <div class="flex gap-2 text-sm">
                                 <button onclick="editarComponenteDoEscopo(${index})" class="text-sky-600 font-bold">✏️</button>
                                 <button onclick="removerPecaDoEscopo(${index})" class="text-red-600 font-bold">✕</button>
@@ -2709,7 +2715,7 @@
 
         window.editarComponenteDoEscopo = function(index) {
             const p = pecasProjetoAtual[index]; idPecaEmEdicaoIndex = index;
-            pecaNome.value = p.nome_peca; pecaPeso.value = p.peso_g;
+            pecaNome.value = p.nome_peca; pecaPeso.value = p.peso_g; pecaPrecoVenda.value = p.preco_venda || '';
             if (p.filamento_chave && mapaCustoPorChaveFilamento.hasOwnProperty(p.filamento_chave)) {
                 pecaSelectFilamento.value = p.filamento_chave;
             }
@@ -2756,7 +2762,9 @@
             pecasProjetoAtual.forEach(p => { tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoPecasAcum += p.custo_calculado; });
             const finProj = calcularFinanceiroProjeto(custoPecasAcum, margem, projCanalVenda.value);
             const custoTotalAcumulado = finProj.custoTotal;
-            const precoVendaFinal = finProj.preco;
+            // Se todas as peças têm valor de venda manual, o preço do projeto no portfólio é a soma delas
+            const todasComPreco = pecasProjetoAtual.length > 0 && pecasProjetoAtual.every(pc => (pc.preco_venda || 0) > 0);
+            const precoVendaFinal = todasComPreco ? pecasProjetoAtual.reduce((a, pc) => a + pc.preco_venda, 0) : finProj.preco;
             btnSalvarProjetoCompleto.disabled = true;
 
             const linkDownload = projLink3mf.value.trim();
@@ -2957,6 +2965,8 @@
                 const cores = new Map();
                 itens.forEach(x => { const c = (x.cor || '').trim(); if (!c) return; const k = c.toLowerCase(); const o = cores.get(k) || { cor: c, est: 0 }; o.est += parseInt(x.quantidade_estoque) || 0; cores.set(k, o); });
                 const chipsCores = cores.size ? `<div><p class="text-[10px] uppercase font-semibold text-inkmute mb-1">Cores disponíveis</p><div class="flex flex-wrap gap-1.5">${[...cores.values()].map(o => `<span class="text-[11px] bg-surface2 border border-line text-ink px-2 py-0.5 rounded-full">🎨 ${escHtml(o.cor)}${o.est > 0 ? ` <span class="text-green-700 font-semibold">(${o.est})</span>` : ''}</span>`).join('')}</div></div>` : '';
+                const pecasComPreco = (proj.pecas || []).filter(pc => (pc.preco_venda || 0) > 0);
+                const listaPecas = pecasComPreco.length ? `<div><p class="text-[10px] uppercase font-semibold text-inkmute mb-1">Peças</p><ul class="space-y-0.5">${pecasComPreco.map(pc => `<li class="flex justify-between text-xs text-ink"><span class="truncate pr-2">${escHtml(pc.nome_peca)}</span><span class="font-semibold text-emerald-700 whitespace-nowrap">R$ ${pc.preco_venda.toFixed(2)}</span></li>`).join('')}</ul></div>` : '';
                 const precos = itens.map(x => parseFloat(x.preco_venda_total) || 0);
                 const pMin = Math.min(...precos), pMax = Math.max(...precos);
                 const textoPreco = pMin === pMax ? `R$ ${pMin.toFixed(2)}` : `a partir de R$ ${pMin.toFixed(2)}`;
@@ -2967,6 +2977,7 @@
                             <h3 class="font-bold text-ink text-base truncate" style="color:#111827 !important;" title="${escHtml(proj.nome_projeto)}">${escHtml(proj.nome_projeto)}</h3>
                             <div>${badgeEstoque}</div>
                             ${chipsCores}
+                            ${listaPecas}
                             <div class="flex items-center justify-between mt-1 pt-2 border-t border-line/50">
                                 <span class="text-xs text-inkmute font-medium uppercase">Preço Final</span>
                                 <span class="text-lg font-black text-green-600">${textoPreco}</span>
