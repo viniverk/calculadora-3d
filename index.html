@@ -64,6 +64,10 @@
             border-left: 3px solid #EA580C;
             color: #111827;
         }
+        #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink { color: #111827 !important; }
+        .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid #E3E6EB; background: #F1F2F5; color: #4B5563; transition: all .15s; }
+        .hist-tab:hover { background: #E5E7EB; }
+        .hist-tab.ativo { background: #EA580C; border-color: #EA580C; color: #FFFFFF; }
         .btn-cta {
             background: linear-gradient(135deg, #EA580C, #C2410C);
             color: #FFFFFF;
@@ -534,54 +538,59 @@
             </div>
 
             <!-- HISTÓRICO / EVOLUÇÃO -->
-            <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
-                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div class="bg-surface p-4 sm:p-5 rounded-2xl border border-line shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                        <h3 class="font-display text-base font-bold text-ink">📈 Evolução do negócio</h3>
-                        <p class="text-xs text-inkmute mt-0.5">Faturamento e lucro líquido por mês, com base nas vendas registradas.</p>
+                        <h3 class="font-display text-base font-bold text-ink">Evolução do negócio</h3>
+                        <p class="text-xs text-inkmute mt-0.5">Escolha abaixo o que quer analisar.</p>
                     </div>
-                    <select id="dashPeriodo" class="bg-surface2 border border-line rounded-lg text-sm text-ink px-3 py-2">
+                    <select id="dashPeriodo" class="bg-surface2 border border-line rounded-lg text-sm text-ink px-3 py-1.5">
                         <option value="6">Últimos 6 meses</option>
                         <option value="12" selected>Últimos 12 meses</option>
                         <option value="0">Todo o período</option>
                     </select>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Faturamento no período</p><p id="histFat" class="font-mono2 text-lg font-bold text-blue-600">R$ 0,00</p></div>
-                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro no período</p><p id="histLucro" class="font-mono2 text-lg font-bold text-green-600">R$ 0,00</p></div>
-                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Margem real média</p><p id="histMargem" class="font-mono2 text-lg font-bold text-ink">0%</p></div>
-                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro por hora de máquina</p><p id="histLucroHora" class="font-mono2 text-lg font-bold text-amber-600">—</p></div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mt-4">
+                    <div class="bg-surface2 rounded-xl px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Faturamento</p><p id="histFat" class="font-mono2 text-base font-bold text-blue-600">R$ 0,00</p></div>
+                    <div class="bg-surface2 rounded-xl px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro</p><p id="histLucro" class="font-mono2 text-base font-bold text-green-600">R$ 0,00</p></div>
+                    <div class="bg-surface2 rounded-xl px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Margem real média</p><p id="histMargem" class="font-mono2 text-base font-bold text-ink">0%</p></div>
+                    <div class="bg-surface2 rounded-xl px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro / hora de máquina</p><p id="histLucroHora" class="font-mono2 text-base font-bold text-amber-600">—</p></div>
                 </div>
-                <div class="flex items-center gap-4 text-xs text-inkmute mb-2">
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#2563EB"></span> Faturamento</span>
-                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#16A34A"></span> Lucro líquido</span>
-                    <span id="histTicket" class="ml-auto"></span>
-                </div>
-                <div id="graficoMensal" class="w-full"></div>
-            </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
-                    <h3 class="font-display text-base font-bold text-ink">🏆 Peças mais vendidas</h3>
-                    <p class="text-xs text-inkmute mt-0.5 mb-3">Por quantidade de vendas no período.</p>
-                    <div id="topPecas" class="space-y-3"></div>
+                <div class="flex gap-2 mt-4 overflow-x-auto pb-1" id="histAbas">
+                    <button type="button" data-painel="mensal" class="hist-tab ativo">📊 Faturamento e lucro</button>
+                    <button type="button" data-painel="pecas" class="hist-tab">🏆 Mais vendidas</button>
+                    <button type="button" data-painel="horas" class="hist-tab">⏱️ Horas de máquina</button>
+                    <button type="button" data-painel="margem" class="hist-tab">💹 Margem por projeto</button>
                 </div>
-                <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
-                    <h3 class="font-display text-base font-bold text-ink">⏱️ Horas de máquina por mês</h3>
-                    <p class="text-xs text-inkmute mt-0.5 mb-3">Projetos em montagem, finalizados ou vendidos, pelo mês da conclusão.</p>
-                    <div id="graficoHoras" class="w-full"></div>
-                    <p id="histHorasTotal" class="text-xs text-inkmute mt-2"></p>
-                </div>
-            </div>
 
-            <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
-                <h3 class="font-display text-base font-bold text-ink">💹 Margem real por projeto</h3>
-                <p class="text-xs text-inkmute mt-0.5 mb-3">Lucro líquido ÷ valor vendido, já descontados custo e taxas do marketplace. Só projetos com vendas no período.</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left min-w-max">
-                        <thead class="text-inkmute text-[11px] uppercase"><tr class="border-b border-line"><th class="py-2 pr-3">Projeto</th><th class="py-2 pr-3 text-right">Vendas</th><th class="py-2 pr-3 text-right">Receita</th><th class="py-2 pr-3 text-right">Lucro</th><th class="py-2 text-right">Margem real</th></tr></thead>
-                        <tbody id="tabelaMargemProjetos" class="divide-y divide-line"></tbody>
-                    </table>
+                <div class="mt-3 min-h-[200px]">
+                    <div data-hist-painel="mensal">
+                        <div class="flex items-center gap-4 text-xs text-inkmute mb-1">
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#2563EB"></span> Faturamento</span>
+                            <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#16A34A"></span> Lucro líquido</span>
+                            <span id="histTicket" class="ml-auto text-right"></span>
+                        </div>
+                        <div id="graficoMensal" class="w-full"></div>
+                    </div>
+                    <div data-hist-painel="pecas" class="hidden">
+                        <p class="text-xs text-inkmute mb-3">Por quantidade de vendas no período.</p>
+                        <div id="topPecas" class="space-y-3 max-w-2xl"></div>
+                    </div>
+                    <div data-hist-painel="horas" class="hidden">
+                        <p class="text-xs text-inkmute mb-1">Projetos em montagem, finalizados ou vendidos, pelo mês da conclusão.</p>
+                        <div id="graficoHoras" class="w-full"></div>
+                        <p id="histHorasTotal" class="text-xs text-inkmute mt-1"></p>
+                    </div>
+                    <div data-hist-painel="margem" class="hidden">
+                        <p class="text-xs text-inkmute mb-2">Lucro líquido ÷ valor vendido, já descontados custo e taxas do marketplace.</p>
+                        <div class="overflow-x-auto max-h-64 overflow-y-auto">
+                            <table class="w-full text-sm text-left min-w-max">
+                                <thead class="text-inkmute text-[11px] uppercase"><tr class="border-b border-line"><th class="py-2 pr-3">Projeto</th><th class="py-2 pr-3 text-right">Vendas</th><th class="py-2 pr-3 text-right">Receita</th><th class="py-2 pr-3 text-right">Lucro</th><th class="py-2 text-right">Margem real</th></tr></thead>
+                                <tbody id="tabelaMargemProjetos" class="divide-y divide-line"></tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1311,14 +1320,14 @@
         function desenharBarras(containerId, meses, series, fmtEixo) {
             const el = document.getElementById(containerId);
             if (!el) return;
-            const W = 720, H = 240, ml = 46, mr = 8, mt = 10, mb = 28;
+            const W = 720, H = 170, ml = 46, mr = 8, mt = 10, mb = 28;
             const max = Math.max(1e-9, ...series.flatMap(sr => sr.valores));
             const passo = (() => { const bruto = max / 4; const mag = Math.pow(10, Math.floor(Math.log10(bruto || 1))); const f = bruto / mag; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag; })();
             const topo = Math.ceil(max / passo) * passo || 1;
             const iw = W - ml - mr, ih = H - mt - mb;
             const gw = iw / Math.max(1, meses.length);
             const bw = Math.max(3, Math.min(26, (gw * 0.7) / series.length));
-            let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img">`;
+            let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" style="max-height:190px" role="img">`;
             for (let v = 0; v <= topo + 1e-9; v += passo) {
                 const y = mt + ih - (v / topo) * ih;
                 svg += `<line x1="${ml}" y1="${y}" x2="${W - mr}" y2="${y}" stroke="#E3E6EB" stroke-width="1"/>`;
@@ -1407,6 +1416,13 @@
                 return `<tr><td class="py-2 pr-3 font-medium text-ink">${escHtml(x.nome)}</td><td class="py-2 pr-3 text-right font-mono2">${x.qtd}</td><td class="py-2 pr-3 text-right font-mono2">${brl(x.receita)}</td><td class="py-2 pr-3 text-right font-mono2 ${x.lucro < 0 ? 'text-red-600' : ''}">${brl(x.lucro)}</td><td class="py-2 text-right font-mono2 font-bold ${cor}">${mg.toFixed(1).replace('.', ',')}%</td></tr>`;
             }).join('') : '<tr><td colspan="5" class="py-3 text-sm text-inkmute italic">Sem vendas no período.</td></tr>';
         }
+        function trocarPainelHist(nome) {
+            document.querySelectorAll('[data-hist-painel]').forEach(el => el.classList.toggle('hidden', el.dataset.histPainel !== nome));
+            document.querySelectorAll('#histAbas .hist-tab').forEach(b => b.classList.toggle('ativo', b.dataset.painel === nome));
+            try { localStorage.setItem('histPainel', nome); } catch (e) {}
+        }
+        document.querySelectorAll('#histAbas .hist-tab').forEach(b => b.addEventListener('click', () => trocarPainelHist(b.dataset.painel)));
+        try { const salvo = localStorage.getItem('histPainel'); if (salvo) trocarPainelHist(salvo); } catch (e) {}
         document.getElementById('dashPeriodo').addEventListener('change', renderizarHistoricoDashboard);
 
         async function carregarDashboard() {
