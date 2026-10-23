@@ -129,6 +129,20 @@ service cloud.firestore {
       allow update, delete: if ehDono(resource.data) && temAcesso();
     }
 
+    // Máquinas (impressoras) do usuário
+    match /maquinas_3d/{id} {
+      allow read: if ehDono(resource.data) && temAcesso();
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+
+    // Marca (logo, nome, WhatsApp): leitura pública para o catálogo compartilhado; escrita só do dono
+    match /marcas/{uid} {
+      allow read: if true;
+      allow create, update: if logado() && request.auth.uid == uid && temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow delete: if logado() && request.auth.uid == uid && temAcesso();
+    }
+
     match /catalogo_modelos/{id} {
       allow read: if ehDono(resource.data) && temAcesso();
       allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;

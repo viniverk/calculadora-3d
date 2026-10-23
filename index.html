@@ -16,12 +16,12 @@
             theme: {
                 extend: {
                     colors: {
-                        base: '#F4F5F7',
-                        surface: '#FFFFFF',
-                        surface2: '#F1F2F5',
-                        line: '#E3E6EB',
-                        ink: '#111827',
-                        inkmute: '#6B7280',
+                        base: 'rgb(var(--c-base) / <alpha-value>)',
+                        surface: 'rgb(var(--c-surface) / <alpha-value>)',
+                        surface2: 'rgb(var(--c-surface2) / <alpha-value>)',
+                        line: 'rgb(var(--c-line) / <alpha-value>)',
+                        ink: 'rgb(var(--c-ink) / <alpha-value>)',
+                        inkmute: 'rgb(var(--c-inkmute) / <alpha-value>)',
                         accent: '#EA580C',
                         accentdark: '#C2410C',
                         teal2: '#0D9488',
@@ -46,9 +46,30 @@
         .aba-conteudo { display: none; }
         .aba-conteudo.active { display: grid; }
 
-        body {
-            background: #F4F5F7;
-        }
+        :root { --c-base: 244 245 247; --c-surface: 255 255 255; --c-surface2: 241 242 245; --c-line: 227 230 235; --c-ink: 17 24 39; --c-inkmute: 107 114 128; }
+        body.tema-escuro { --c-base: 15 17 21; --c-surface: 24 27 33; --c-surface2: 33 37 45; --c-line: 52 58 69; --c-ink: 233 236 241; --c-inkmute: 156 163 175; color-scheme: dark; }
+        body { background: rgb(var(--c-base)); }
+        body.tema-escuro input, body.tema-escuro select, body.tema-escuro textarea { color: rgb(var(--c-ink)); }
+        body.tema-escuro ::placeholder { color: rgb(var(--c-inkmute) / .7); }
+        body.tema-escuro option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
+        body.tema-escuro .bg-white { background-color: rgb(var(--c-surface)); }
+        body.tema-escuro [style*="color:#111827"] { color: rgb(var(--c-ink)) !important; }
+        body.tema-escuro .bg-green-100, body.tema-escuro .bg-emerald-100 { background-color: rgba(34,197,94,.18); }
+        body.tema-escuro .bg-sky-100, body.tema-escuro .bg-blue-100, body.tema-escuro .bg-sky-50 { background-color: rgba(56,189,248,.16); }
+        body.tema-escuro .bg-amber-100, body.tema-escuro .bg-yellow-100 { background-color: rgba(245,158,11,.18); }
+        body.tema-escuro .bg-orange-50, body.tema-escuro .bg-orange-100 { background-color: rgba(249,115,22,.16); }
+        body.tema-escuro .bg-red-100 { background-color: rgba(239,68,68,.18); }
+        body.tema-escuro .bg-purple-100 { background-color: rgba(168,85,247,.18); }
+        body.tema-escuro .bg-gray-100 { background-color: rgba(148,163,184,.18); }
+        body.tema-escuro .text-green-600, body.tema-escuro .text-green-700, body.tema-escuro .text-green-800, body.tema-escuro .text-emerald-700, body.tema-escuro .text-emerald-800 { color: #4ade80; }
+        body.tema-escuro .text-blue-600, body.tema-escuro .text-blue-700, body.tema-escuro .text-blue-800, body.tema-escuro .text-sky-600, body.tema-escuro .text-sky-700, body.tema-escuro .text-teal-600 { color: #7dd3fc; }
+        body.tema-escuro .text-amber-600, body.tema-escuro .text-amber-700, body.tema-escuro .text-amber-800, body.tema-escuro .text-amber-500 { color: #fbbf24; }
+        body.tema-escuro .text-orange-600 { color: #fb923c; }
+        body.tema-escuro .text-red-600, body.tema-escuro .text-red-700 { color: #f87171; }
+        body.tema-escuro .text-gray-700 { color: #cbd5e1; }
+        body.tema-escuro .\!bg-emerald-50 { background-color: rgba(34,197,94,.14) !important; }
+        body.tema-escuro .\!text-emerald-800 { color: #4ade80 !important; }
+        body.tema-escuro .bg-emerald-50 { background-color: rgba(34,197,94,.14); }
         .layer-lines {
             background-image: repeating-linear-gradient(180deg, rgba(17,24,39,0.02) 0px, rgba(17,24,39,0.02) 1px, transparent 1px, transparent 7px);
         }
@@ -62,14 +83,14 @@
         .item-menu-btn.ativo-nav {
             background: linear-gradient(90deg, rgba(234,88,12,0.08), transparent);
             border-left: 3px solid #EA580C;
-            color: #111827;
+            color: rgb(var(--c-ink));
         }
-        #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink, #view-pedidos h2, #view-pedidos .text-ink { color: #111827 !important; }
-        .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid #E3E6EB; background: #F1F2F5; color: #4B5563; transition: all .15s; }
-        .hist-tab:hover { background: #E5E7EB; }
+        #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink, #view-pedidos h2, #view-pedidos .text-ink { color: rgb(var(--c-ink)) !important; }
+        .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-surface2)); color: rgb(var(--c-inkmute)); transition: all .15s; }
+        .hist-tab:hover { filter: brightness(.96); }
         .hist-tab.ativo { background: #EA580C; border-color: #EA580C; color: #FFFFFF; }
-        .ped-lbl { display:block; font-size:12px; font-weight:500; color:#6B7280; margin-bottom:4px; }
-        .ped-inp { width:100%; background:#fff; border:1px solid #E3E6EB; border-radius:10px; padding:9px 12px; font-size:14px; color:#111827; }
+        .ped-lbl { display:block; font-size:12px; font-weight:500; color:rgb(var(--c-inkmute)); margin-bottom:4px; }
+        .ped-inp { width:100%; background:rgb(var(--c-surface)); border:1px solid rgb(var(--c-line)); border-radius:10px; padding:9px 12px; font-size:14px; color:rgb(var(--c-ink)); }
         .ped-inp:focus { outline:none; border-color:#047857; box-shadow:0 0 0 3px rgba(4,120,87,.15) !important; }
         #pedFiltros .hist-tab.ativo { background:#047857; border-color:#047857; }
         .ped-btn { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; }
@@ -435,7 +456,7 @@
     </div>
 
     <aside id="sidebarApp" class="fixed top-0 left-0 h-screen bg-surface border-r border-line flex flex-col justify-between transition-sidebar w-64 z-30 hidden -translate-x-full md:translate-x-0 transition-transform duration-300">
-        <div>
+        <div class="flex-1 min-h-0 overflow-y-auto">
             <div class="p-4 flex items-center justify-between border-b border-line layer-lines">
                 <div class="flex items-center gap-2 overflow-hidden">
                     <img src="icone-venda3d.png" alt="" class="h-8 w-8 object-contain shrink-0">
@@ -446,57 +467,34 @@
                 </button>
             </div>
 
-            <nav class="p-3 space-y-1.5">
-                <button onclick="mudarAba('dashboard')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition text-inkmute item-menu-btn ativo-nav" data-aba="dashboard">
-                    <span class="text-lg">📊</span>
-                    <span class="whitespace-nowrap label-texto font-medium">Dashboard</span>
-                </button>
+            <nav class="p-3 space-y-1">
+                <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn !bg-emerald-50 !text-emerald-800 border border-emerald-200 font-bold" data-aba="calculadora"><span class="text-lg">🧮</span><span class="whitespace-nowrap label-texto font-medium">Calcular</span></button>
+                <p class="label-texto px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70">Operação</p>
+                <button onclick="mudarAba('dashboard')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn ativo-nav" data-aba="dashboard"><span class="text-lg">📊</span><span class="whitespace-nowrap label-texto font-medium">Visão geral</span></button>
+                <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="inserir-impressao"><span class="text-lg">🚀</span><span class="whitespace-nowrap label-texto font-medium">Impressões</span></button>
+                <button onclick="mudarAba('pedidos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="pedidos"><span class="text-lg">📋</span><span class="whitespace-nowrap label-texto font-medium">Pedidos e Fila</span></button>
+                <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas"><span class="text-lg">💰</span><span class="whitespace-nowrap label-texto font-medium">Vendas</span></button>
+                <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="portfolio-cliente"><span class="text-lg">🖼️</span><span class="whitespace-nowrap label-texto font-medium">Portfólio</span></button>
+                <p class="label-texto px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70">Recursos</p>
+                <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos"><span class="text-lg">🧵</span><span class="whitespace-nowrap label-texto font-medium">Estoque</span></button>
+                <button onclick="mudarAba('maquinas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="maquinas"><span class="text-lg">🖨️</span><span class="whitespace-nowrap label-texto font-medium">Máquinas</span></button>
 
-                <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition text-inkmute item-menu-btn" data-aba="inserir-impressao">
-                    <span class="text-lg">🚀</span>
-                    <span class="whitespace-nowrap label-texto font-medium">Impressões</span>
-                </button>
-
-                <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="portfolio-cliente">
-                    <span class="text-lg">🖼️</span>
-                    <span class="whitespace-nowrap label-texto">Portfólios (Clientes)</span>
-                </button>
-
-                <button onclick="mudarAba('pedidos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="pedidos">
-                    <span class="text-lg">📋</span>
-                    <span class="whitespace-nowrap label-texto">Pedidos e Fila</span>
-                </button>
-
-                <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas">
-                    <span class="text-lg">💰</span>
-                    <span class="whitespace-nowrap label-texto">Vendas</span>
-                </button>
-
-                <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos">
-                    <span class="text-lg">🧵</span>
-                    <span class="whitespace-nowrap label-texto">Estoque</span>
-                </button>
-                
-                <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="calculadora">
-                    <span class="text-lg">🧮</span>
-                    <span class="whitespace-nowrap label-texto">Calculadora/Orçamento</span>
-                </button>
-
-                <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gold2/10 text-gold2 border border-gold2/20 font-medium hidden item-menu-btn mt-2" data-aba="admin">
+                <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gold2/10 text-gold2 border border-gold2/20 font-medium hidden item-menu-btn mt-3" data-aba="admin">
                     <span class="text-lg">🛡️</span>
                     <span class="whitespace-nowrap label-texto">Gerenciar Usuários</span>
                 </button>
             </nav>
         </div>
 
-        <div class="p-4 border-t border-line bg-surface2/40">
-            <div class="overflow-hidden mb-2 label-texto">
-                <p class="text-[10px] uppercase tracking-wide text-inkmute/70">Conectado como</p>
+        <div class="p-3 border-t border-line bg-surface2/40 space-y-2">
+            <button id="btnTema" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span id="btnTemaIcone">🌙</span><span class="label-texto whitespace-nowrap" id="btnTemaTxt">Modo escuro</span></button>
+            <button onclick="mudarAba('marca')" data-aba="marca" class="item-menu-btn w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span>🎨</span><span class="label-texto whitespace-nowrap">Minha marca</span></button>
+            <div class="overflow-hidden label-texto px-1">
                 <p class="text-xs text-ink truncate font-medium" id="usuarioLogado">...</p>
             </div>
             <button id="btnSair" class="w-full bg-transparent hover:bg-red-50 border border-red-200 text-red-600 hover:text-red-700 text-sm font-bold py-2 rounded-lg transition flex items-center justify-center gap-2">
                 <span>🚪</span>
-                <span class="label-texto whitespace-nowrap">Sair do Sistema</span>
+                <span class="label-texto whitespace-nowrap">Sair da conta</span>
             </button>
         </div>
     </aside>
@@ -639,6 +637,10 @@
                     <label class="block text-sm font-medium mb-1">Cor / variação desta impressão <span class="text-inkmute font-normal">(opcional)</span></label>
                     <input type="text" id="projCor" placeholder="Ex: Preto com laranja" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
                     <p class="text-[11px] text-inkmute mt-1">Use "Duplicar" para imprimir o mesmo modelo em outra cor. No Portfólio aparece um só card, com as cores disponíveis.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium mb-1">Máquina usada <span class="text-inkmute font-normal">(define o custo por hora)</span></label>
+                    <select id="projMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"><option value="">Padrão das Configurações</option></select>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div>
@@ -809,6 +811,7 @@
 
         <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line">
+                <div id="portfolioMarca" class="hidden mb-5"></div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-line pb-3 gap-2">
                     <div>
                         <h2 class="font-display text-2xl font-bold text-teal-600">Catálogo de Modelos 3D</h2>
@@ -878,6 +881,47 @@
                         <button id="btnSalvarPedido" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl">Salvar pedido</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="view-maquinas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+            <div class="bg-surface p-5 rounded-2xl shadow-sm border border-line h-fit lg:col-span-1 space-y-3">
+                <h2 id="maqTitulo" class="font-display text-lg font-bold text-ink border-b border-line pb-2">Nova máquina</h2>
+                <div><label class="ped-lbl">Nome</label><input type="text" id="maqNome" placeholder="Ex: Bambu A1 #1" class="ped-inp"></div>
+                <div><label class="ped-lbl">Modelo (opcional)</label><input type="text" id="maqModelo" placeholder="Ex: Bambu Lab A1 Mini" class="ped-inp"></div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div><label class="ped-lbl">Valor pago (R$)</label><input type="number" id="maqValor" step="0.01" class="ped-inp"></div>
+                    <div><label class="ped-lbl">Vida útil (horas)</label><input type="number" id="maqVida" value="5000" class="ped-inp"></div>
+                    <div><label class="ped-lbl">Potência (W)</label><input type="number" id="maqPotencia" value="150" class="ped-inp"></div>
+                    <div><label class="ped-lbl">Horas já usadas</label><input type="number" id="maqHorasIni" value="0" class="ped-inp"></div>
+                </div>
+                <label class="flex items-center gap-2 text-sm text-ink"><input type="checkbox" id="maqPadrao" class="accent-emerald-700"> Usar como padrão nos novos projetos</label>
+                <div class="flex gap-2">
+                    <button id="btnSalvarMaquina" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm py-2.5 rounded-xl">Salvar máquina</button>
+                    <button id="btnCancelarMaquina" class="hidden px-4 border border-line rounded-xl text-sm">Cancelar</button>
+                </div>
+                <p class="text-[11px] text-inkmute">O custo por hora usa energia (potência × tarifa do kWh das Configurações) e desgaste (valor ÷ vida útil). Em cada projeto você escolhe em qual máquina foi impresso.</p>
+            </div>
+            <div class="lg:col-span-2 space-y-3">
+                <div><h2 class="font-display text-2xl font-bold text-ink">Máquinas</h2><p class="text-sm text-inkmute mt-1">Suas impressoras, custo por hora e horas de uso.</p></div>
+                <div id="listaMaquinas" class="grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
+            </div>
+        </div>
+
+        <div id="view-marca" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="bg-surface p-5 rounded-2xl shadow-sm border border-line h-fit space-y-3">
+                <h2 class="font-display text-lg font-bold text-ink border-b border-line pb-2">Minha marca</h2>
+                <p class="text-xs text-inkmute">Aparece no topo do seu catálogo público e gera o botão de WhatsApp nos modelos.</p>
+                <div><label class="ped-lbl">Nome da marca</label><input type="text" id="marcaNome" placeholder="Ex: VERK3D Print" class="ped-inp"></div>
+                <div><label class="ped-lbl">Link da logo (imagem hospedada)</label><input type="url" id="marcaLogo" placeholder="https://..." class="ped-inp"></div>
+                <div><label class="ped-lbl">WhatsApp (com DDD)</label><input type="text" id="marcaWhats" placeholder="(41) 99999-9999" class="ped-inp"></div>
+                <div><label class="ped-lbl">Instagram (opcional)</label><input type="text" id="marcaInsta" placeholder="@suamarca" class="ped-inp"></div>
+                <div><label class="ped-lbl">Mensagem curta</label><input type="text" id="marcaMsg" placeholder="Peças personalizadas impressas em 3D" class="ped-inp"></div>
+                <button id="btnSalvarMarca" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm py-2.5 rounded-xl">Salvar marca</button>
+            </div>
+            <div class="space-y-2">
+                <p class="text-xs font-semibold uppercase text-inkmute">Pré-visualização do catálogo</p>
+                <div id="marcaPreview" class="bg-surface rounded-2xl border border-line p-5"></div>
             </div>
         </div>
 
@@ -1191,6 +1235,7 @@
 
         const projNome = document.getElementById('projNome');
         const projCor = document.getElementById('projCor');
+        const projMaquina = document.getElementById('projMaquina');
         const projStatus = document.getElementById('projStatus'); 
         const projDataConclusao = document.getElementById('projDataConclusao');
         const projImagemUrl = document.getElementById('projImagemUrl');
@@ -1300,6 +1345,7 @@
 
         function executarCargaPublicaEstavel() {
             carregarProjetos3d();
+            carregarMarca(uidCatalogoPublico);
         }
 
         function copiarLinkPublico() {
@@ -1373,6 +1419,8 @@
             if (abaDestino === 'portfolio-cliente') renderizerPortfolioCliente();
             if (abaDestino === 'vendas') carregarJanelaVendas();
             if (abaDestino === 'pedidos') carregarPedidos();
+            if (abaDestino === 'maquinas') abrirAbaMaquinas();
+            if (abaDestino === 'marca') preencherFormMarca();
             if (abaDestino === 'filamentos') carregarFilamentos();
             if (abaDestino === 'admin') carregarAdminUsuarios();
         }
@@ -1724,6 +1772,7 @@
         function mostrarTelaAcessoPendente() {
             telaAuth.classList.add('hidden');
             sidebarApp.classList.add('hidden');
+            document.body.classList.remove('tema-escuro');
             conteudoPainel.classList.add('hidden');
             mobileTopBar.classList.add('hidden');
             document.getElementById('telaCompletarCadastro').classList.add('hidden');
@@ -1764,6 +1813,7 @@
             mobileTopBar.classList.remove('hidden');
             usuarioLogadoText.innerText = usuarioAtual.email;
             atualizarBannerAcesso();
+            aplicarTema();
         }
         document.getElementById('btnVoltarSistema').addEventListener('click', mostrarApp);
 
@@ -1951,6 +2001,8 @@
                 if (!usuarioTemAcesso()) { mostrarTelaAcessoPendente(); return; }
                 mostrarApp();
                 carregarConfigCustos();
+                carregarMaquinas();
+                carregarMarca();
                 carregarDashboard();
                 carregarFilamentos();
                 carregarModelos();
@@ -1961,6 +2013,7 @@
                 document.getElementById('telaAcessoPendente').classList.add('hidden');
                 document.getElementById('telaCompletarCadastro').classList.add('hidden');
                 sidebarApp.classList.add('hidden');
+                document.body.classList.remove('tema-escuro');
                 conteudoPainel.classList.add('hidden');
                 mobileTopBar.classList.add('hidden');
                 telaAuth.classList.remove('hidden');
@@ -2178,6 +2231,122 @@
                 catch (error) { alert(error.message); }
             }
         };
+
+        // --- MÁQUINAS ---
+        const maqNome = document.getElementById('maqNome'), maqModelo = document.getElementById('maqModelo'), maqValor = document.getElementById('maqValor'), maqVida = document.getElementById('maqVida'), maqPotencia = document.getElementById('maqPotencia'), maqHorasIni = document.getElementById('maqHorasIni'), maqPadrao = document.getElementById('maqPadrao');
+        let maquinaEditandoId = null;
+        async function carregarMaquinas() {
+            try {
+                const snap = await colecao('maquinas_3d').where('user_id', '==', usuarioAtual.uid).get();
+                maquinasCache = ordenarPor(snapshotParaArray(snap) || [], 'created_at', 'asc');
+            } catch (e) { console.error('maquinas', e); maquinasCache = []; }
+            const atual = projMaquina.value;
+            projMaquina.innerHTML = '<option value="">Padrão das Configurações</option>' + maquinasCache.map(m => `<option value="${m.id}">${escHtml(m.nome)}</option>`).join('');
+            projMaquina.value = maquinasCache.some(m => m.id === atual) ? atual : '';
+            renderizarMaquinas();
+        }
+        function renderizarMaquinas() {
+            const box = document.getElementById('listaMaquinas'); if (!box) return;
+            if (!maquinasCache.length) { box.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-8 text-center text-sm text-inkmute">Nenhuma máquina cadastrada. Sem máquinas, os projetos usam os valores das Configurações de custos.</div>'; return; }
+            box.innerHTML = maquinasCache.map(m => {
+                const h = custoHoraMaquina(m);
+                const projs = projetosCacheLocal.filter(p => p.maquina_id === m.id && p.status !== 'Aguardando Impressão');
+                const horas = projs.reduce((a, p) => a + (p.tempo_total_min || 0) / 60, 0);
+                const total = horas + num(m.horas_iniciais, 0), vida = num(m.vida_h, 0);
+                const pct = vida > 0 ? Math.min(100, total / vida * 100) : 0;
+                return `<div class="bg-surface rounded-2xl border border-line p-4 shadow-sm">
+                    <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-ink truncate">🖨️ ${escHtml(m.nome)}</p>${m.modelo ? `<p class="text-[11px] text-inkmute">${escHtml(m.modelo)}</p>` : ''}</div>${m.padrao ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">PADRÃO</span>' : ''}</div>
+                    <div class="grid grid-cols-3 gap-2 mt-3 text-center">
+                        <div class="bg-surface2 rounded-lg py-2"><p class="text-[10px] uppercase text-inkmute">Custo/hora</p><p class="font-mono2 font-bold text-sm text-amber-600">${brl(h.energia + h.desgaste)}</p></div>
+                        <div class="bg-surface2 rounded-lg py-2"><p class="text-[10px] uppercase text-inkmute">Horas impressas</p><p class="font-mono2 font-bold text-sm text-ink">${horas.toFixed(1).replace('.', ',')} h</p></div>
+                        <div class="bg-surface2 rounded-lg py-2"><p class="text-[10px] uppercase text-inkmute">Projetos</p><p class="font-mono2 font-bold text-sm text-ink">${projs.length}</p></div>
+                    </div>
+                    <p class="text-[11px] text-inkmute mt-2">Energia ${brl(h.energia)}/h + desgaste ${brl(h.desgaste)}/h</p>
+                    <div class="mt-2"><div class="flex justify-between text-[11px] text-inkmute"><span>Vida útil usada</span><span>${total.toFixed(0)} / ${vida} h (${pct.toFixed(0)}%)</span></div><div class="h-2 bg-surface2 rounded-full mt-1"><div class="h-2 rounded-full ${pct > 85 ? 'bg-red-500' : pct > 60 ? 'bg-amber-500' : 'bg-emerald-600'}" style="width:${pct}%"></div></div></div>
+                    <div class="flex gap-3 mt-3 text-[11px]"><button onclick="editarMaquina('${m.id}')" class="text-sky-600 font-semibold">✏️ Editar</button>${m.padrao ? '' : `<button onclick="tornarMaquinaPadrao('${m.id}')" class="text-emerald-700 font-semibold">⭐ Tornar padrão</button>`}<button onclick="excluirMaquina('${m.id}')" class="text-red-600 ml-auto">Excluir</button></div>
+                </div>`;
+            }).join('');
+        }
+        async function abrirAbaMaquinas() { if (!projetosCacheLocal.length) { try { await carregarProjetos3d(); } catch (e) {} } await carregarMaquinas(); }
+        function limparFormMaquina() {
+            maquinaEditandoId = null; [maqNome, maqModelo, maqValor].forEach(el => el.value = ''); maqVida.value = 5000; maqPotencia.value = 150; maqHorasIni.value = 0; maqPadrao.checked = false;
+            document.getElementById('maqTitulo').innerText = 'Nova máquina'; document.getElementById('btnCancelarMaquina').classList.add('hidden');
+        }
+        document.getElementById('btnCancelarMaquina').addEventListener('click', limparFormMaquina);
+        document.getElementById('btnSalvarMaquina').addEventListener('click', async () => {
+            const nome = maqNome.value.trim(); if (!nome) return alert('Dê um nome para a máquina.');
+            const dados = { nome, modelo: maqModelo.value.trim(), valor: parseFloat(maqValor.value) || 0, vida_h: parseFloat(maqVida.value) || 0, potencia_w: parseFloat(maqPotencia.value) || 0, horas_iniciais: parseFloat(maqHorasIni.value) || 0, padrao: maqPadrao.checked };
+            try {
+                let id = maquinaEditandoId;
+                if (id) await colecao('maquinas_3d').doc(id).update(dados);
+                else { const r = await colecao('maquinas_3d').add({ ...dados, user_id: usuarioAtual.uid, created_at: new Date().toISOString() }); id = r.id; }
+                if (dados.padrao) for (const m of maquinasCache) if (m.id !== id && m.padrao) await colecao('maquinas_3d').doc(m.id).update({ padrao: false });
+                limparFormMaquina(); await carregarMaquinas();
+            } catch (e) { alert('Erro ao salvar máquina: ' + e.message); }
+        });
+        window.editarMaquina = function(id) {
+            const m = maquinasCache.find(x => x.id === id); if (!m) return; maquinaEditandoId = id;
+            maqNome.value = m.nome || ''; maqModelo.value = m.modelo || ''; maqValor.value = m.valor || ''; maqVida.value = m.vida_h || ''; maqPotencia.value = m.potencia_w || ''; maqHorasIni.value = m.horas_iniciais || 0; maqPadrao.checked = !!m.padrao;
+            document.getElementById('maqTitulo').innerText = 'Editar máquina'; document.getElementById('btnCancelarMaquina').classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.tornarMaquinaPadrao = async function(id) {
+            try { for (const m of maquinasCache) { const alvo = m.id === id; if (!!m.padrao !== alvo) await colecao('maquinas_3d').doc(m.id).update({ padrao: alvo }); } await carregarMaquinas(); } catch (e) { alert(e.message); }
+        };
+        window.excluirMaquina = async function(id) {
+            if (!confirm('Excluir esta máquina? Projetos que a usam voltam a usar os valores das Configurações ao recalcular.')) return;
+            try { await colecao('maquinas_3d').doc(id).delete(); await carregarMaquinas(); } catch (e) { alert(e.message); }
+        };
+        projMaquina.addEventListener('change', () => {
+            if (pecasProjetoAtual.length && confirm('Recalcular o custo das peças já incluídas com esta máquina?')) document.getElementById('btnRecalcularCustos').click();
+        });
+
+        // --- MINHA MARCA ---
+        let marcaAtual = null;
+        const digitosWhats = (t) => { const d = String(t || '').replace(/\D/g, ''); return d.length >= 10 && d.length <= 11 ? '55' + d : d; };
+        function htmlMarca(m, grande) {
+            if (!m || !(m.nome || m.logo_url)) return '';
+            const wa = digitosWhats(m.whatsapp);
+            const ig = String(m.instagram || '').replace(/^@/, '').trim();
+            return `<div class="flex flex-wrap items-center gap-4">
+                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="${grande ? 'h-16 w-16' : 'h-12 w-12'} rounded-xl object-contain bg-surface2 border border-line">` : ''}
+                <div class="min-w-0 flex-1"><p class="font-display font-bold ${grande ? 'text-2xl' : 'text-xl'} text-ink">${escHtml(m.nome || '')}</p>${m.mensagem ? `<p class="text-sm text-inkmute">${escHtml(m.mensagem)}</p>` : ''}</div>
+                <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="border border-line text-ink text-xs font-bold px-4 py-2 rounded-lg">@${escHtml(ig)}</a>` : ''}</div>
+            </div>`;
+        }
+        function renderizarMarcaPortfolio() {
+            const el = document.getElementById('portfolioMarca'); if (!el) return;
+            const h = htmlMarca(marcaAtual, true);
+            el.innerHTML = h ? h + '<div class="border-b border-line mt-4"></div>' : '';
+            el.classList.toggle('hidden', !h);
+        }
+        function renderizarPreviewMarca() { document.getElementById('marcaPreview').innerHTML = htmlMarca({ nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim() }, true) || '<p class="text-sm text-inkmute">Preencha o nome ou a logo para ver a prévia.</p>'; }
+        const marcaNome = document.getElementById('marcaNome'), marcaLogo = document.getElementById('marcaLogo'), marcaWhats = document.getElementById('marcaWhats'), marcaInsta = document.getElementById('marcaInsta'), marcaMsg = document.getElementById('marcaMsg');
+        [marcaNome, marcaLogo, marcaWhats, marcaInsta, marcaMsg].forEach(el => el.addEventListener('input', renderizarPreviewMarca));
+        function preencherFormMarca() { const m = marcaAtual || {}; marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; renderizarPreviewMarca(); }
+        async function carregarMarca(uid) {
+            try { const d = await colecao('marcas').doc(uid || usuarioAtual.uid).get(); marcaAtual = d.exists ? d.data() : null; } catch (e) { marcaAtual = null; }
+            renderizarMarcaPortfolio();
+            if (typeof renderizerPortfolioCliente === 'function') renderizerPortfolioCliente();
+        }
+        document.getElementById('btnSalvarMarca').addEventListener('click', async () => {
+            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), user_id: usuarioAtual.uid };
+            try { await colecao('marcas').doc(usuarioAtual.uid).set(dados); marcaAtual = dados; renderizarMarcaPortfolio(); renderizerPortfolioCliente(); alert('Marca salva! Ela aparece no topo do seu catálogo público.'); }
+            catch (e) { alert('Erro ao salvar: ' + e.message); }
+        });
+
+        // --- MODO ESCURO ---
+        function aplicarTema() {
+            let escuro = false; try { escuro = localStorage.getItem('tema') === 'escuro'; } catch (e) {}
+            const appVisivel = !sidebarApp.classList.contains('hidden') && !modoPublicoAtivo;
+            document.body.classList.toggle('tema-escuro', escuro && appVisivel);
+            document.getElementById('btnTemaIcone').innerText = escuro ? '☀️' : '🌙';
+            document.getElementById('btnTemaTxt').innerText = escuro ? 'Modo claro' : 'Modo escuro';
+        }
+        document.getElementById('btnTema').addEventListener('click', () => {
+            let escuro = false; try { escuro = localStorage.getItem('tema') === 'escuro'; localStorage.setItem('tema', escuro ? 'claro' : 'escuro'); } catch (e) { escuro = document.body.classList.contains('tema-escuro'); }
+            aplicarTema();
+            if (typeof renderizarHistoricoDashboard === 'function') { try { renderizarHistoricoDashboard(); } catch (e) {} }
+        });
 
         // --- PEDIDOS E FILA DE IMPRESSÃO ---
         const pedCliente = document.getElementById('pedCliente');
@@ -2518,15 +2687,20 @@
         let configCustos = { ...CONFIG_PADRAO };
         const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
 
-        function custoHoraMaquina() {
+        let maquinasCache = [];
+        function maquinaDoFormulario() { const el = document.getElementById('projMaquina'); return el ? (maquinasCache.find(m => m.id === el.value) || null) : null; }
+        function custoHoraMaquina(maq) {
             const c = configCustos;
-            const energia = (num(c.potencia_w, 0) / 1000) * num(c.custo_kwh, 0);
-            const desgaste = num(c.impressora_vida_h, 0) > 0 ? num(c.impressora_valor, 0) / num(c.impressora_vida_h, 1) : 0;
+            const potencia = maq ? num(maq.potencia_w, num(c.potencia_w, 0)) : num(c.potencia_w, 0);
+            const valor = maq ? num(maq.valor, 0) : num(c.impressora_valor, 0);
+            const vida = maq ? num(maq.vida_h, 0) : num(c.impressora_vida_h, 0);
+            const energia = (potencia / 1000) * num(c.custo_kwh, 0);
+            const desgaste = vida > 0 ? valor / vida : 0;
             const mao = num(c.mao_obra_hora, 0);
             return { energia, desgaste, mao, total: energia + desgaste + mao };
         }
-        function calcularCustoPeca(pesoG, horas, custoPorGrama) {
-            const h = custoHoraMaquina();
+        function calcularCustoPeca(pesoG, horas, custoPorGrama, maq) {
+            const h = custoHoraMaquina(maq || null);
             const filamento = pesoG * custoPorGrama;
             const energia = horas * h.energia, desgaste = horas * h.desgaste, mao_obra = horas * h.mao;
             return { total: filamento + energia + desgaste + mao_obra, detalhe: { filamento, energia, desgaste, mao_obra } };
@@ -2664,7 +2838,7 @@
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
             
             if (!nome || peso <= 0 || tempoTotalH <= 0) return alert('Informe os parâmetros da peça corretamente.');
-            const calcPeca = calcularCustoPeca(peso, tempoTotalH, custoPorGrama);
+            const calcPeca = calcularCustoPeca(peso, tempoTotalH, custoPorGrama, maquinaDoFormulario());
             const custoComponente = calcPeca.total;
             
             const dadosPeca = { 
@@ -2745,7 +2919,7 @@
             if (pecasProjetoAtual.length === 0) return alert('Este projeto ainda não tem peças.');
             pecasProjetoAtual = pecasProjetoAtual.map(pc => {
                 const cpg = mapaCustoPorChaveFilamento[pc.filamento_chave] ?? (pc.peso_g > 0 ? ((pc.custo_detalhe ? pc.custo_detalhe.filamento : pc.custo_calculado) / pc.peso_g) : 0.12);
-                const r = calcularCustoPeca(pc.peso_g, pc.tempo_h, cpg);
+                const r = calcularCustoPeca(pc.peso_g, pc.tempo_h, cpg, maquinaDoFormulario());
                 return { ...pc, custo_calculado: r.total, custo_detalhe: r.detalhe };
             });
             renderizarPecasDoEscopo(); atualizarAcumuladoresMaster();
@@ -2773,6 +2947,8 @@
             let payload = { 
                 nome_projeto: nomeProjeto, 
                 cor: projCor.value.trim(),
+                maquina_id: projMaquina.value || null,
+                maquina_nome: (maquinaDoFormulario() || {}).nome || '',
                 imagem_base64: imagemUrlFinal, // Mantém o nome do campo por compatibilidade; hoje guarda o link colado
                 nome_arquivo_3mf: linkDownload, 
                 arquivo_3mf_data: null, 
@@ -2857,7 +3033,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projCor.value = ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projCor.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -2867,7 +3043,7 @@
 
         window.editarProjeto3d = function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
@@ -2889,7 +3065,7 @@
             const grupo = proj.grupo_modelo || proj.id;
             try {
                 await colecao('projetos_3d').add({
-                    nome_projeto: proj.nome_projeto.replace(/\s*\(c[óo]pia\)\s*$/i, ''), cor: corNova.trim(), grupo_modelo: grupo,
+                    nome_projeto: proj.nome_projeto.replace(/\s*\(c[óo]pia\)\s*$/i, ''), cor: corNova.trim(), grupo_modelo: grupo, maquina_id: proj.maquina_id || null, maquina_nome: proj.maquina_nome || '',
                     imagem_base64: proj.imagem_base64 || null, nome_arquivo_3mf: proj.nome_arquivo_3mf || '',
                     pecas: proj.pecas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total,
                     preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g,
@@ -2978,6 +3154,7 @@
                             <div>${badgeEstoque}</div>
                             ${chipsCores}
                             ${listaPecas}
+                            ${marcaAtual && digitosWhats(marcaAtual.whatsapp) ? `<a href="https://wa.me/${digitosWhats(marcaAtual.whatsapp)}?text=${encodeURIComponent('Olá! Tenho interesse em: ' + proj.nome_projeto)}" target="_blank" rel="noopener" class="text-center text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg">💬 Pedir pelo WhatsApp</a>` : ''}
                             <div class="flex items-center justify-between mt-1 pt-2 border-t border-line/50">
                                 <span class="text-xs text-inkmute font-medium uppercase">Preço Final</span>
                                 <span class="text-lg font-black text-green-600">${textoPreco}</span>
