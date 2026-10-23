@@ -822,7 +822,7 @@
             <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
                     <h2 class="font-display text-2xl font-bold text-ink">Seus pedidos</h2>
-                    <p class="text-sm text-inkmute mt-1">A fila mostra primeiro o que tem o prazo mais curto.</p>
+                    <p class="text-sm text-inkmute mt-1">Pedidos de clientes e a fila de produção, por prazo. Ao entregar, a venda é lançada sozinha.</p>
                 </div>
                 <button id="btnNovoPedido" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition">+ Novo pedido</button>
             </div>
@@ -834,7 +834,7 @@
             </div>
             <div class="flex gap-2 overflow-x-auto" id="pedFiltros">
                 <button type="button" data-filtro="fila" class="hist-tab ativo">Fila de produção</button>
-                <button type="button" data-filtro="entregues" class="hist-tab">Entregues</button>
+                <button type="button" data-filtro="entregues" class="hist-tab">Entregues / vendidos</button>
                 <button type="button" data-filtro="todos" class="hist-tab">Todos</button>
             </div>
             <div id="listaPedidos" class="grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
@@ -879,7 +879,8 @@
 
         <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit lg:col-span-1 space-y-4">
-                <h2 class="font-display text-xl font-semibold text-emerald-600 border-b border-line pb-2">Lançar Nova Venda</h2>
+                <h2 class="font-display text-xl font-semibold text-emerald-600 border-b border-line pb-2">Venda rápida</h2>
+                <p class="text-[11px] text-inkmute -mt-2">Para vender na hora, sem pedido (balcão, feira, marketplace). Pedidos de clientes com prazo ficam em <button type="button" onclick="mudarAba('pedidos')" class="text-sky-600 font-semibold underline">Pedidos e Fila</button> e viram venda quando você marca como entregue.</p>
                 <div>
                     <label class="block text-sm font-medium mb-1">Selecione o Projeto do Portfólio</label>
                     <select id="vendaSelectProjeto" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-emerald-500 text-ink text-sm">
@@ -2141,7 +2142,7 @@
                 return `
                     <div class="bg-surface2 p-2.5 rounded border border-line flex justify-between items-center text-xs">
                         <div>
-                            <span class="font-bold text-ink text-sm block">${v.nome_projeto}</span>
+                            <span class="font-bold text-ink text-sm block">${escHtml(v.nome_projeto)}${v.pedido_id ? ' <span class="text-[10px] bg-sky-100 text-sky-700 px-1.5 py-0.5 rounded font-bold align-middle">📋 de um pedido</span>' : ''}</span>
                             <span class="text-inkmute">Comprador: ${escHtml(v.cliente)} | Dia: ${dataF}</span>
                             <span class="text-inkmute block">${NOME_CANAL[v.canal_venda] || 'Venda direta'} • lucro <strong class="${(parseFloat(v.lucro_liquido) || 0) < 0 ? 'text-red-600' : 'text-green-700'}">${brl(parseFloat(v.lucro_liquido) || 0)}</strong> • margem ${(parseFloat(v.preco_venda_final) > 0 ? (parseFloat(v.lucro_liquido) || 0) / parseFloat(v.preco_venda_final) * 100 : 0).toFixed(1).replace('.', ',')}%</span>
                         </div>
@@ -2201,6 +2202,7 @@
         const btnItemBranco = document.getElementById('btnItemBranco');
         const listaClientesPedidos = document.getElementById('listaClientesPedidos');
         let pedidosCache = [];
+        let vendasSemPedido = [];   // vendas lançadas direto na aba Vendas (sem pedido)
         let filtroPedidos = 'fila';
         let pedidoEditandoId = null;
         let pedItensAtuais = [];   // [{projeto_id, nome, quantidade, preco_unitario, custo_unitario}]
@@ -2349,8 +2351,25 @@
                 listaPedidos.innerHTML = '<p class="text-sm text-red-600">Não foi possível carregar os pedidos: ' + escHtml(e.message) + '</p>';
                 return;
             }
+            try {
+                const vs = await colecao('vendas_3d').where('user_id', '==', usuarioAtual.uid).get();
+                vendasSemPedido = (snapshotParaArray(vs) || []).filter(v => !v.pedido_id);
+            } catch (e) { vendasSemPedido = []; }
             preencherListasPedido();
             renderizarPedidos();
+        }
+
+        function cartaoVendaDireta(v) {
+            const preco = parseFloat(v.preco_venda_final) || 0, lucro = parseFloat(v.lucro_liquido) || 0;
+            return `<div class="bg-surface rounded-2xl border border-line p-4 shadow-sm">
+                <div class="flex items-start justify-between gap-2">
+                    <div class="min-w-0"><p class="text-sm font-bold text-ink truncate">${escHtml(v.cliente || 'Cliente Geral')}</p><p class="text-[11px] text-inkmute">Venda lançada na aba Vendas • ${fmtData(v.data_venda)}</p></div>
+                    <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full whitespace-nowrap ${COR_STATUS.Entregue}">Vendido</span>
+                </div>
+                <ul class="mt-2 text-xs text-ink"><li class="flex justify-between gap-2"><span class="truncate">${escHtml(v.nome_projeto)} <span class="text-inkmute">× 1</span></span><span class="font-mono2 text-inkmute">${brl(preco)}</span></li></ul>
+                <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-2 pt-2 border-t border-line"><span class="text-inkmute">${NOME_CANAL[v.canal_venda] || 'Venda direta'}</span><span class="font-bold text-ink">Total ${brl(preco)}</span><span class="${lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro ${brl(lucro)}</span></div>
+                <div class="mt-2 text-right"><button onclick="mudarAba('vendas')" class="text-[11px] text-sky-600 font-semibold">Ver na aba Vendas →</button></div>
+            </div>`;
         }
 
         function renderizarPedidos() {
@@ -2367,14 +2386,15 @@
 
             let lista;
             if (filtroPedidos === 'fila') lista = [...ativos].sort((a, b) => (a.prazo || '9999-99-99').localeCompare(b.prazo || '9999-99-99') || (a.created_at || '').localeCompare(b.created_at || ''));
-            else if (filtroPedidos === 'entregues') lista = pedidosCache.filter(o => o.status === 'Entregue').sort((a, b) => (b.data_entrega || '').localeCompare(a.data_entrega || ''));
-            else lista = [...pedidosCache].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            else if (filtroPedidos === 'entregues') lista = [...pedidosCache.filter(o => o.status === 'Entregue'), ...vendasSemPedido.map(v => ({ ...v, _venda: true }))].sort((a, b) => (b.data_entrega || b.data_venda || '').localeCompare(a.data_entrega || a.data_venda || ''));
+            else lista = [...pedidosCache, ...vendasSemPedido.map(v => ({ ...v, _venda: true }))].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
 
             if (!lista.length) {
                 listaPedidos.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-10 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Clique em <strong>+ Novo pedido</strong> para começar.' : 'Nada por aqui ainda.') + '</div>';
                 return;
             }
             listaPedidos.innerHTML = lista.map((o, i) => {
+                if (o._venda) return cartaoVendaDireta(o);
                 const itens = itensDoPedido(o), tt = totaisItens(itens), total = tt.vendas;
                 const pago = valorPagoPedido(o, total), falta = Math.max(0, total - pago);
                 const d = ativos.includes(o) ? diasAte(o.prazo) : null;
