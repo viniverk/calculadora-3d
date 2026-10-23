@@ -478,6 +478,7 @@
                 <p class="label-texto px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70">Recursos</p>
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos"><span class="text-lg">🧵</span><span class="whitespace-nowrap label-texto font-medium">Estoque</span></button>
                 <button onclick="mudarAba('maquinas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="maquinas"><span class="text-lg">🖨️</span><span class="whitespace-nowrap label-texto font-medium">Máquinas</span></button>
+                <button onclick="mudarAba('buscador')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="buscador"><span class="text-lg">🔎</span><span class="whitespace-nowrap label-texto font-medium">Buscar modelos</span></button>
 
                 <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gold2/10 text-gold2 border border-gold2/20 font-medium hidden item-menu-btn mt-3" data-aba="admin">
                     <span class="text-lg">🛡️</span>
@@ -899,6 +900,57 @@
                         <button id="btnSalvarPedido" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl">Salvar pedido</button>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div id="view-buscador" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
+            <div class="rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#0b2b22 0%,#0f3d30 55%,#0a1f1a 100%)">
+                <h2 class="font-display text-3xl sm:text-5xl font-bold tracking-tight" style="color:#fff !important">Buscador de modelos 3D</h2>
+                <p class="text-sm sm:text-base text-white/75 mt-3 max-w-2xl">Pesquise STL e 3MF em várias bibliotecas com uma única busca. Os arquivos ficam nos sites de origem — revise a licença antes de baixar ou vender.</p>
+                <div class="flex flex-wrap gap-2 mt-5" id="buscFontesChips"></div>
+            </div>
+
+            <div class="bg-surface rounded-2xl border border-line shadow-sm">
+                <div class="p-4 sm:p-5 border-b border-line">
+                    <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Pesquisa unificada</p>
+                    <h3 class="font-display text-lg font-bold text-ink">Pesquise modelos em várias bibliotecas</h3>
+                </div>
+                <div class="p-4 sm:p-5 space-y-3">
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <div class="flex-1 flex items-center gap-2 bg-surface2 border border-line rounded-xl px-3">
+                            <span class="text-inkmute">🔍</span>
+                            <input id="buscQuery" type="text" placeholder="Ex.: suporte para filamento, vaso ou miniatura" class="flex-1 bg-transparent py-3 text-sm text-ink focus:outline-none">
+                        </div>
+                        <button id="btnBuscar" class="bg-lime-300 hover:bg-lime-400 text-emerald-950 font-bold text-sm px-5 py-3 rounded-xl">🔎 Pesquisar modelos</button>
+                        <div class="relative">
+                            <button id="btnBuscFontes" type="button" class="w-full sm:w-auto flex items-center gap-2 border border-line rounded-xl px-4 py-3 text-sm font-semibold text-ink bg-surface hover:bg-surface2">Fontes <span id="buscFontesCont" class="text-[11px] bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5">0</span> ▾</button>
+                            <div id="buscFontesMenu" class="hidden absolute right-0 top-full mt-1 z-20 w-64 rounded-xl border border-line bg-surface shadow-xl p-2"></div>
+                        </div>
+                    </div>
+                    <p class="text-[11px] text-inkmute">Use termos específicos, de preferência em inglês, para resultados mais relevantes.</p>
+                    <div id="buscRecentes" class="flex flex-wrap items-center gap-2"></div>
+                </div>
+
+                <div id="buscResultados" class="border-t border-line p-4 sm:p-5">
+                    <div id="buscSugestoes" class="text-center py-6">
+                        <p class="text-[11px] font-bold uppercase tracking-widest text-inkmute mb-3">Sugestões para começar</p>
+                        <div class="flex flex-wrap justify-center gap-2" id="buscSugChips"></div>
+                    </div>
+                    <div id="buscCards" class="hidden"></div>
+                </div>
+            </div>
+
+            <div class="bg-surface rounded-2xl border border-line shadow-sm p-4 sm:p-5 space-y-3">
+                <div>
+                    <h3 class="font-display text-base font-bold text-ink">Achou um modelo? Salve como projeto</h3>
+                    <p class="text-xs text-inkmute">Cole o link da página do modelo. O app cria o projeto já com o link do arquivo e você completa as peças na aba Impressões.</p>
+                </div>
+                <div class="grid sm:grid-cols-3 gap-2">
+                    <input id="buscSalvarNome" type="text" placeholder="Nome do projeto" class="ped-inp">
+                    <input id="buscSalvarLink" type="url" placeholder="Link da página do modelo" class="ped-inp">
+                    <input id="buscSalvarImg" type="url" placeholder="Link da imagem (opcional)" class="ped-inp">
+                </div>
+                <button id="btnBuscSalvar" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl">📁 Criar projeto</button>
             </div>
         </div>
 
@@ -2355,6 +2407,78 @@
         };
         projMaquina.addEventListener('change', () => {
             if (pecasProjetoAtual.length && confirm('Recalcular o custo das peças já incluídas com esta máquina?')) document.getElementById('btnRecalcularCustos').click();
+        });
+
+        // --- BUSCADOR DE MODELOS 3D (pesquisa unificada por links) ---
+        const FONTES_MODELOS = [
+            { id: 'printables', nome: 'Printables', cor: '#E8590C', url: q => `https://www.printables.com/search/models?q=${q}` },
+            { id: 'thingiverse', nome: 'Thingiverse', cor: '#1D6FD8', url: q => `https://www.thingiverse.com/search?q=${q}&type=things&sort=relevant` },
+            { id: 'myminifactory', nome: 'MyMiniFactory', cor: '#374151', url: q => `https://www.myminifactory.com/search?query=${q}` },
+            { id: 'cults3d', nome: 'Cults3D', cor: '#B0267B', url: q => `https://cults3d.com/en/search?q=${q}` },
+            { id: 'makerworld', nome: 'MakerWorld', cor: '#16A34A', url: q => `https://makerworld.com/en/search/models?keyword=${q}` },
+            { id: 'thangs', nome: 'Thangs', cor: '#7C3AED', url: q => `https://thangs.com/search/${q}?scope=all` },
+            { id: 'creality', nome: 'Creality Cloud', cor: '#0D9488', url: q => `https://www.google.com/search?q=${encodeURIComponent('site:crealitycloud.com ')}${q}`, via: 'via Google' },
+            { id: 'nexprint', nome: 'Nexprint', cor: '#4F46E5', url: q => `https://www.google.com/search?q=${encodeURIComponent('site:nexprint.com ')}${q}`, via: 'via Google' },
+            { id: 'google', nome: 'Google (STL/3MF)', cor: '#6B7280', url: q => `https://www.google.com/search?q=${q}+${encodeURIComponent('(stl OR 3mf) download')}`, via: 'busca geral' }
+        ];
+        const buscQuery = document.getElementById('buscQuery');
+        let buscFontesSel = new Set(FONTES_MODELOS.slice(0, 6).map(f => f.id));
+        try { const sv = JSON.parse(localStorage.getItem('buscFontes') || 'null'); if (Array.isArray(sv) && sv.length) buscFontesSel = new Set(sv.filter(id => FONTES_MODELOS.some(f => f.id === id))); } catch (e) {}
+        function buscSalvarFontes() { try { localStorage.setItem('buscFontes', JSON.stringify([...buscFontesSel])); } catch (e) {} }
+        function renderizarFontesBusca() {
+            document.getElementById('buscFontesCont').innerText = `${buscFontesSel.size} de ${FONTES_MODELOS.length}`;
+            document.getElementById('buscFontesChips').innerHTML = FONTES_MODELOS.filter(f => buscFontesSel.has(f.id)).map(f => `<span class="text-[11px] font-semibold bg-white/10 border border-white/20 text-white px-3 py-1 rounded-lg">${escHtml(f.nome)}</span>`).join('');
+            document.getElementById('buscFontesMenu').innerHTML = FONTES_MODELOS.map(f => `<label class="flex items-center gap-2 px-2 py-2 rounded-lg hover:bg-surface2 cursor-pointer text-sm text-ink"><input type="checkbox" data-id="${f.id}" ${buscFontesSel.has(f.id) ? 'checked' : ''} class="accent-emerald-700 h-4 w-4"><span class="h-2 w-2 rounded-full" style="background:${f.cor}"></span>${escHtml(f.nome)}</label>`).join('');
+            document.querySelectorAll('#buscFontesMenu input').forEach(cb => cb.addEventListener('change', () => { cb.checked ? buscFontesSel.add(cb.dataset.id) : buscFontesSel.delete(cb.dataset.id); buscSalvarFontes(); renderizarFontesBusca(); if (buscQuery.value.trim()) pesquisarModelos(true); }));
+        }
+        document.getElementById('btnBuscFontes').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('buscFontesMenu').classList.toggle('hidden'); });
+        document.addEventListener('click', (e) => { const m = document.getElementById('buscFontesMenu'); if (m && !m.contains(e.target)) m.classList.add('hidden'); });
+        const SUG_BUSCA = ['benchy', 'phone stand', 'cable organizer', 'articulated dragon', 'planter', 'keychain', 'filament spool holder', 'vase'];
+        document.getElementById('buscSugChips').innerHTML = SUG_BUSCA.map(t => `<button type="button" data-q="${t}" class="text-xs font-semibold border border-line rounded-full px-4 py-2 bg-surface hover:bg-surface2 text-ink">🔍 ${t}</button>`).join('');
+        document.querySelectorAll('#buscSugChips button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
+        function renderizarRecentesBusca() {
+            let rec = []; try { rec = JSON.parse(localStorage.getItem('buscRecentes') || '[]'); } catch (e) {}
+            document.getElementById('buscRecentes').innerHTML = rec.length ? '<span class="text-[11px] text-inkmute">Recentes:</span>' + rec.map(t => `<button type="button" data-q="${escHtml(t)}" class="text-[11px] border border-line rounded-full px-3 py-1 bg-surface2 text-ink">${escHtml(t)}</button>`).join('') : '';
+            document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
+        }
+        function pesquisarModelos(silencioso) {
+            const termo = buscQuery.value.trim();
+            if (!termo) { buscQuery.focus(); return; }
+            const fontes = FONTES_MODELOS.filter(f => buscFontesSel.has(f.id));
+            if (!fontes.length) return alert('Marque pelo menos uma fonte.');
+            if (!silencioso) { try { const rec = [termo, ...JSON.parse(localStorage.getItem('buscRecentes') || '[]').filter(x => x !== termo)].slice(0, 6); localStorage.setItem('buscRecentes', JSON.stringify(rec)); } catch (e) {} renderizarRecentesBusca(); }
+            const q = encodeURIComponent(termo);
+            document.getElementById('buscSugestoes').classList.add('hidden');
+            const box = document.getElementById('buscCards'); box.classList.remove('hidden');
+            box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><p class="text-sm text-ink">Pesquisar <strong>“${escHtml(termo)}”</strong> em ${fontes.length} fonte${fontes.length === 1 ? '' : 's'}:</p><button id="btnAbrirTodas" class="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg">Abrir todas em novas abas</button></div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${fontes.map(f => `<a href="${f.url(q)}" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 border border-line rounded-xl p-3 bg-surface hover:border-emerald-600 hover:shadow transition"><span class="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0" style="background:${f.cor}">${escHtml(f.nome.charAt(0))}</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-ink">${escHtml(f.nome)}</span><span class="block text-[11px] text-inkmute">Ver resultados${f.via ? ' • ' + f.via : ''}</span></span><span class="text-emerald-700 font-bold group-hover:translate-x-0.5 transition">↗</span></a>`).join('')}</div>
+                <p class="text-[11px] text-inkmute mt-3">Os resultados abrem no site de origem. “Abrir todas” pode pedir para liberar pop-ups neste site no seu navegador.</p>`;
+            document.getElementById('btnAbrirTodas').addEventListener('click', () => { fontes.forEach(f => window.open(f.url(q), '_blank', 'noopener,noreferrer')); });
+        }
+        document.getElementById('btnBuscar').addEventListener('click', () => pesquisarModelos());
+        buscQuery.addEventListener('keydown', (e) => { if (e.key === 'Enter') pesquisarModelos(); });
+        renderizarFontesBusca(); renderizarRecentesBusca();
+
+        document.getElementById('btnBuscSalvar').addEventListener('click', async () => {
+            const nome = document.getElementById('buscSalvarNome').value.trim();
+            const link = document.getElementById('buscSalvarLink').value.trim();
+            const img = document.getElementById('buscSalvarImg').value.trim();
+            if (!nome) return alert('Dê um nome para o projeto.');
+            if (link && !/^https?:\/\//i.test(link)) return alert('O link precisa começar com http:// ou https://');
+            try {
+                const ref = await colecao('projetos_3d').add({
+                    nome_projeto: nome, cor: '', imagem_base64: img || null, nome_arquivo_3mf: link, arquivo_3mf_data: null,
+                    pecas: [], margem_lucro_porcentagem: 100, custo_total: 0, preco_venda_total: 0, tempo_total_min: 0, peso_total_g: 0,
+                    status: 'Aguardando Impressão', data_conclusao: null, visibilidade_portfolio: 'esconder', quantidade_estoque: 0,
+                    canal_venda: 'direta', taxa_percentual: 0, taxas_canal_valor: 0, custo_fixo_aplicado: 0,
+                    maquina_id: (maquinasCache.find(m => m.padrao) || {}).id || null, maquina_nome: (maquinasCache.find(m => m.padrao) || {}).nome || '',
+                    user_id: usuarioAtual.uid, created_at: new Date().toISOString()
+                });
+                ['buscSalvarNome', 'buscSalvarLink', 'buscSalvarImg'].forEach(id => document.getElementById(id).value = '');
+                await carregarProjetos3d();
+                mudarAba('inserir-impressao');
+                editarProjeto3d(ref.id);
+            } catch (e) { alert('Erro ao criar o projeto: ' + e.message); }
         });
 
         // --- MINHA MARCA ---
