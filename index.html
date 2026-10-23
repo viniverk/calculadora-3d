@@ -630,7 +630,9 @@
                         <label class="block text-[10px] uppercase font-bold text-sky-600 mb-0.5">Canal de venda</label>
                         <select id="projCanalVenda" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
                             <option value="direta">Venda direta (sem taxa)</option>
-                            <option value="marketplace">Marketplace (com taxa)</option>
+                            <option value="shopee">Shopee</option>
+                            <option value="ml_classico">Mercado Livre — Clássico</option>
+                            <option value="ml_premium">Mercado Livre — Premium</option>
                         </select>
                     </div>
                     <button id="btnRecalcularCustos" type="button" class="bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink text-xs font-bold py-2 px-3 rounded transition">♻️ Recalcular peças com os custos atuais</button>
@@ -856,10 +858,30 @@
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Vida útil estimada (horas)</label><input type="number" step="100" min="1" id="cfgVidaImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Mão de obra (R$ por hora)</label><input type="number" step="0.1" min="0" id="cfgMaoObra" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Embalagem + frete (R$ por projeto)</label><input type="number" step="0.1" min="0" id="cfgFixoProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Taxa do marketplace (%)</label><input type="number" step="0.5" min="0" max="90" id="cfgTaxaMkt" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div class="hidden"></div>
                     <div class="flex items-end"><button id="btnSalvarConfigCustos" class="w-full btn-cta font-bold py-2 rounded-lg text-sm transition">Salvar custos</button></div>
                 </div>
                 <p id="cfgResumoHora" class="text-xs text-inkmute mt-3"></p>
+
+                <div class="mt-5 pt-4 border-t border-line">
+                    <h3 class="font-display font-semibold text-sm text-ink mb-1">🛒 Taxas dos marketplaces</h3>
+                    <p class="text-[11px] text-inkmute mb-3">Valores de referência conferidos em outubro/2026. As taxas mudam com frequência e variam por categoria: confirme na Central do Vendedor e ajuste aqui se precisar.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Clássico — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlClassico" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Premium — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlPremium" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML tarifa fixa abaixo de R$ 79 (R$)</label><input type="number" step="0.1" min="0" id="cfgMlFixa" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML frete grátis pago por você, de R$ 79 em diante (R$)</label><input type="number" step="0.5" min="0" id="cfgMlFrete" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    </div>
+                    <label class="flex items-start gap-2 text-xs text-inkmute mt-3"><input type="checkbox" id="cfgShopeeCpf" class="mt-0.5"> <span>Shopee: sou vendedor CPF com mais de 450 pedidos em 90 dias (soma R$ 3,00 por item)</span></label>
+                    <details class="mt-3 text-xs text-inkmute"><summary class="cursor-pointer font-bold text-ink">Ver tabela da Shopee usada no cálculo</summary>
+                        <ul class="mt-2 space-y-0.5 list-disc list-inside">
+                            <li>Até R$ 79,99: 20% + R$ 4,50 por item (abaixo de R$ 9, a tarifa fixa é metade do preço)</li>
+                            <li>R$ 80 a R$ 99,99: 14% + R$ 16,00</li>
+                            <li>R$ 100 a R$ 199,99: 14% + R$ 20,00</li>
+                            <li>A partir de R$ 200: 14% + R$ 26,00</li>
+                        </ul>
+                    </details>
+                </div>
             </div>
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-4 text-teal2 border-b border-line pb-2">Orçamento / Modelo Estimado</h2>
@@ -1663,8 +1685,11 @@
             }
 
             const custoP = parseFloat(proj.custo_total);
-            const taxaVenda = parseFloat(proj.taxa_percentual) || 0;
-            const lucroL = precoFinal * (1 - taxaVenda / 100) - custoP;
+            // Taxas do canal sobre o preço FINAL vendido (usa o canal do projeto; projetos antigos usam o % guardado)
+            const canalProj = proj.canal_venda;
+            const taxasVenda = (canalProj && NOME_CANAL[canalProj]) ? taxasDoCanal(canalProj, precoFinal).total : precoFinal * ((parseFloat(proj.taxa_percentual) || 0) / 100);
+            const taxaVenda = precoFinal > 0 ? taxasVenda / precoFinal * 100 : 0;
+            const lucroL = precoFinal - taxasVenda - custoP;
             btnRegistrarVenda.disabled = true;
             
             try {
@@ -1678,6 +1703,8 @@
                     cliente: cliente,
                     preco_venda_final: precoFinal,
                     taxa_percentual: taxaVenda,
+                    taxas_canal_valor: taxasVenda,
+                    canal_venda: canalProj || 'direta',
                     custo_producao_retido: custoP,
                     lucro_liquido: lucroL,
                     data_venda: dataV,
@@ -1771,7 +1798,7 @@
         });
 
         // --- CUSTOS DO NEGÓCIO (configuráveis por usuário) ---
-        const CONFIG_PADRAO = { custo_kwh: 0.90, potencia_w: 150, impressora_valor: 0, impressora_vida_h: 5000, mao_obra_hora: 1.50, custo_fixo_projeto: 0, taxa_marketplace: 0 };
+        const CONFIG_PADRAO = { custo_kwh: 0.90, potencia_w: 150, impressora_valor: 0, impressora_vida_h: 5000, mao_obra_hora: 1.50, custo_fixo_projeto: 0, ml_comissao_classico: 13, ml_comissao_premium: 18, ml_tarifa_fixa: 6, ml_frete_vendedor: 0, shopee_cpf_alto_volume: false };
         let configCustos = { ...CONFIG_PADRAO };
         const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
 
@@ -1788,14 +1815,62 @@
             const energia = horas * h.energia, desgaste = horas * h.desgaste, mao_obra = horas * h.mao;
             return { total: filamento + energia + desgaste + mao_obra, detalhe: { filamento, energia, desgaste, mao_obra } };
         }
-        // Financeiro do projeto: custo das peças + custo fixo; preço cobre a taxa do canal de venda
+        // --- TAXAS DOS MARKETPLACES (referência out/2026) ---
+        const NOME_CANAL = { direta: 'Venda direta', shopee: 'Shopee', ml_classico: 'Mercado Livre Clássico', ml_premium: 'Mercado Livre Premium' };
+        // Faixas de preço: [min, max) -> comissão %, tarifa fixa e custo extra (R$) por item
+        function faixasDoCanal(canal) {
+            const c = configCustos;
+            if (canal === 'shopee') {
+                const extra = c.shopee_cpf_alto_volume ? 3 : 0;
+                return [
+                    { min: 0,   max: 80,       pct: 20, fixo: 4.5, extra: extra, metadeAbaixo9: true },
+                    { min: 80,  max: 100,      pct: 14, fixo: 16,  extra: extra },
+                    { min: 100, max: 200,      pct: 14, fixo: 20,  extra: extra },
+                    { min: 200, max: Infinity, pct: 14, fixo: 26,  extra: extra }
+                ];
+            }
+            if (canal === 'ml_classico' || canal === 'ml_premium') {
+                const pct = canal === 'ml_premium' ? num(c.ml_comissao_premium, 18) : num(c.ml_comissao_classico, 13);
+                return [
+                    { min: 0,  max: 79,       pct: pct, fixo: num(c.ml_tarifa_fixa, 6), extra: 0 },
+                    { min: 79, max: Infinity, pct: pct, fixo: 0, extra: num(c.ml_frete_vendedor, 0) }
+                ];
+            }
+            return [{ min: 0, max: Infinity, pct: 0, fixo: 0, extra: 0 }];
+        }
+        function faixaPorPreco(canal, preco) {
+            const fx = faixasDoCanal(canal);
+            return fx.find(f => preco >= f.min && preco < f.max) || fx[fx.length - 1];
+        }
+        function fixoDaFaixa(f, preco) { return f.metadeAbaixo9 ? Math.min(f.fixo, preco / 2) : f.fixo; }
+        // Taxas cobradas pelo canal sobre um preço de venda
+        function taxasDoCanal(canal, preco) {
+            if (!canal || canal === 'direta') return { total: 0, comissao: 0, fixo: 0, extra: 0, pct: 0 };
+            const f = faixaPorPreco(canal, preco);
+            const comissao = preco * f.pct / 100, fixo = fixoDaFaixa(f, preco);
+            return { total: comissao + fixo + f.extra, comissao, fixo, extra: f.extra, pct: f.pct };
+        }
+        // Menor preço que, descontadas as taxas do canal, entrega o lucro-alvo (custo × margem)
+        function precoParaCanal(alvoLiquido, canal) {
+            if (!canal || canal === 'direta') return alvoLiquido;
+            const candidatos = [];
+            faixasDoCanal(canal).forEach(f => {
+                const k = 1 - f.pct / 100;
+                let p = (alvoLiquido + f.fixo + f.extra) / k;
+                if (f.metadeAbaixo9 && p < 9) p = (alvoLiquido + f.extra) / (k - 0.5);   // abaixo de R$ 9 a tarifa fixa é metade do preço
+                if (p < f.min) p = f.min;                                              // ainda cobre o alvo, pois a faixa seguinte já é mais barata na proporção
+                if (p < f.max) candidatos.push(p);
+            });
+            return candidatos.length ? Math.min(...candidatos) : alvoLiquido;
+        }
+        // Financeiro do projeto: custo das peças + custo fixo; preço cobre as taxas do canal de venda
         function calcularFinanceiroProjeto(custoPecas, margemPct, canal) {
             const fixo = num(configCustos.custo_fixo_projeto, 0);
-            const taxa = canal === 'marketplace' ? Math.min(num(configCustos.taxa_marketplace, 0), 90) : 0;
             const custoTotal = custoPecas + fixo;
-            const preco = custoTotal * (1 + margemPct / 100) / (1 - taxa / 100);
-            const taxaValor = preco * taxa / 100;
-            return { fixo, taxa, custoTotal, preco, taxaValor, lucroLiquido: preco - taxaValor - custoTotal };
+            const alvoLiquido = custoTotal * (1 + margemPct / 100);
+            const preco = precoParaCanal(alvoLiquido, canal);
+            const t = taxasDoCanal(canal, preco);
+            return { fixo, canal, custoTotal, preco, taxas: t, taxaValor: t.total, taxa: preco > 0 ? t.total / preco * 100 : 0, lucroLiquido: preco - t.total - custoTotal };
         }
         const brl = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
 
@@ -1804,10 +1879,12 @@
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
             set('cfgKwh', c.custo_kwh); set('cfgWatts', c.potencia_w); set('cfgValorImp', c.impressora_valor);
             set('cfgVidaImp', c.impressora_vida_h); set('cfgMaoObra', c.mao_obra_hora);
-            set('cfgFixoProjeto', c.custo_fixo_projeto); set('cfgTaxaMkt', c.taxa_marketplace);
+            set('cfgFixoProjeto', c.custo_fixo_projeto);
+            set('cfgMlClassico', c.ml_comissao_classico); set('cfgMlPremium', c.ml_comissao_premium); set('cfgMlFixa', c.ml_tarifa_fixa); set('cfgMlFrete', c.ml_frete_vendedor);
+            const cpf = document.getElementById('cfgShopeeCpf'); if (cpf) cpf.checked = !!c.shopee_cpf_alto_volume;
             atualizarResumoConfigCustos();
-            const opt = document.querySelector('#projCanalVenda option[value="marketplace"]');
-            if (opt) opt.textContent = `Marketplace (taxa ${num(c.taxa_marketplace, 0)}%)`;
+            const oc = document.querySelector('#projCanalVenda option[value="ml_classico"]'); if (oc) oc.textContent = `Mercado Livre — Clássico (${num(c.ml_comissao_classico, 13)}%)`;
+            const op = document.querySelector('#projCanalVenda option[value="ml_premium"]'); if (op) op.textContent = `Mercado Livre — Premium (${num(c.ml_comissao_premium, 18)}%)`;
         }
         function atualizarResumoConfigCustos() {
             const h = custoHoraMaquina();
@@ -1824,7 +1901,11 @@
                 impressora_vida_h: Math.max(1, num(document.getElementById('cfgVidaImp').value, 5000)),
                 mao_obra_hora: num(document.getElementById('cfgMaoObra').value, 0),
                 custo_fixo_projeto: num(document.getElementById('cfgFixoProjeto').value, 0),
-                taxa_marketplace: Math.min(90, Math.max(0, num(document.getElementById('cfgTaxaMkt').value, 0)))
+                ml_comissao_classico: Math.min(40, Math.max(0, num(document.getElementById('cfgMlClassico').value, 13))),
+                ml_comissao_premium: Math.min(40, Math.max(0, num(document.getElementById('cfgMlPremium').value, 18))),
+                ml_tarifa_fixa: Math.max(0, num(document.getElementById('cfgMlFixa').value, 6)),
+                ml_frete_vendedor: Math.max(0, num(document.getElementById('cfgMlFrete').value, 0)),
+                shopee_cpf_alto_volume: !!document.getElementById('cfgShopeeCpf').checked
             };
         }
         async function carregarConfigCustos() {
@@ -1836,8 +1917,8 @@
             atualizarAcumuladoresMaster();
             calcularAbaBase();
         }
-        ['cfgKwh','cfgWatts','cfgValorImp','cfgVidaImp','cfgMaoObra','cfgFixoProjeto','cfgTaxaMkt'].forEach(id => {
-            document.getElementById(id).addEventListener('input', () => {
+        ['cfgKwh','cfgWatts','cfgValorImp','cfgVidaImp','cfgMaoObra','cfgFixoProjeto','cfgMlClassico','cfgMlPremium','cfgMlFixa','cfgMlFrete','cfgShopeeCpf'].forEach(id => {
+            document.getElementById(id).addEventListener(id === 'cfgShopeeCpf' ? 'change' : 'input', () => {
                 const antigo = configCustos; configCustos = { ...CONFIG_PADRAO, ...lerConfigCustosDoFormulario() };
                 atualizarResumoConfigCustos(); calcularAbaBase();
             });
@@ -1939,7 +2020,10 @@
             resumoPrecoVenda.innerText = `R$ ${fin.preco.toFixed(2)}`;
             const partes = [`Peças: ${brl(custoPecas)}`];
             if (fin.fixo > 0) partes.push(`embalagem/frete: ${brl(fin.fixo)}`);
-            if (fin.taxa > 0) partes.push(`taxa do marketplace (${fin.taxa}%): ${brl(fin.taxaValor)}`);
+            if (fin.taxaValor > 0) {
+                const t = fin.taxas;
+                partes.push(`taxas ${NOME_CANAL[fin.canal] || 'do canal'} (${t.pct}% = ${brl(t.comissao)}${t.fixo > 0 ? ' + tarifa fixa ' + brl(t.fixo) : ''}${t.extra > 0 ? ' + ' + brl(t.extra) : ''}): ${brl(fin.taxaValor)}`);
+            }
             partes.push(`<strong class="text-green-600">lucro líquido estimado: ${brl(fin.lucroLiquido)}</strong>`);
             document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
         }
@@ -1988,6 +2072,7 @@
                 quantidade_estoque: Math.max(0, parseInt(projQuantidadeEstoque.value) || 0),
                 canal_venda: projCanalVenda.value,
                 taxa_percentual: finProj.taxa,
+                taxas_canal_valor: finProj.taxaValor,
                 custo_fixo_aplicado: finProj.fixo
             };
 
@@ -2071,7 +2156,7 @@
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
             projQuantidadeEstoque.value = parseInt(proj.quantidade_estoque) || 0;
-            projCanalVenda.value = proj.canal_venda || 'direta';
+            projCanalVenda.value = (proj.canal_venda && NOME_CANAL[proj.canal_venda]) ? proj.canal_venda : 'direta';
             if (proj.imagem_base64) { imgPreview.src = proj.imagem_base64; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             projLink3mf.value = proj.nome_arquivo_3mf || '';
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas || [])); 
