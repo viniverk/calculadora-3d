@@ -928,6 +928,18 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-inkmute">Use termos específicos, de preferência em inglês, para resultados mais relevantes.</p>
+                    <details id="buscConfig" class="rounded-xl border border-line bg-surface2/50 text-sm">
+                        <summary class="cursor-pointer px-3 py-2 font-semibold text-ink">⚙️ Servidor de busca <span id="buscServStatus" class="text-[11px] font-normal text-inkmute ml-1"></span></summary>
+                        <div class="px-3 pb-3 space-y-2">
+                            <p class="text-[11px] text-inkmute">Com o servidor ligado, os resultados aparecem aqui dentro, com imagem, autor, curtidas e filtro de gratuitos (Printables, Thingiverse, MyMiniFactory e Cults3D). Sem ele, o app abre as buscas nos sites. Passo a passo no arquivo README do servidor.</p>
+                            <div class="flex flex-col sm:flex-row gap-2">
+                                <input id="buscServUrl" type="url" placeholder="https://busca-modelos.seu-usuario.workers.dev" class="ped-inp flex-1">
+                                <button id="btnBuscServSalvar" type="button" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">Salvar</button>
+                                <button id="btnBuscServTestar" type="button" class="border border-line text-ink text-xs font-bold px-4 py-2 rounded-lg hover:bg-surface2">Testar</button>
+                            </div>
+                            <p id="buscServMsg" class="text-[11px] text-inkmute"></p>
+                        </div>
+                    </details>
                     <div id="buscRecentes" class="flex flex-wrap items-center gap-2"></div>
                 </div>
 
@@ -2441,7 +2453,80 @@
             document.getElementById('buscRecentes').innerHTML = rec.length ? '<span class="text-[11px] text-inkmute">Recentes:</span>' + rec.map(t => `<button type="button" data-q="${escHtml(t)}" class="text-[11px] border border-line rounded-full px-3 py-1 bg-surface2 text-ink">${escHtml(t)}</button>`).join('') : '';
             document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
         }
-        function pesquisarModelos(silencioso) {
+        const FONTES_API = ['printables', 'thingiverse', 'myminifactory', 'cults3d'];
+        const buscServidor = () => { try { return (localStorage.getItem('buscServidor') || '').replace(/\/+$/, ''); } catch (e) { return ''; } };
+        function atualizarStatusServidor() {
+            const u = buscServidor();
+            document.getElementById('buscServUrl').value = u;
+            document.getElementById('buscServStatus').innerText = u ? '• ligado' : '• desligado (usa links)';
+        }
+        document.getElementById('btnBuscServSalvar').addEventListener('click', () => {
+            const v = document.getElementById('buscServUrl').value.trim();
+            if (v && !/^https:\/\//i.test(v)) return alert('O endereço precisa começar com https://');
+            try { localStorage.setItem('buscServidor', v); } catch (e) {}
+            atualizarStatusServidor();
+            document.getElementById('buscServMsg').innerText = v ? 'Salvo. Clique em Testar para conferir.' : 'Servidor removido.';
+        });
+        document.getElementById('btnBuscServTestar').addEventListener('click', async () => {
+            const msg = document.getElementById('buscServMsg'); const u = buscServidor();
+            if (!u) { msg.innerText = 'Salve o endereço primeiro.'; return; }
+            msg.innerText = 'Testando…';
+            try {
+                const r = await fetch(u + '/search?q=benchy&fontes=' + FONTES_API.join(','));
+                const d = await r.json();
+                const erros = Object.entries(d.erros || {}).map(([k, v]) => `${k}: ${v}`);
+                msg.innerText = `Funcionou: ${(d.resultados || []).length} resultado(s).` + (erros.length ? ' Fontes com problema → ' + erros.join(' | ') : '');
+            } catch (e) { msg.innerText = 'Não consegui falar com o servidor (' + e.message + '). Confira o endereço e se o Worker foi publicado.'; }
+        });
+        atualizarStatusServidor();
+
+        let buscDados = null, buscOrdem = 'relevantes', buscSoGratis = false;
+        function htmlCartoesLinks(fontes, q, titulo) {
+            return `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><p class="text-sm text-ink">${titulo}</p><button data-abrir-todas class="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg">Abrir todas em novas abas</button></div>
+                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${fontes.map(f => `<a href="${f.url(q)}" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 border border-line rounded-xl p-3 bg-surface hover:border-emerald-600 hover:shadow transition"><span class="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0" style="background:${f.cor}">${escHtml(f.nome.charAt(0))}</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-ink">${escHtml(f.nome)}</span><span class="block text-[11px] text-inkmute">Ver resultados${f.via ? ' • ' + f.via : ''}</span></span><span class="text-emerald-700 font-bold group-hover:translate-x-0.5 transition">↗</span></a>`).join('')}</div>`;
+        }
+        function renderizarCartoesModelos() {
+            const box = document.getElementById('buscCards'); if (!buscDados) return;
+            const { termo, q, fontes, resultados, erros } = buscDados;
+            let lista = resultados.filter(r => !buscSoGratis || r.gratuito !== false);
+            if (buscOrdem === 'curtidas') lista = [...lista].sort((a, b) => (b.curtidas || 0) - (a.curtidas || 0));
+            else if (buscOrdem === 'downloads') lista = [...lista].sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+            else if (buscOrdem === 'nome') lista = [...lista].sort((a, b) => String(a.titulo).localeCompare(String(b.titulo), 'pt-BR'));
+            const nomeFonte = (id) => (FONTES_MODELOS.find(f => f.id === id) || { nome: id, cor: '#6B7280' });
+            const fmt = (n) => n == null ? '–' : n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.', ',') + ' mil' : String(n);
+            const avisos = Object.entries(erros || {}).filter(([k]) => buscFontesSel.has(k) && !/sem chave/.test(erros[k])).map(([k, v]) => `${nomeFonte(k).nome}: ${v}`);
+            const semChave = Object.keys(erros || {}).filter(k => buscFontesSel.has(k) && /sem chave/.test(erros[k])).map(k => nomeFonte(k).nome);
+            const restantes = fontes.filter(f => !FONTES_API.includes(f.id));
+            box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <p class="text-sm text-ink"><strong>${lista.length}</strong> modelo${lista.length === 1 ? '' : 's'} para <strong>“${escHtml(termo)}”</strong></p>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <label class="flex items-center gap-2 text-xs text-ink cursor-pointer"><input id="buscSoGratis" type="checkbox" ${buscSoGratis ? 'checked' : ''} class="accent-emerald-700 h-4 w-4"> Somente gratuitos</label>
+                        <label class="flex items-center gap-2 text-xs text-inkmute">Ordenar por
+                            <select id="buscOrdem" class="ped-inp !py-1.5 !w-auto"><option value="relevantes">Mais relevantes</option><option value="curtidas">Mais curtidos</option><option value="downloads">Mais baixados</option><option value="nome">Nome (A–Z)</option></select></label>
+                    </div>
+                </div>
+                ${avisos.length ? `<p class="text-[11px] text-amber-700 mb-3">Algumas fontes falharam — ${escHtml(avisos.join(' | '))}</p>` : ''}
+                ${semChave.length ? `<p class="text-[11px] text-inkmute mb-3">Sem chave configurada no servidor: ${escHtml(semChave.join(', '))}.</p>` : ''}
+                ${lista.length ? `<div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3">${lista.map((r, i) => { const f = nomeFonte(r.fonte); return `<article class="border border-line rounded-xl bg-surface overflow-hidden flex flex-col">
+                    <a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="block relative aspect-square bg-surface2">
+                        ${r.imagem ? `<img src="${escHtml(r.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover">` : '<div class="w-full h-full flex items-center justify-center text-3xl text-inkmute">🧊</div>'}
+                        <span class="absolute top-2 left-2 text-[10px] font-bold text-white px-2 py-0.5 rounded-md" style="background:${f.cor}">${escHtml(f.nome)}</span>
+                        ${r.gratuito === true ? '<span class="absolute top-2 right-2 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-md">Gratuito</span>' : r.gratuito === false ? '<span class="absolute top-2 right-2 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-md">Pago</span>' : ''}
+                    </a>
+                    <div class="p-3 flex-1 flex flex-col gap-1">
+                        <p class="text-sm font-bold text-ink leading-snug line-clamp-2">${escHtml(r.titulo)}</p>
+                        <p class="text-[11px] text-inkmute truncate">${r.autor ? 'por ' + escHtml(r.autor) : ''}</p>
+                        <div class="mt-auto pt-2 flex items-center justify-between text-[11px] text-inkmute"><span>♥ ${fmt(r.curtidas)} • ⬇ ${fmt(r.downloads)}</span><a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 font-bold text-sm" title="Abrir no site">↗</a></div>
+                        <button type="button" data-salvar="${i}" class="mt-1 text-[11px] font-bold border border-line rounded-lg py-1.5 text-ink hover:bg-surface2">➕ Salvar como projeto</button>
+                    </div></article>`; }).join('')}</div>` : '<p class="text-sm text-inkmute text-center py-6">Nenhum modelo encontrado com esses filtros.</p>'}
+                ${restantes.length ? `<div class="mt-6 pt-4 border-t border-line">${htmlCartoesLinks(restantes, q, 'Outras fontes (abrem no site de origem):')}</div>` : ''}`;
+            document.getElementById('buscOrdem').value = buscOrdem;
+            document.getElementById('buscOrdem').addEventListener('change', (e) => { buscOrdem = e.target.value; renderizarCartoesModelos(); });
+            document.getElementById('buscSoGratis').addEventListener('change', (e) => { buscSoGratis = e.target.checked; renderizarCartoesModelos(); });
+            box.querySelectorAll('[data-salvar]').forEach(b => b.addEventListener('click', () => { const r = lista[+b.dataset.salvar]; document.getElementById('buscSalvarNome').value = r.titulo || ''; document.getElementById('buscSalvarLink').value = r.url || ''; document.getElementById('buscSalvarImg').value = r.imagem || ''; document.getElementById('buscSalvarNome').scrollIntoView({ behavior: 'smooth', block: 'center' }); }));
+            box.querySelectorAll('[data-abrir-todas]').forEach(b => b.addEventListener('click', () => restantes.forEach(f => window.open(f.url(q), '_blank', 'noopener,noreferrer'))));
+        }
+        async function pesquisarModelos(silencioso) {
             const termo = buscQuery.value.trim();
             if (!termo) { buscQuery.focus(); return; }
             const fontes = FONTES_MODELOS.filter(f => buscFontesSel.has(f.id));
@@ -2450,11 +2535,29 @@
             const q = encodeURIComponent(termo);
             document.getElementById('buscSugestoes').classList.add('hidden');
             const box = document.getElementById('buscCards'); box.classList.remove('hidden');
-            box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-2 mb-3"><p class="text-sm text-ink">Pesquisar <strong>“${escHtml(termo)}”</strong> em ${fontes.length} fonte${fontes.length === 1 ? '' : 's'}:</p><button id="btnAbrirTodas" class="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white px-4 py-2 rounded-lg">Abrir todas em novas abas</button></div>
-                <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">${fontes.map(f => `<a href="${f.url(q)}" target="_blank" rel="noopener noreferrer" class="group flex items-center gap-3 border border-line rounded-xl p-3 bg-surface hover:border-emerald-600 hover:shadow transition"><span class="h-10 w-10 rounded-lg flex items-center justify-center text-white font-bold shrink-0" style="background:${f.cor}">${escHtml(f.nome.charAt(0))}</span><span class="min-w-0 flex-1"><span class="block text-sm font-bold text-ink">${escHtml(f.nome)}</span><span class="block text-[11px] text-inkmute">Ver resultados${f.via ? ' • ' + f.via : ''}</span></span><span class="text-emerald-700 font-bold group-hover:translate-x-0.5 transition">↗</span></a>`).join('')}</div>
-                <p class="text-[11px] text-inkmute mt-3">Os resultados abrem no site de origem. “Abrir todas” pode pedir para liberar pop-ups neste site no seu navegador.</p>`;
-            document.getElementById('btnAbrirTodas').addEventListener('click', () => { fontes.forEach(f => window.open(f.url(q), '_blank', 'noopener,noreferrer')); });
+            const servidor = buscServidor();
+            const viaApi = fontes.filter(f => FONTES_API.includes(f.id));
+            const mostrarLinks = (aviso) => {
+                box.innerHTML = (aviso ? `<p class="text-[11px] text-amber-700 mb-3">${escHtml(aviso)}</p>` : '') + htmlCartoesLinks(fontes, q, `Pesquisar <strong>“${escHtml(termo)}”</strong> em ${fontes.length} fonte${fontes.length === 1 ? '' : 's'}:`) +
+                    '<p class="text-[11px] text-inkmute mt-3">Os resultados abrem no site de origem. “Abrir todas” pode pedir para liberar pop-ups neste site no seu navegador.</p>';
+                box.querySelector('[data-abrir-todas]').addEventListener('click', () => fontes.forEach(f => window.open(f.url(q), '_blank', 'noopener,noreferrer')));
+            };
+            if (!servidor || !viaApi.length) { buscDados = null; return mostrarLinks(''); }
+            box.innerHTML = '<p class="text-sm text-inkmute text-center py-8">🔎 Buscando nas bibliotecas…</p>';
+            const meuTermo = termo; buscUltimaBusca = meuTermo + '|' + Date.now(); const marca = buscUltimaBusca;
+            try {
+                const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 20000);
+                const r = await fetch(`${servidor}/search?q=${q}&fontes=${viaApi.map(f => f.id).join(',')}`, { signal: ctrl.signal }); clearTimeout(t);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const d = await r.json();
+                if (marca !== buscUltimaBusca) return;
+                const resultados = Array.isArray(d.resultados) ? d.resultados : [];
+                if (!resultados.length) return mostrarLinks('O servidor não trouxe resultados' + (d.erros && Object.keys(d.erros).length ? ' (' + Object.entries(d.erros).map(([k, v]) => k + ': ' + v).join(' | ') + ')' : '') + '. Use os links abaixo.');
+                buscDados = { termo, q, fontes, resultados, erros: d.erros || {} };
+                renderizarCartoesModelos();
+            } catch (e) { if (marca === buscUltimaBusca) { buscDados = null; mostrarLinks('Servidor de busca indisponível (' + (e.name === 'AbortError' ? 'demorou demais' : e.message) + '). Mostrando os links.'); } }
         }
+        let buscUltimaBusca = '';
         document.getElementById('btnBuscar').addEventListener('click', () => pesquisarModelos());
         buscQuery.addEventListener('keydown', (e) => { if (e.key === 'Enter') pesquisarModelos(); });
         renderizarFontesBusca(); renderizarRecentesBusca();
