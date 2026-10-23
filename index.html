@@ -533,6 +533,58 @@
                 </div>
             </div>
 
+            <!-- HISTÓRICO / EVOLUÇÃO -->
+            <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <div>
+                        <h3 class="font-display text-base font-bold text-ink">📈 Evolução do negócio</h3>
+                        <p class="text-xs text-inkmute mt-0.5">Faturamento e lucro líquido por mês, com base nas vendas registradas.</p>
+                    </div>
+                    <select id="dashPeriodo" class="bg-surface2 border border-line rounded-lg text-sm text-ink px-3 py-2">
+                        <option value="6">Últimos 6 meses</option>
+                        <option value="12" selected>Últimos 12 meses</option>
+                        <option value="0">Todo o período</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Faturamento no período</p><p id="histFat" class="font-mono2 text-lg font-bold text-blue-600">R$ 0,00</p></div>
+                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro no período</p><p id="histLucro" class="font-mono2 text-lg font-bold text-green-600">R$ 0,00</p></div>
+                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Margem real média</p><p id="histMargem" class="font-mono2 text-lg font-bold text-ink">0%</p></div>
+                    <div class="bg-surface2 rounded-xl p-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Lucro por hora de máquina</p><p id="histLucroHora" class="font-mono2 text-lg font-bold text-amber-600">—</p></div>
+                </div>
+                <div class="flex items-center gap-4 text-xs text-inkmute mb-2">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#2563EB"></span> Faturamento</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-sm" style="background:#16A34A"></span> Lucro líquido</span>
+                    <span id="histTicket" class="ml-auto"></span>
+                </div>
+                <div id="graficoMensal" class="w-full"></div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
+                    <h3 class="font-display text-base font-bold text-ink">🏆 Peças mais vendidas</h3>
+                    <p class="text-xs text-inkmute mt-0.5 mb-3">Por quantidade de vendas no período.</p>
+                    <div id="topPecas" class="space-y-3"></div>
+                </div>
+                <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
+                    <h3 class="font-display text-base font-bold text-ink">⏱️ Horas de máquina por mês</h3>
+                    <p class="text-xs text-inkmute mt-0.5 mb-3">Projetos em montagem, finalizados ou vendidos, pelo mês da conclusão.</p>
+                    <div id="graficoHoras" class="w-full"></div>
+                    <p id="histHorasTotal" class="text-xs text-inkmute mt-2"></p>
+                </div>
+            </div>
+
+            <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
+                <h3 class="font-display text-base font-bold text-ink">💹 Margem real por projeto</h3>
+                <p class="text-xs text-inkmute mt-0.5 mb-3">Lucro líquido ÷ valor vendido, já descontados custo e taxas do marketplace. Só projetos com vendas no período.</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left min-w-max">
+                        <thead class="text-inkmute text-[11px] uppercase"><tr class="border-b border-line"><th class="py-2 pr-3">Projeto</th><th class="py-2 pr-3 text-right">Vendas</th><th class="py-2 pr-3 text-right">Receita</th><th class="py-2 pr-3 text-right">Lucro</th><th class="py-2 text-right">Margem real</th></tr></thead>
+                        <tbody id="tabelaMargemProjetos" class="divide-y divide-line"></tbody>
+                    </table>
+                </div>
+            </div>
+
             <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
                 <div class="flex justify-between items-center mb-3">
                     <h3 class="font-display text-base font-bold text-ink">Peso Atual por Filamento</h3>
@@ -1227,6 +1279,136 @@
         }
 
         // --- DASHBOARD / VISÃO GERAL ---
+
+        // --- DASHBOARD: HISTÓRICO / EVOLUÇÃO ---
+        let dashDados = { projetos: [], vendas: [] };
+        const MESES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+        const escHtml = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+        function chaveMes(d) { return String(d || '').slice(0, 7); }   // 'YYYY-MM'
+        function rotuloMes(k) { const [a, m] = k.split('-'); return `${MESES_ABREV[parseInt(m, 10) - 1] || m}/${a.slice(2)}`; }
+        function listaMeses(vendas, projetos, n) {
+            const hoje = new Date();
+            const fim = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+            let inicio;
+            if (n > 0) inicio = new Date(fim.getFullYear(), fim.getMonth() - (n - 1), 1);
+            else {
+                const todas = [...vendas.map(v => chaveMes(v.data_venda || v.created_at)), ...projetos.map(p => chaveMes(p.data_conclusao || p.created_at))].filter(k => /^\d{4}-\d{2}$/.test(k)).sort();
+                if (todas.length === 0) return [];
+                const [a, m] = todas[0].split('-').map(Number);
+                inicio = new Date(a, m - 1, 1);
+                const limite = new Date(fim.getFullYear(), fim.getMonth() - 35, 1);   // no máximo 36 meses
+                if (inicio < limite) inicio = limite;
+            }
+            const out = [];
+            for (let d = new Date(inicio); d <= fim; d = new Date(d.getFullYear(), d.getMonth() + 1, 1)) {
+                out.push(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`);
+            }
+            return out;
+        }
+
+        // Gráfico de barras em SVG (sem bibliotecas). series: [{nome, cor, valores[], fmt}]
+        function desenharBarras(containerId, meses, series, fmtEixo) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            const W = 720, H = 240, ml = 46, mr = 8, mt = 10, mb = 28;
+            const max = Math.max(1e-9, ...series.flatMap(sr => sr.valores));
+            const passo = (() => { const bruto = max / 4; const mag = Math.pow(10, Math.floor(Math.log10(bruto || 1))); const f = bruto / mag; return (f <= 1 ? 1 : f <= 2 ? 2 : f <= 5 ? 5 : 10) * mag; })();
+            const topo = Math.ceil(max / passo) * passo || 1;
+            const iw = W - ml - mr, ih = H - mt - mb;
+            const gw = iw / Math.max(1, meses.length);
+            const bw = Math.max(3, Math.min(26, (gw * 0.7) / series.length));
+            let svg = `<svg viewBox="0 0 ${W} ${H}" class="w-full h-auto" role="img">`;
+            for (let v = 0; v <= topo + 1e-9; v += passo) {
+                const y = mt + ih - (v / topo) * ih;
+                svg += `<line x1="${ml}" y1="${y}" x2="${W - mr}" y2="${y}" stroke="#E3E6EB" stroke-width="1"/>`;
+                svg += `<text x="${ml - 6}" y="${y + 3}" text-anchor="end" font-size="10" fill="#6B7280">${fmtEixo(v)}</text>`;
+            }
+            const passoRot = meses.length > 14 ? Math.ceil(meses.length / 12) : 1;
+            meses.forEach((m, i) => {
+                const cx = ml + gw * i + gw / 2;
+                series.forEach((sr, k) => {
+                    const val = sr.valores[i];
+                    const h = Math.max(0, (val / topo) * ih);
+                    const x = cx - (bw * series.length) / 2 + k * bw;
+                    if (val > 0) svg += `<rect x="${x.toFixed(1)}" y="${(mt + ih - h).toFixed(1)}" width="${(bw - 1).toFixed(1)}" height="${h.toFixed(1)}" rx="2" fill="${sr.cor}"><title>${rotuloMes(m)} — ${sr.nome}: ${sr.fmt(val)}</title></rect>`;
+                });
+                if (i % passoRot === 0) svg += `<text x="${cx.toFixed(1)}" y="${H - 10}" text-anchor="middle" font-size="10" fill="#6B7280">${rotuloMes(m)}</text>`;
+            });
+            svg += '</svg>';
+            el.innerHTML = svg;
+        }
+
+        function renderizarHistoricoDashboard() {
+            const n = parseInt(document.getElementById('dashPeriodo').value, 10) || 0;
+            const { projetos, vendas } = dashDados;
+            const meses = listaMeses(vendas, projetos, n);
+            const setM = new Set(meses);
+            const vendasPeriodo = vendas.filter(v => setM.has(chaveMes(v.data_venda || v.created_at)));
+            const projPorId = {}; projetos.forEach(p => { projPorId[p.id] = p; });
+
+            // Totais e indicadores
+            const fat = vendasPeriodo.reduce((a, v) => a + (parseFloat(v.preco_venda_final) || 0), 0);
+            const luc = vendasPeriodo.reduce((a, v) => a + (parseFloat(v.lucro_liquido) || 0), 0);
+            let horasVendidas = 0, vendasComHoras = 0, lucroComHoras = 0;
+            vendasPeriodo.forEach(v => { const pr = projPorId[v.projeto_id]; if (pr && pr.tempo_total_min > 0) { horasVendidas += pr.tempo_total_min / 60; lucroComHoras += parseFloat(v.lucro_liquido) || 0; vendasComHoras++; } });
+            document.getElementById('histFat').innerText = brl(fat);
+            document.getElementById('histLucro').innerText = brl(luc);
+            document.getElementById('histMargem').innerText = fat > 0 ? `${(luc / fat * 100).toFixed(1).replace('.', ',')}%` : '—';
+            document.getElementById('histLucroHora').innerText = horasVendidas > 0 ? `${brl(lucroComHoras / horasVendidas)}/h` : '—';
+            document.getElementById('histTicket').innerText = vendasPeriodo.length ? `${vendasPeriodo.length} venda${vendasPeriodo.length === 1 ? '' : 's'} • ticket médio ${brl(fat / vendasPeriodo.length)}` : 'Nenhuma venda no período';
+
+            // Gráfico mensal
+            const fatMes = meses.map(m => vendasPeriodo.filter(v => chaveMes(v.data_venda || v.created_at) === m).reduce((a, v) => a + (parseFloat(v.preco_venda_final) || 0), 0));
+            const lucMes = meses.map(m => vendasPeriodo.filter(v => chaveMes(v.data_venda || v.created_at) === m).reduce((a, v) => a + (parseFloat(v.lucro_liquido) || 0), 0));
+            if (meses.length === 0 || vendasPeriodo.length === 0) {
+                document.getElementById('graficoMensal').innerHTML = '<p class="text-sm text-inkmute italic py-8 text-center">Registre vendas na aba Vendas para ver a evolução mensal aqui.</p>';
+            } else {
+                desenharBarras('graficoMensal', meses, [
+                    { nome: 'Faturamento', cor: '#2563EB', valores: fatMes, fmt: brl },
+                    { nome: 'Lucro líquido', cor: '#16A34A', valores: lucMes.map(x => Math.max(0, x)), fmt: (v) => brl(v) }
+                ], (v) => v >= 1000 ? `R$ ${(v / 1000).toFixed(v % 1000 === 0 ? 0 : 1).replace('.', ',')}k` : `R$ ${Math.round(v)}`);
+            }
+
+            // Peças mais vendidas
+            const grupos = {};
+            vendasPeriodo.forEach(v => {
+                const k = v.projeto_id || v.nome_projeto;
+                if (!grupos[k]) grupos[k] = { nome: v.nome_projeto || '(sem nome)', qtd: 0, receita: 0, lucro: 0, custo: 0 };
+                grupos[k].qtd++; grupos[k].receita += parseFloat(v.preco_venda_final) || 0; grupos[k].lucro += parseFloat(v.lucro_liquido) || 0;
+            });
+            const lista = Object.values(grupos);
+            const topQtd = [...lista].sort((a, b) => b.qtd - a.qtd || b.receita - a.receita).slice(0, 5);
+            const maxQtd = Math.max(1, ...topQtd.map(x => x.qtd));
+            document.getElementById('topPecas').innerHTML = topQtd.length ? topQtd.map((x, i) => `
+                <div>
+                    <div class="flex justify-between text-sm"><span class="font-semibold text-ink truncate pr-2">${i + 1}. ${escHtml(x.nome)}</span><span class="font-mono2 text-xs text-inkmute whitespace-nowrap">${x.qtd} venda${x.qtd === 1 ? '' : 's'} • ${brl(x.receita)}</span></div>
+                    <div class="h-2 bg-surface2 rounded-full mt-1"><div class="h-2 rounded-full bg-orange-500" style="width:${(x.qtd / maxQtd * 100).toFixed(0)}%"></div></div>
+                </div>`).join('') : '<p class="text-sm text-inkmute italic">Sem vendas no período.</p>';
+
+            // Horas de máquina por mês (projetos já impressos)
+            const impressos = projetos.filter(p => ['Montagem', 'Projeto Finalizado', 'Vendido'].includes(p.status) && p.tempo_total_min > 0);
+            const horasMes = meses.map(m => impressos.filter(p => chaveMes(p.data_conclusao || p.created_at) === m).reduce((a, p) => a + p.tempo_total_min / 60, 0));
+            const totalHoras = horasMes.reduce((a, b) => a + b, 0);
+            if (totalHoras <= 0) {
+                document.getElementById('graficoHoras').innerHTML = '<p class="text-sm text-inkmute italic py-8 text-center">Ainda não há projetos concluídos no período.</p>';
+                document.getElementById('histHorasTotal').innerText = '';
+            } else {
+                desenharBarras('graficoHoras', meses, [{ nome: 'Horas de máquina', cor: '#F59E0B', valores: horasMes, fmt: (v) => `${v.toFixed(1).replace('.', ',')} h` }], (v) => `${Math.round(v)}h`);
+                const dias = totalHoras / 24;
+                document.getElementById('histHorasTotal').innerText = `Total no período: ${totalHoras.toFixed(1).replace('.', ',')} h de impressão (${dias.toFixed(1).replace('.', ',')} dias seguidos de máquina).`;
+            }
+
+            // Margem real por projeto
+            const porLucro = [...lista].sort((a, b) => b.lucro - a.lucro).slice(0, 12);
+            document.getElementById('tabelaMargemProjetos').innerHTML = porLucro.length ? porLucro.map(x => {
+                const mg = x.receita > 0 ? x.lucro / x.receita * 100 : 0;
+                const cor = mg < 15 ? 'text-red-600' : mg < 30 ? 'text-amber-600' : 'text-green-600';
+                return `<tr><td class="py-2 pr-3 font-medium text-ink">${escHtml(x.nome)}</td><td class="py-2 pr-3 text-right font-mono2">${x.qtd}</td><td class="py-2 pr-3 text-right font-mono2">${brl(x.receita)}</td><td class="py-2 pr-3 text-right font-mono2 ${x.lucro < 0 ? 'text-red-600' : ''}">${brl(x.lucro)}</td><td class="py-2 text-right font-mono2 font-bold ${cor}">${mg.toFixed(1).replace('.', ',')}%</td></tr>`;
+            }).join('') : '<tr><td colspan="5" class="py-3 text-sm text-inkmute italic">Sem vendas no período.</td></tr>';
+        }
+        document.getElementById('dashPeriodo').addEventListener('change', renderizarHistoricoDashboard);
+
         async function carregarDashboard() {
             const [projSnap, vendSnap, estSnap] = await Promise.all([
                 colecao('projetos_3d').where('user_id', '==', usuarioAtual.uid).get(),
@@ -1247,6 +1429,9 @@
             document.getElementById('dashFaturamento').innerText = `R$ ${faturamento.toFixed(2)}`;
             document.getElementById('dashLucro').innerText = `R$ ${lucro.toFixed(2)}`;
             document.getElementById('dashEstoque').innerText = `R$ ${investEstoque.toFixed(2)}`;
+
+            dashDados = { projetos: projetos || [], vendas: vendas || [] };
+            try { renderizarHistoricoDashboard(); } catch (e) { console.error('histórico', e); }
 
             atualizarTabelaEstoqueDashboard();
         }
