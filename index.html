@@ -64,10 +64,11 @@
             border-left: 3px solid #EA580C;
             color: #111827;
         }
-        #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink { color: #111827 !important; }
+        #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink, #view-pedidos h2, #view-pedidos .text-ink { color: #111827 !important; }
         .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid #E3E6EB; background: #F1F2F5; color: #4B5563; transition: all .15s; }
         .hist-tab:hover { background: #E5E7EB; }
         .hist-tab.ativo { background: #EA580C; border-color: #EA580C; color: #FFFFFF; }
+        .ped-btn { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; }
         .btn-cta {
             background: linear-gradient(135deg, #EA580C, #C2410C);
             color: #FFFFFF;
@@ -173,7 +174,8 @@
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-rose-100 flex items-center justify-center text-xl">📊</div><h3 class="font-display font-bold text-lg mt-4">Dashboard</h3><p class="text-sm text-inkmute mt-2">Visão geral do negócio e tabela com o peso atual de cada filamento, com alerta de cores para estoque baixo.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-xl">🔒</div><h3 class="font-display font-bold text-lg mt-4">Dados só seus</h3><p class="text-sm text-inkmute mt-2">Cada usuário tem a própria conta e só enxerga as próprias informações. Ninguém vê os dados de outro.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-teal-100 flex items-center justify-center text-xl">📱</div><h3 class="font-display font-bold text-lg mt-4">Funciona no celular</h3><p class="text-sm text-inkmute mt-2">Layout pensado para telas pequenas. Consulte estoque e registre vendas de onde estiver.</p></div>
-                    <div class="rounded-2xl p-6 bg-gradient-to-br from-blue-600 to-sky-500 text-white flex flex-col justify-between"><div><div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl">🎁</div><h3 class="font-display font-bold text-lg mt-4">Teste 5 dias grátis</h3><p class="text-sm text-white/85 mt-2">Crie sua conta, use todas as funcionalidades e só escolha um plano se gostar.</p></div><button onclick="abrirAuth('cadastro')" class="mt-5 bg-white text-blue-700 font-bold text-sm py-2.5 rounded-full hover:bg-blue-50 transition">Começar grátis ›</button></div>
+                    <div class="border-2 border-blue-600 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white relative"><span class="absolute -top-3 right-4 bg-blue-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full">NOVO</span><div class="w-11 h-11 rounded-xl bg-sky-100 flex items-center justify-center text-xl">📋</div><h3 class="font-display font-bold text-lg mt-4">Pedidos e fila de impressão</h3><p class="text-sm text-inkmute mt-2">Registre cliente, prazo e sinal pago. A fila mostra o que imprimir primeiro, avisa os atrasos e, ao entregar, lança a venda e abate o estoque sozinho.</p></div>
+                    <div class="rounded-2xl p-6 sm:col-span-2 lg:col-span-3 bg-gradient-to-br from-blue-600 to-sky-500 text-white flex flex-col justify-between"><div><div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl">🎁</div><h3 class="font-display font-bold text-lg mt-4">Teste 5 dias grátis</h3><p class="text-sm text-white/85 mt-2">Crie sua conta, use todas as funcionalidades e só escolha um plano se gostar.</p></div><button onclick="abrirAuth('cadastro')" class="mt-5 bg-white text-blue-700 font-bold text-sm py-2.5 rounded-full hover:bg-blue-50 transition">Começar grátis ›</button></div>
                 </div>
             </div>
         </section>
@@ -456,6 +458,11 @@
                     <span class="whitespace-nowrap label-texto">Portfólios (Clientes)</span>
                 </button>
 
+                <button onclick="mudarAba('pedidos')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="pedidos">
+                    <span class="text-lg">📋</span>
+                    <span class="whitespace-nowrap label-texto">Pedidos e Fila</span>
+                </button>
+
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas">
                     <span class="text-lg">💰</span>
                     <span class="whitespace-nowrap label-texto">Vendas</span>
@@ -502,6 +509,7 @@
                 <h2 class="font-display text-2xl font-bold text-ink">Visão Geral</h2>
                 <p class="text-sm text-inkmute mt-1">Resumo rápido da sua operação de impressão 3D.</p>
             </div>
+            <div id="dashPedidosAviso" class="hidden bg-orange-50 border border-orange-200 text-sm text-ink rounded-xl px-4 py-3"></div>
 
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 <div class="bg-surface p-5 rounded-2xl border border-line shadow-sm">
@@ -798,6 +806,71 @@
                     </button>
                 </div>
                 <div id="listaPortfolioClientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+            </div>
+        </div>
+
+        <div id="view-pedidos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
+            <div class="bg-surface p-5 rounded-2xl shadow-sm border border-line h-fit lg:col-span-1 space-y-3">
+                <h2 id="pedTituloForm" class="font-display text-lg font-bold text-ink border-b border-line pb-2">Novo pedido</h2>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-inkmute">Cliente</label>
+                    <input type="text" id="pedCliente" placeholder="Ex: Maria Souza" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-inkmute">Contato (WhatsApp, opcional)</label>
+                    <input type="text" id="pedContato" placeholder="(11) 99999-9999" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-inkmute">Projeto</label>
+                    <select id="pedProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"><option value="">-- Escolha um projeto --</option></select>
+                    <p id="pedInfoProjeto" class="text-[11px] text-inkmute mt-1"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-inkmute">Quantidade</label>
+                        <input type="number" id="pedQtd" min="1" value="1" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-inkmute">Valor unitário (R$)</label>
+                        <input type="number" id="pedPreco" step="0.01" placeholder="0.00" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-inkmute">Prazo de entrega</label>
+                        <input type="date" id="pedPrazo" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium mb-1 text-inkmute">Sinal pago (R$)</label>
+                        <input type="number" id="pedSinal" step="0.01" placeholder="0.00" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                    </div>
+                </div>
+                <p id="pedResumoValor" class="text-xs text-inkmute bg-surface2 rounded-lg px-3 py-2">Total: R$ 0,00 • Falta receber: R$ 0,00</p>
+                <div>
+                    <label class="block text-xs font-medium mb-1 text-inkmute">Observações (cor, acabamento…)</label>
+                    <textarea id="pedObs" rows="2" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"></textarea>
+                </div>
+                <div class="flex gap-2">
+                    <button id="btnSalvarPedido" class="flex-1 btn-cta font-bold py-2.5 rounded-xl text-sm">📋 Salvar pedido</button>
+                    <button id="btnCancelarEdicaoPedido" class="hidden px-4 bg-surface2 border border-line rounded-xl text-sm text-ink">Cancelar</button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 space-y-4">
+                <div>
+                    <h2 class="font-display text-2xl font-bold text-ink">Pedidos e fila de impressão</h2>
+                    <p class="text-sm text-inkmute mt-1">A fila mostra primeiro o que tem o prazo mais curto.</p>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Em aberto</p><p id="pedKpiAbertos" class="font-mono2 text-lg font-bold text-ink">0</p></div>
+                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Atrasados</p><p id="pedKpiAtrasados" class="font-mono2 text-lg font-bold text-red-600">0</p></div>
+                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">A receber</p><p id="pedKpiReceber" class="font-mono2 text-lg font-bold text-blue-600">R$ 0,00</p></div>
+                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Horas de fila</p><p id="pedKpiHoras" class="font-mono2 text-lg font-bold text-amber-600">0 h</p></div>
+                </div>
+                <div class="flex gap-2 overflow-x-auto" id="pedFiltros">
+                    <button type="button" data-filtro="fila" class="hist-tab ativo">Fila de produção</button>
+                    <button type="button" data-filtro="entregues" class="hist-tab">Entregues</button>
+                    <button type="button" data-filtro="todos" class="hist-tab">Todos</button>
+                </div>
+                <div id="listaPedidos" class="space-y-3"></div>
             </div>
         </div>
 
@@ -1283,6 +1356,7 @@
             if (abaDestino === 'inserir-impressao') carregarProjetos3d();
             if (abaDestino === 'portfolio-cliente') renderizerPortfolioCliente();
             if (abaDestino === 'vendas') carregarJanelaVendas();
+            if (abaDestino === 'pedidos') carregarPedidos();
             if (abaDestino === 'filamentos') carregarFilamentos();
             if (abaDestino === 'admin') carregarAdminUsuarios();
         }
@@ -1448,6 +1522,7 @@
 
             dashDados = { projetos: projetos || [], vendas: vendas || [] };
             try { renderizarHistoricoDashboard(); } catch (e) { console.error('histórico', e); }
+            atualizarAvisoPedidosDashboard();
 
             atualizarTabelaEstoqueDashboard();
         }
@@ -1914,6 +1989,40 @@
             vendaBoxInfo.classList.remove('hidden');
         });
 
+        // Registra UMA venda (uma unidade) de um projeto: calcula taxas/lucro, baixa estoque quando há peça pronta.
+        async function lancarVendaUnidade(proj, cliente, precoFinal, dataV, pedidoId) {
+            const custoP = parseFloat(proj.custo_total) || 0;
+            const canalProj = proj.canal_venda;
+            const taxasVenda = (canalProj && NOME_CANAL[canalProj]) ? taxasDoCanal(canalProj, precoFinal).total : precoFinal * ((parseFloat(proj.taxa_percentual) || 0) / 100);
+            const taxaVenda = precoFinal > 0 ? taxasVenda / precoFinal * 100 : 0;
+            const lucroL = precoFinal - taxasVenda - custoP;
+            const estoqueAtual = parseInt(proj.quantidade_estoque) || 0;
+            const baixouEstoque = estoqueAtual > 0;
+            const novoEstoque = baixouEstoque ? estoqueAtual - 1 : 0;
+            const doc = {
+                estoque_baixado: baixouEstoque,
+                projeto_id: proj.id,
+                nome_projeto: proj.nome_projeto,
+                cliente: cliente,
+                preco_venda_final: precoFinal,
+                taxa_percentual: taxaVenda,
+                taxas_canal_valor: taxasVenda,
+                canal_venda: canalProj || 'direta',
+                custo_producao_retido: custoP,
+                lucro_liquido: lucroL,
+                data_venda: dataV,
+                user_id: usuarioAtual.uid,
+                created_at: new Date().toISOString()
+            };
+            if (pedidoId) doc.pedido_id = pedidoId;
+            await colecao('vendas_3d').add(doc);
+            const upd = baixouEstoque ? { quantidade_estoque: novoEstoque } : {};
+            if (novoEstoque === 0) upd.status = 'Vendido';
+            await colecao('projetos_3d').doc(proj.id).update(upd);
+            proj.quantidade_estoque = novoEstoque;
+            if (upd.status) proj.status = upd.status;
+        }
+
         btnRegistrarVenda.addEventListener('click', async () => {
             const projId = vendaSelectProjeto.value;
             const cliente = vendaCliente.value.trim() || 'Cliente Geral';
@@ -1934,28 +2043,7 @@
             btnRegistrarVenda.disabled = true;
             
             try {
-                const estoqueAtual = parseInt(proj.quantidade_estoque) || 0;
-                const baixouEstoque = estoqueAtual > 0;
-                const novoEstoque = baixouEstoque ? estoqueAtual - 1 : 0;
-                await colecao('vendas_3d').add({
-                    estoque_baixado: baixouEstoque,
-                    projeto_id: projId,
-                    nome_projeto: proj.nome_projeto,
-                    cliente: cliente,
-                    preco_venda_final: precoFinal,
-                    taxa_percentual: taxaVenda,
-                    taxas_canal_valor: taxasVenda,
-                    canal_venda: canalProj || 'direta',
-                    custo_producao_retido: custoP,
-                    lucro_liquido: lucroL,
-                    data_venda: dataV,
-                    user_id: usuarioAtual.uid,
-                    created_at: new Date().toISOString()
-                });
-                const upd = baixouEstoque ? { quantidade_estoque: novoEstoque } : {};
-                // Só marca como Vendido quando não restam peças prontas em estoque
-                if (novoEstoque === 0) upd.status = 'Vendido';
-                await colecao('projetos_3d').doc(projId).update(upd);
+                await lancarVendaUnidade(proj, cliente, precoFinal, dataV, null);
             } catch (error) {
                 alert('Erro: ' + error.message);
                 btnRegistrarVenda.disabled = false;
@@ -2023,6 +2111,223 @@
                 catch (error) { alert(error.message); }
             }
         };
+
+        // --- PEDIDOS E FILA DE IMPRESSÃO ---
+        const pedCliente = document.getElementById('pedCliente');
+        const pedContato = document.getElementById('pedContato');
+        const pedProjeto = document.getElementById('pedProjeto');
+        const pedInfoProjeto = document.getElementById('pedInfoProjeto');
+        const pedQtd = document.getElementById('pedQtd');
+        const pedPreco = document.getElementById('pedPreco');
+        const pedPrazo = document.getElementById('pedPrazo');
+        const pedSinal = document.getElementById('pedSinal');
+        const pedResumoValor = document.getElementById('pedResumoValor');
+        const pedObs = document.getElementById('pedObs');
+        const btnSalvarPedido = document.getElementById('btnSalvarPedido');
+        const btnCancelarEdicaoPedido = document.getElementById('btnCancelarEdicaoPedido');
+        const pedTituloForm = document.getElementById('pedTituloForm');
+        const pedKpiAbertos = document.getElementById('pedKpiAbertos');
+        const pedKpiAtrasados = document.getElementById('pedKpiAtrasados');
+        const pedKpiReceber = document.getElementById('pedKpiReceber');
+        const pedKpiHoras = document.getElementById('pedKpiHoras');
+        const listaPedidos = document.getElementById('listaPedidos');
+        let pedidosCache = [];
+        let filtroPedidos = 'fila';
+        let pedidoEditandoId = null;
+        const STATUS_ATIVOS = ['Aguardando', 'Imprimindo', 'Pronto'];
+        const COR_STATUS = { Aguardando: 'bg-gray-100 text-gray-700', Imprimindo: 'bg-blue-100 text-blue-700', Pronto: 'bg-green-100 text-green-700', Entregue: 'bg-emerald-600 text-white', Cancelado: 'bg-red-100 text-red-700' };
+        const hojeISO = () => new Date().toLocaleDateString('sv-SE');
+        function diasAte(prazo) {
+            if (!prazo) return null;
+            const [a, m, d] = prazo.split('-').map(Number);
+            const alvo = new Date(a, m - 1, d), h = new Date(); h.setHours(0, 0, 0, 0);
+            return Math.round((alvo - h) / 86400000);
+        }
+        const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
+
+        function atualizarResumoFormPedido() {
+            const total = (parseInt(pedQtd.value) || 0) * (parseFloat(pedPreco.value) || 0);
+            const falta = Math.max(0, total - (parseFloat(pedSinal.value) || 0));
+            pedResumoValor.innerText = `Total: ${brl(total)} • Falta receber: ${brl(falta)}`;
+        }
+        ['input', 'change'].forEach(ev => [pedQtd, pedPreco, pedSinal].forEach(el => el.addEventListener(ev, atualizarResumoFormPedido)));
+        pedProjeto.addEventListener('change', () => {
+            const pr = projetosCacheLocal.find(x => x.id === pedProjeto.value);
+            if (!pr) { pedInfoProjeto.innerText = ''; return; }
+            if (!pedPreco.value) pedPreco.value = (parseFloat(pr.preco_venda_total) || 0).toFixed(2);
+            const est = parseInt(pr.quantidade_estoque) || 0;
+            pedInfoProjeto.innerText = est > 0 ? `📦 ${est} peça(s) pronta(s) em estoque — a entrega abate do estoque.` : 'Sem estoque pronto: será impresso sob encomenda.';
+            atualizarResumoFormPedido();
+        });
+
+        function limparFormPedido() {
+            pedidoEditandoId = null;
+            [pedCliente, pedContato, pedPreco, pedPrazo, pedSinal, pedObs].forEach(el => el.value = '');
+            pedQtd.value = 1; pedProjeto.value = ''; pedInfoProjeto.innerText = '';
+            pedTituloForm.innerText = 'Novo pedido';
+            btnSalvarPedido.innerText = '📋 Salvar pedido';
+            btnCancelarEdicaoPedido.classList.add('hidden');
+            atualizarResumoFormPedido();
+        }
+        btnCancelarEdicaoPedido.addEventListener('click', limparFormPedido);
+
+        btnSalvarPedido.addEventListener('click', async () => {
+            const pr = projetosCacheLocal.find(x => x.id === pedProjeto.value);
+            const cliente = pedCliente.value.trim();
+            const qtd = parseInt(pedQtd.value) || 0;
+            const preco = parseFloat(pedPreco.value) || 0;
+            if (!cliente || !pr || qtd < 1 || preco <= 0) return alert('Informe cliente, projeto, quantidade e valor unitário.');
+            const dados = {
+                cliente, contato: pedContato.value.trim(),
+                projeto_id: pr.id, nome_projeto: pr.nome_projeto,
+                quantidade: qtd, preco_unitario: preco,
+                prazo: pedPrazo.value || '', sinal_pago: parseFloat(pedSinal.value) || 0,
+                observacoes: pedObs.value.trim()
+            };
+            btnSalvarPedido.disabled = true;
+            try {
+                if (pedidoEditandoId) await colecao('pedidos_3d').doc(pedidoEditandoId).update(dados);
+                else await colecao('pedidos_3d').add({ ...dados, status: 'Aguardando', user_id: usuarioAtual.uid, created_at: new Date().toISOString() });
+                limparFormPedido();
+                await carregarPedidos();
+            } catch (e) { alert('Erro ao salvar pedido: ' + e.message); }
+            btnSalvarPedido.disabled = false;
+        });
+
+        document.querySelectorAll('#pedFiltros .hist-tab').forEach(b => b.addEventListener('click', () => {
+            filtroPedidos = b.dataset.filtro;
+            document.querySelectorAll('#pedFiltros .hist-tab').forEach(x => x.classList.toggle('ativo', x === b));
+            renderizarPedidos();
+        }));
+
+        async function carregarPedidos() {
+            if (!projetosCacheLocal.length) { try { await carregarProjetos3d(); } catch (e) {} }
+            const atual = pedProjeto.value;
+            pedProjeto.innerHTML = '<option value="">-- Escolha um projeto --</option>' + projetosCacheLocal.map(p => `<option value="${p.id}">${escHtml(p.nome_projeto)}</option>`).join('');
+            pedProjeto.value = atual;
+            try {
+                const snap = await colecao('pedidos_3d').where('user_id', '==', usuarioAtual.uid).get();
+                pedidosCache = snapshotParaArray(snap) || [];
+            } catch (e) {
+                listaPedidos.innerHTML = '<p class="text-sm text-red-600">Não foi possível carregar os pedidos: ' + escHtml(e.message) + '</p>';
+                return;
+            }
+            renderizarPedidos();
+        }
+
+        function renderizarPedidos() {
+            const ativos = pedidosCache.filter(o => STATUS_ATIVOS.includes(o.status));
+            // KPIs
+            let atras = 0, receber = 0, minutos = 0;
+            ativos.forEach(o => {
+                const d = diasAte(o.prazo); if (d !== null && d < 0) atras++;
+                receber += Math.max(0, (o.quantidade || 0) * (o.preco_unitario || 0) - (o.sinal_pago || 0));
+                if (o.status !== 'Pronto') { const pr = projetosCacheLocal.find(x => x.id === o.projeto_id); minutos += ((pr && pr.tempo_total_min) || 0) * (o.quantidade || 0); }
+            });
+            pedKpiAbertos.innerText = ativos.length; pedKpiAtrasados.innerText = atras;
+            pedKpiReceber.innerText = brl(receber); pedKpiHoras.innerText = `${(minutos / 60).toFixed(1).replace('.', ',')} h`;
+
+            let lista;
+            if (filtroPedidos === 'fila') {
+                lista = [...ativos].sort((a, b) => (a.prazo || '9999-99-99').localeCompare(b.prazo || '9999-99-99') || (a.created_at || '').localeCompare(b.created_at || ''));
+            } else if (filtroPedidos === 'entregues') {
+                lista = pedidosCache.filter(o => o.status === 'Entregue').sort((a, b) => (b.data_entrega || '').localeCompare(a.data_entrega || ''));
+            } else {
+                lista = [...pedidosCache].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+            }
+            if (!lista.length) {
+                listaPedidos.innerHTML = '<div class="bg-surface rounded-2xl border border-line p-8 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Cadastre um pedido ao lado.' : 'Nada por aqui ainda.') + '</div>';
+                return;
+            }
+            listaPedidos.innerHTML = lista.map((o, i) => {
+                const total = (o.quantidade || 0) * (o.preco_unitario || 0);
+                const falta = Math.max(0, total - (o.sinal_pago || 0));
+                const d = ativos.includes(o) ? diasAte(o.prazo) : null;
+                let prazoHtml = o.prazo ? `<span class="text-inkmute">Prazo ${fmtData(o.prazo)}</span>` : '<span class="text-inkmute">Sem prazo</span>';
+                if (d !== null) {
+                    if (d < 0) prazoHtml = `<span class="font-bold text-red-600">⚠ Atrasado ${-d} dia${d === -1 ? '' : 's'} (${fmtData(o.prazo)})</span>`;
+                    else if (d === 0) prazoHtml = '<span class="font-bold text-amber-600">Entrega hoje</span>';
+                    else if (d <= 3) prazoHtml = `<span class="font-bold text-amber-600">Entrega em ${d} dia${d === 1 ? '' : 's'} (${fmtData(o.prazo)})</span>`;
+                }
+                const pr = projetosCacheLocal.find(x => x.id === o.projeto_id);
+                const est = pr ? (parseInt(pr.quantidade_estoque) || 0) : 0;
+                const horas = pr && pr.tempo_total_min ? ((pr.tempo_total_min * o.quantidade) / 60).toFixed(1).replace('.', ',') + ' h de impressão' : '';
+                let botoes = '';
+                if (o.status === 'Aguardando') botoes = `<button onclick="avancarPedido('${o.id}','Imprimindo')" class="ped-btn bg-blue-600 text-white">▶ Iniciar impressão</button><button onclick="avancarPedido('${o.id}','Pronto')" class="ped-btn bg-surface2 border border-line text-ink">⏩ Já está pronto</button>`;
+                else if (o.status === 'Imprimindo') botoes = `<button onclick="avancarPedido('${o.id}','Pronto')" class="ped-btn bg-green-600 text-white">✅ Marcar pronto</button>`;
+                else if (o.status === 'Pronto') botoes = `<button onclick="entregarPedido('${o.id}')" class="ped-btn bg-emerald-600 text-white">📦 Entregar e lançar venda</button>`;
+                else if (o.status === 'Cancelado') botoes = `<button onclick="avancarPedido('${o.id}','Aguardando')" class="ped-btn bg-surface2 border border-line text-ink">↩ Reabrir</button>`;
+                const podeEditar = STATUS_ATIVOS.includes(o.status);
+                return `<div class="bg-surface rounded-2xl border border-line p-4 shadow-sm">
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="text-sm font-bold text-ink">${filtroPedidos === 'fila' ? `<span class="text-inkmute font-mono2 mr-1">#${i + 1}</span>` : ''}${escHtml(o.nome_projeto)} <span class="text-inkmute font-normal">× ${o.quantidade}</span></p>
+                            <p class="text-xs text-inkmute mt-0.5">${escHtml(o.cliente)}${o.contato ? ' • ' + escHtml(o.contato) : ''}</p>
+                        </div>
+                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full ${COR_STATUS[o.status] || ''}">${o.status}</span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-2">${prazoHtml}<span class="text-inkmute">Total ${brl(total)}</span><span class="${falta > 0 ? 'text-blue-600 font-semibold' : 'text-green-600 font-semibold'}">${falta > 0 ? 'Falta ' + brl(falta) : 'Pago'}${o.sinal_pago > 0 && falta > 0 ? ' (sinal ' + brl(o.sinal_pago) + ')' : ''}</span>${horas ? `<span class="text-inkmute">⏱ ${horas}</span>` : ''}${est >= o.quantidade && STATUS_ATIVOS.includes(o.status) ? '<span class="text-green-600">📦 tem em estoque</span>' : ''}</div>
+                    ${o.observacoes ? `<p class="text-xs text-inkmute mt-2 italic">${escHtml(o.observacoes)}</p>` : ''}
+                    <div class="flex flex-wrap items-center gap-2 mt-3">${botoes}
+                        ${podeEditar ? `<button onclick="editarPedido('${o.id}')" class="text-[11px] text-sky-600 font-semibold ml-auto">✏️ Editar</button><button onclick="avancarPedido('${o.id}','Cancelado')" class="text-[11px] text-amber-600 font-semibold">Cancelar</button>` : '<span class="ml-auto"></span>'}
+                        <button onclick="excluirPedido('${o.id}')" class="text-[11px] text-red-600">Excluir</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        window.avancarPedido = async function(id, novo) {
+            try { await colecao('pedidos_3d').doc(id).update({ status: novo }); await carregarPedidos(); }
+            catch (e) { alert(e.message); }
+        };
+        window.editarPedido = function(id) {
+            const o = pedidosCache.find(x => x.id === id); if (!o) return;
+            pedidoEditandoId = id;
+            pedCliente.value = o.cliente || ''; pedContato.value = o.contato || '';
+            pedProjeto.value = o.projeto_id || ''; pedQtd.value = o.quantidade || 1;
+            pedPreco.value = o.preco_unitario || ''; pedPrazo.value = o.prazo || '';
+            pedSinal.value = o.sinal_pago || ''; pedObs.value = o.observacoes || '';
+            pedTituloForm.innerText = 'Editar pedido';
+            btnSalvarPedido.innerText = '💾 Salvar alterações';
+            btnCancelarEdicaoPedido.classList.remove('hidden');
+            atualizarResumoFormPedido();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+        window.excluirPedido = async function(id) {
+            if (!confirm('Excluir este pedido? Vendas já lançadas não são apagadas.')) return;
+            try { await colecao('pedidos_3d').doc(id).delete(); if (pedidoEditandoId === id) limparFormPedido(); await carregarPedidos(); }
+            catch (e) { alert(e.message); }
+        };
+        window.entregarPedido = async function(id) {
+            const o = pedidosCache.find(x => x.id === id); if (!o) return;
+            if (o.venda_registrada) return alert('A venda deste pedido já foi lançada.');
+            const pr = projetosCacheLocal.find(x => x.id === o.projeto_id);
+            if (!pr) return alert('O projeto deste pedido não existe mais. Não dá para lançar a venda automaticamente.');
+            const total = o.quantidade * o.preco_unitario;
+            if (!confirm(`Entregar o pedido de ${o.cliente} e lançar ${o.quantidade} venda(s) de ${brl(o.preco_unitario)} (total ${brl(total)})?\nPeças prontas em estoque serão abatidas.`)) return;
+            try {
+                const hoje = hojeISO();
+                for (let i = 0; i < o.quantidade; i++) await lancarVendaUnidade(pr, o.cliente, o.preco_unitario, hoje, o.id);
+                await colecao('pedidos_3d').doc(id).update({ status: 'Entregue', venda_registrada: true, data_entrega: hoje });
+                await carregarPedidos();
+                carregarProjetos3d();
+            } catch (e) { alert('Erro ao lançar a venda: ' + e.message + '\nConfira a aba Vendas antes de tentar de novo.'); await carregarPedidos(); }
+        };
+
+        // Aviso no dashboard: pedidos atrasados / próximos
+        async function atualizarAvisoPedidosDashboard() {
+            const box = document.getElementById('dashPedidosAviso');
+            if (!box) return;
+            try {
+                const snap = await colecao('pedidos_3d').where('user_id', '==', usuarioAtual.uid).get();
+                const ativos = (snapshotParaArray(snap) || []).filter(o => STATUS_ATIVOS.includes(o.status));
+                const atras = ativos.filter(o => { const d = diasAte(o.prazo); return d !== null && d < 0; }).length;
+                const prox = ativos.filter(o => { const d = diasAte(o.prazo); return d !== null && d >= 0 && d <= 3; }).length;
+                if (!ativos.length) { box.classList.add('hidden'); return; }
+                box.innerHTML = `📋 <strong>${ativos.length}</strong> pedido(s) na fila` + (atras ? ` • <strong class="text-red-600">${atras} atrasado(s)</strong>` : '') + (prox ? ` • <strong class="text-amber-600">${prox} para os próximos 3 dias</strong>` : '') + ` <button onclick="mudarAba('pedidos')" class="ml-2 text-orange-600 font-semibold hover:underline">Ver fila →</button>`;
+                box.classList.remove('hidden');
+            } catch (e) { box.classList.add('hidden'); }
+        }
 
         // --- VISUALIZAÇÃO PRÉVIA DA IMAGEM (a partir do link colado) ---
         projImagemUrl.addEventListener('input', function() {

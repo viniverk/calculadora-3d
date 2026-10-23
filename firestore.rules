@@ -122,6 +122,13 @@ service cloud.firestore {
       allow update, delete: if ehDono(resource.data) && temAcesso();
     }
 
+    // Pedidos de clientes / fila de impressão: só o próprio usuário, com acesso vigente
+    match /pedidos_3d/{id} {
+      allow read: if ehDono(resource.data) && temAcesso();
+      allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
+      allow update, delete: if ehDono(resource.data) && temAcesso();
+    }
+
     match /catalogo_modelos/{id} {
       allow read: if ehDono(resource.data) && temAcesso();
       allow create: if temAcesso() && request.resource.data.user_id == request.auth.uid;
