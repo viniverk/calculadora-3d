@@ -625,6 +625,18 @@
                     </div>
                 </div>
 
+                <div class="grid sm:grid-cols-2 gap-3 items-end">
+                    <div>
+                        <label class="block text-[10px] uppercase font-bold text-sky-600 mb-0.5">Canal de venda</label>
+                        <select id="projCanalVenda" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
+                            <option value="direta">Venda direta (sem taxa)</option>
+                            <option value="marketplace">Marketplace (com taxa)</option>
+                        </select>
+                    </div>
+                    <button id="btnRecalcularCustos" type="button" class="bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink text-xs font-bold py-2 px-3 rounded transition">♻️ Recalcular peças com os custos atuais</button>
+                </div>
+                <p id="resumoDetalheCustos" class="text-xs text-inkmute"></p>
+
                 <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 pt-2 border-t border-line">
                     <div>
                         <span class="text-xs text-inkmute uppercase font-bold block">Preço Final de Venda Sugerido:</span>
@@ -832,6 +844,23 @@
         </div>
 
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2 mb-4">
+                    <h2 class="font-display text-xl font-semibold text-amber-600">⚙️ Custos do seu negócio</h2>
+                    <span class="text-xs text-inkmute">Usados no cálculo de custo e preço de todos os projetos novos</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Energia (R$ por kWh)</label><input type="number" step="0.01" min="0" id="cfgKwh" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Consumo da impressora (W)</label><input type="number" step="1" min="0" id="cfgWatts" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Valor da impressora (R$)</label><input type="number" step="1" min="0" id="cfgValorImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Vida útil estimada (horas)</label><input type="number" step="100" min="1" id="cfgVidaImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Mão de obra (R$ por hora)</label><input type="number" step="0.1" min="0" id="cfgMaoObra" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Embalagem + frete (R$ por projeto)</label><input type="number" step="0.1" min="0" id="cfgFixoProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Taxa do marketplace (%)</label><input type="number" step="0.5" min="0" max="90" id="cfgTaxaMkt" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div class="flex items-end"><button id="btnSalvarConfigCustos" class="w-full btn-cta font-bold py-2 rounded-lg text-sm transition">Salvar custos</button></div>
+                </div>
+                <p id="cfgResumoHora" class="text-xs text-inkmute mt-3"></p>
+            </div>
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-4 text-teal2 border-b border-line pb-2">Orçamento / Modelo Estimado</h2>
                 <div class="space-y-4">
@@ -857,7 +886,7 @@
                     </div>
                     <div class="bg-surface2/50 p-4 rounded-lg border border-line">
                         <p id="labelCustoInsumo" class="text-xs text-inkmute mb-1">Base de Custo: R$ 0,1200 /g</p>
-                        <p class="text-xs text-inkmute mb-2">Taxa operadora de máquina: R$ 1,50 / hora</p>
+                        <p id="labelCustoHora" class="text-xs text-inkmute mb-2">Custo de máquina por hora: R$ 1,50</p>
                         <hr class="border-line my-2">
                         <div class="flex justify-between items-center">
                             <span class="font-bold text-sm">Preço Sugerido (Lucro 3x):</span>
@@ -959,6 +988,7 @@
         const projLink3mf = document.getElementById('projLink3mf');
         const projVisibilidadePortfolio = document.getElementById('projVisibilidadePortfolio');
         const projQuantidadeEstoque = document.getElementById('projQuantidadeEstoque');
+        const projCanalVenda = document.getElementById('projCanalVenda');
 
         const pecaNome = document.getElementById('pecaNome');
         const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
@@ -1565,6 +1595,7 @@
                 if (perfilOk === 'completar') { mostrarTelaCompletarCadastro(); return; }
                 if (!usuarioTemAcesso()) { mostrarTelaAcessoPendente(); return; }
                 mostrarApp();
+                carregarConfigCustos();
                 carregarDashboard();
                 carregarFilamentos();
                 carregarModelos();
@@ -1632,7 +1663,8 @@
             }
 
             const custoP = parseFloat(proj.custo_total);
-            const lucroL = precoFinal - custoP;
+            const taxaVenda = parseFloat(proj.taxa_percentual) || 0;
+            const lucroL = precoFinal * (1 - taxaVenda / 100) - custoP;
             btnRegistrarVenda.disabled = true;
             
             try {
@@ -1645,6 +1677,7 @@
                     nome_projeto: proj.nome_projeto,
                     cliente: cliente,
                     preco_venda_final: precoFinal,
+                    taxa_percentual: taxaVenda,
                     custo_producao_retido: custoP,
                     lucro_liquido: lucroL,
                     data_venda: dataV,
@@ -1737,6 +1770,91 @@
             previewContainer.classList.add('hidden');
         });
 
+        // --- CUSTOS DO NEGÓCIO (configuráveis por usuário) ---
+        const CONFIG_PADRAO = { custo_kwh: 0.90, potencia_w: 150, impressora_valor: 0, impressora_vida_h: 5000, mao_obra_hora: 1.50, custo_fixo_projeto: 0, taxa_marketplace: 0 };
+        let configCustos = { ...CONFIG_PADRAO };
+        const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
+
+        function custoHoraMaquina() {
+            const c = configCustos;
+            const energia = (num(c.potencia_w, 0) / 1000) * num(c.custo_kwh, 0);
+            const desgaste = num(c.impressora_vida_h, 0) > 0 ? num(c.impressora_valor, 0) / num(c.impressora_vida_h, 1) : 0;
+            const mao = num(c.mao_obra_hora, 0);
+            return { energia, desgaste, mao, total: energia + desgaste + mao };
+        }
+        function calcularCustoPeca(pesoG, horas, custoPorGrama) {
+            const h = custoHoraMaquina();
+            const filamento = pesoG * custoPorGrama;
+            const energia = horas * h.energia, desgaste = horas * h.desgaste, mao_obra = horas * h.mao;
+            return { total: filamento + energia + desgaste + mao_obra, detalhe: { filamento, energia, desgaste, mao_obra } };
+        }
+        // Financeiro do projeto: custo das peças + custo fixo; preço cobre a taxa do canal de venda
+        function calcularFinanceiroProjeto(custoPecas, margemPct, canal) {
+            const fixo = num(configCustos.custo_fixo_projeto, 0);
+            const taxa = canal === 'marketplace' ? Math.min(num(configCustos.taxa_marketplace, 0), 90) : 0;
+            const custoTotal = custoPecas + fixo;
+            const preco = custoTotal * (1 + margemPct / 100) / (1 - taxa / 100);
+            const taxaValor = preco * taxa / 100;
+            return { fixo, taxa, custoTotal, preco, taxaValor, lucroLiquido: preco - taxaValor - custoTotal };
+        }
+        const brl = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
+
+        function preencherConfigCustos() {
+            const c = configCustos;
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+            set('cfgKwh', c.custo_kwh); set('cfgWatts', c.potencia_w); set('cfgValorImp', c.impressora_valor);
+            set('cfgVidaImp', c.impressora_vida_h); set('cfgMaoObra', c.mao_obra_hora);
+            set('cfgFixoProjeto', c.custo_fixo_projeto); set('cfgTaxaMkt', c.taxa_marketplace);
+            atualizarResumoConfigCustos();
+            const opt = document.querySelector('#projCanalVenda option[value="marketplace"]');
+            if (opt) opt.textContent = `Marketplace (taxa ${num(c.taxa_marketplace, 0)}%)`;
+        }
+        function atualizarResumoConfigCustos() {
+            const h = custoHoraMaquina();
+            const el = document.getElementById('cfgResumoHora');
+            if (el) el.innerText = `Custo por hora de impressão: ${brl(h.total)} (energia ${brl(h.energia)} + desgaste da impressora ${brl(h.desgaste)} + mão de obra ${brl(h.mao)}). Mais o filamento, por grama.`;
+            const l = document.getElementById('labelCustoHora');
+            if (l) l.innerText = `Custo de máquina por hora: ${brl(h.total)} (energia + desgaste + mão de obra)`;
+        }
+        function lerConfigCustosDoFormulario() {
+            return {
+                custo_kwh: num(document.getElementById('cfgKwh').value, 0),
+                potencia_w: num(document.getElementById('cfgWatts').value, 0),
+                impressora_valor: num(document.getElementById('cfgValorImp').value, 0),
+                impressora_vida_h: Math.max(1, num(document.getElementById('cfgVidaImp').value, 5000)),
+                mao_obra_hora: num(document.getElementById('cfgMaoObra').value, 0),
+                custo_fixo_projeto: num(document.getElementById('cfgFixoProjeto').value, 0),
+                taxa_marketplace: Math.min(90, Math.max(0, num(document.getElementById('cfgTaxaMkt').value, 0)))
+            };
+        }
+        async function carregarConfigCustos() {
+            try {
+                const d = await colecao('config_custos').doc(usuarioAtual.uid).get();
+                if (d.exists) configCustos = { ...CONFIG_PADRAO, ...d.data() };
+            } catch (e) { console.error('config_custos', e); }
+            preencherConfigCustos();
+            atualizarAcumuladoresMaster();
+            calcularAbaBase();
+        }
+        ['cfgKwh','cfgWatts','cfgValorImp','cfgVidaImp','cfgMaoObra','cfgFixoProjeto','cfgTaxaMkt'].forEach(id => {
+            document.getElementById(id).addEventListener('input', () => {
+                const antigo = configCustos; configCustos = { ...CONFIG_PADRAO, ...lerConfigCustosDoFormulario() };
+                atualizarResumoConfigCustos(); calcularAbaBase();
+            });
+        });
+        document.getElementById('btnSalvarConfigCustos').addEventListener('click', async () => {
+            const btn = document.getElementById('btnSalvarConfigCustos');
+            const nova = lerConfigCustosDoFormulario();
+            btn.disabled = true; btn.innerText = 'Salvando...';
+            try {
+                await colecao('config_custos').doc(usuarioAtual.uid).set({ ...nova, user_id: usuarioAtual.uid, updated_at: new Date().toISOString() });
+                configCustos = { ...CONFIG_PADRAO, ...nova };
+                preencherConfigCustos(); atualizarAcumuladoresMaster(); calcularAbaBase();
+                alert('Custos salvos! Valem para as próximas peças e projetos. Em projetos antigos, use "Recalcular peças" ao editar.');
+            } catch (e) { alert('Erro ao salvar: ' + e.message); }
+            btn.disabled = false; btn.innerText = 'Salvar custos';
+        });
+
         // --- ENGINE DE COMPONENTES ---
         btnIncluirPeca.addEventListener('click', () => {
             const nome = pecaNome.value.trim();
@@ -1749,10 +1867,11 @@
             const textoFilamento = pecaSelectFilamento.options[pecaSelectFilamento.selectedIndex].text;
             
             if (!nome || peso <= 0 || tempoTotalH <= 0) return alert('Informe os parâmetros da peça corretamente.');
-            const custoComponente = (peso * custoPorGrama) + (tempoTotalH * 1.50);
+            const calcPeca = calcularCustoPeca(peso, tempoTotalH, custoPorGrama);
+            const custoComponente = calcPeca.total;
             
             const dadosPeca = { 
-                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado
+                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado
             };
 
             if (idPecaEmEdicaoIndex !== null) {
@@ -1808,17 +1927,32 @@
         };
 
         function atualizarAcumuladoresMaster() {
-            let tempoTotal = 0; let pesoTotal = 0; let custoTotal = 0;
-            pecasProjetoAtual.forEach(p => { tempoTotal += p.tempo_h; pesoTotal += p.peso_g; custoTotal += p.custo_calculado; });
+            let tempoTotal = 0; let pesoTotal = 0; let custoPecas = 0;
+            pecasProjetoAtual.forEach(p => { tempoTotal += p.tempo_h; pesoTotal += p.peso_g; custoPecas += p.custo_calculado; });
             const margemPorcentagem = parseFloat(projMargemPorcentagem.value) || 0;
-            const precoVendaFinal = custoTotal * (1 + (margemPorcentagem / 100));
+            const fin = calcularFinanceiroProjeto(custoPecas, margemPorcentagem, projCanalVenda.value);
             const totalMinsAcumulados = Math.round(tempoTotal * 60);
 
             resumoTempo.innerText = `${Math.floor(totalMinsAcumulados / 60)}h ${totalMinsAcumulados % 60}m`; 
             resumoPeso.innerText = `${pesoTotal}g`; 
-            resumoCusto.innerText = `R$ ${custoTotal.toFixed(2)}`; 
-            resumoPrecoVenda.innerText = `R$ ${precoVendaFinal.toFixed(2)}`;
+            resumoCusto.innerText = `R$ ${fin.custoTotal.toFixed(2)}`; 
+            resumoPrecoVenda.innerText = `R$ ${fin.preco.toFixed(2)}`;
+            const partes = [`Peças: ${brl(custoPecas)}`];
+            if (fin.fixo > 0) partes.push(`embalagem/frete: ${brl(fin.fixo)}`);
+            if (fin.taxa > 0) partes.push(`taxa do marketplace (${fin.taxa}%): ${brl(fin.taxaValor)}`);
+            partes.push(`<strong class="text-green-600">lucro líquido estimado: ${brl(fin.lucroLiquido)}</strong>`);
+            document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
         }
+        projCanalVenda.addEventListener('change', atualizarAcumuladoresMaster);
+        document.getElementById('btnRecalcularCustos').addEventListener('click', () => {
+            if (pecasProjetoAtual.length === 0) return alert('Este projeto ainda não tem peças.');
+            pecasProjetoAtual = pecasProjetoAtual.map(pc => {
+                const cpg = mapaCustoPorChaveFilamento[pc.filamento_chave] ?? (pc.peso_g > 0 ? ((pc.custo_detalhe ? pc.custo_detalhe.filamento : pc.custo_calculado) / pc.peso_g) : 0.12);
+                const r = calcularCustoPeca(pc.peso_g, pc.tempo_h, cpg);
+                return { ...pc, custo_calculado: r.total, custo_detalhe: r.detalhe };
+            });
+            renderizarPecasDoEscopo(); atualizarAcumuladoresMaster();
+        });
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
 
         // --- SALVAMENTO DO PROJETO (imagem = link colado, sem upload) ---
@@ -1827,9 +1961,11 @@
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
             if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça.');
             
-            let tempoTotalMin = 0; let pesoTotalG = 0; let custoTotalAcumulado = 0;
-            pecasProjetoAtual.forEach(p => { tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoTotalAcumulado += p.custo_calculado; });
-            const precoVendaFinal = custoTotalAcumulado * (1 + (margem / 100));
+            let tempoTotalMin = 0; let pesoTotalG = 0; let custoPecasAcum = 0;
+            pecasProjetoAtual.forEach(p => { tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoPecasAcum += p.custo_calculado; });
+            const finProj = calcularFinanceiroProjeto(custoPecasAcum, margem, projCanalVenda.value);
+            const custoTotalAcumulado = finProj.custoTotal;
+            const precoVendaFinal = finProj.preco;
             btnSalvarProjetoCompleto.disabled = true;
 
             const linkDownload = projLink3mf.value.trim();
@@ -1849,7 +1985,10 @@
                 status: statusAtual, 
                 data_conclusao: dataConclusao,
                 visibilidade_portfolio: projVisibilidadePortfolio.value,
-                quantidade_estoque: Math.max(0, parseInt(projQuantidadeEstoque.value) || 0)
+                quantidade_estoque: Math.max(0, parseInt(projQuantidadeEstoque.value) || 0),
+                canal_venda: projCanalVenda.value,
+                taxa_percentual: finProj.taxa,
+                custo_fixo_aplicado: finProj.fixo
             };
 
             const eraProjetoNovo = !idProjetoEmEdicao;
@@ -1918,7 +2057,7 @@
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
             projNome.value = ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
-            projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0;
+            projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
             btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
@@ -1932,6 +2071,7 @@
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
             projQuantidadeEstoque.value = parseInt(proj.quantidade_estoque) || 0;
+            projCanalVenda.value = proj.canal_venda || 'direta';
             if (proj.imagem_base64) { imgPreview.src = proj.imagem_base64; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             projLink3mf.value = proj.nome_arquivo_3mf || '';
             pecasProjetoAtual = JSON.parse(JSON.stringify(proj.pecas || [])); 
@@ -2203,9 +2343,7 @@
             const custoPorGrama = selectFilamento.value === 'padrao' ? 0.12 : (parseFloat(selectFilamento.value) || 0.12);
             const peso = parseFloat(pesoInput.value) || 0;
             const horas = parseFloat(tempoInput.value) || 0;
-            const custoInsumo = peso * custoPorGrama;
-            const custoMaoDeObra = horas * 1.50;
-            const custoTotalCalc = custoInsumo + custoMaoDeObra;
+            const custoTotalCalc = calcularCustoPeca(peso, horas, custoPorGrama).total + num(configCustos.custo_fixo_projeto, 0);
             const precoSugerido = custoTotalCalc * 3; // Lucro 3x, conforme rótulo da tela
 
             labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
