@@ -114,7 +114,7 @@
                 <div>
                     <span class="inline-flex items-center gap-2 text-xs font-bold text-blue-700 bg-blue-100 px-3 py-1 rounded-full">🖨️ Feito para quem vive de impressão 3D</span>
                     <h1 class="font-display text-4xl sm:text-5xl font-bold tracking-tight mt-5 leading-[1.08]">Controle sua produção 3D <span class="text-blue-600">do orçamento à venda</span></h1>
-                    <p class="text-base sm:text-lg text-inkmute mt-5 max-w-xl">Calcule o preço certo de cada peça, controle o estoque de filamento com desconto automático, registre vendas e mostre seu portfólio aos clientes. Tudo em um só lugar, no computador ou no celular.</p>
+                    <p class="text-base sm:text-lg text-inkmute mt-5 max-w-xl">Calcule o preço certo de cada peça, com taxas da Shopee e do Mercado Livre, controle o estoque de filamento, registre vendas e mostre seu portfólio aos clientes. Tudo em um só lugar, no computador ou no celular.</p>
                     <div class="flex flex-wrap items-center gap-3 mt-8">
                         <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-7 py-3.5 rounded-full shadow-md transition">Testar 5 dias grátis ›</button>
                         <a href="#funcionalidades" class="font-bold text-ink border border-line bg-white hover:bg-surface2 px-7 py-3.5 rounded-full transition">Ver funcionalidades</a>
@@ -158,7 +158,9 @@
                     <p class="text-inkmute mt-3">Da primeira peça à venda final, sem planilhas e sem conta de cabeça.</p>
                 </div>
                 <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-12">
-                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-xl">🧮</div><h3 class="font-display font-bold text-lg mt-4">Calculadora de orçamento</h3><p class="text-sm text-inkmute mt-2">Informe peso, tempo e margem de lucro e veja o custo e o preço de venda certos. Salve modelos no seu catálogo de preços.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-blue-100 flex items-center justify-center text-xl">🧮</div><h3 class="font-display font-bold text-lg mt-4">Calculadora de orçamento</h3><p class="text-sm text-inkmute mt-2">Informe peso, tempo e margem de lucro e veja o preço de venda certo. Salve modelos no seu catálogo de preços.</p></div>
+                    <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-yellow-100 flex items-center justify-center text-xl">⚡</div><h3 class="font-display font-bold text-lg mt-4">Custo real de cada peça</h3><p class="text-sm text-inkmute mt-2">Some filamento, energia, desgaste da impressora, mão de obra, embalagem e frete. Configure os seus custos uma vez e todo projeto usa.</p></div>
+                    <div class="border-2 border-blue-600 rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white relative"><span class="absolute -top-3 right-4 bg-blue-600 text-white text-[10px] font-bold px-3 py-0.5 rounded-full">NOVO</span><div class="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center text-xl">🛒</div><h3 class="font-display font-bold text-lg mt-4">Preço certo por marketplace</h3><p class="text-sm text-inkmute mt-2">Escolha Shopee, Mercado Livre Clássico ou Premium e o sistema inclui as comissões e tarifas no preço, mostrando o lucro líquido.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-orange-100 flex items-center justify-center text-xl">🚀</div><h3 class="font-display font-bold text-lg mt-4">Projetos e impressões</h3><p class="text-sm text-inkmute mt-2">Cadastre cada projeto com suas peças, status (imprimindo, montagem, finalizado), capa, link do arquivo .3mf, filtros e busca.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-purple-100 flex items-center justify-center text-xl">🧵</div><h3 class="font-display font-bold text-lg mt-4">Estoque de filamento automático</h3><p class="text-sm text-inkmute mt-2">Histórico de compras e peso atual de cada rolo. Ao registrar uma impressão, o material é descontado sozinho do estoque.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-green-100 flex items-center justify-center text-xl">💰</div><h3 class="font-display font-bold text-lg mt-4">Vendas e lucro real</h3><p class="text-sm text-inkmute mt-2">Registre cada venda e acompanhe faturamento, custo de produção e lucro líquido. Estorne quando precisar.</p></div>
@@ -167,6 +169,43 @@
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-rose-100 flex items-center justify-center text-xl">📊</div><h3 class="font-display font-bold text-lg mt-4">Dashboard</h3><p class="text-sm text-inkmute mt-2">Visão geral do negócio e tabela com o peso atual de cada filamento, com alerta de cores para estoque baixo.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-slate-200 flex items-center justify-center text-xl">🔒</div><h3 class="font-display font-bold text-lg mt-4">Dados só seus</h3><p class="text-sm text-inkmute mt-2">Cada usuário tem a própria conta e só enxerga as próprias informações. Ninguém vê os dados de outro.</p></div>
                     <div class="border border-line rounded-2xl p-6 hover:shadow-lg hover:-translate-y-0.5 transition bg-white"><div class="w-11 h-11 rounded-xl bg-teal-100 flex items-center justify-center text-xl">📱</div><h3 class="font-display font-bold text-lg mt-4">Funciona no celular</h3><p class="text-sm text-inkmute mt-2">Layout pensado para telas pequenas. Consulte estoque e registre vendas de onde estiver.</p></div>
+                    <div class="rounded-2xl p-6 bg-gradient-to-br from-blue-600 to-sky-500 text-white flex flex-col justify-between"><div><div class="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center text-xl">🎁</div><h3 class="font-display font-bold text-lg mt-4">Teste 5 dias grátis</h3><p class="text-sm text-white/85 mt-2">Crie sua conta, use todas as funcionalidades e só escolha um plano se gostar.</p></div><button onclick="abrirAuth('cadastro')" class="mt-5 bg-white text-blue-700 font-bold text-sm py-2.5 rounded-full hover:bg-blue-50 transition">Começar grátis ›</button></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VITRINE: PREÇO POR CANAL -->
+        <section class="py-16 md:py-24 bg-white">
+            <div class="max-w-6xl mx-auto px-4 grid md:grid-cols-2 gap-12 items-center">
+                <div>
+                    <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Preço certo para cada canal</p>
+                    <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Venda na Shopee e no Mercado Livre sem perder dinheiro nas taxas</h2>
+                    <p class="text-inkmute mt-4">Cada marketplace cobra comissão e tarifa fixa diferentes, e elas mudam conforme o preço. O Gestor 3D faz essa conta por você: escolha o canal e veja o preço que mantém a sua margem.</p>
+                    <ul class="mt-6 space-y-3 text-sm">
+                        <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Shopee</strong> com as faixas de comissão e tarifa por item, inclusive a regra para vendedor CPF.</span></li>
+                        <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Mercado Livre</strong> Clássico e Premium, com tarifa fixa abaixo de R$ 79 e frete grátis acima disso.</span></li>
+                        <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Custo completo:</strong> filamento, energia, desgaste da impressora, mão de obra, embalagem e frete.</span></li>
+                        <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Lucro líquido</strong> mostrado no projeto e registrado em cada venda, já descontadas as taxas.</span></li>
+                    </ul>
+                    <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-7 py-3 rounded-full shadow-md transition mt-8">Testar 5 dias grátis ›</button>
+                </div>
+                <div class="relative">
+                    <div class="absolute -inset-3 bg-gradient-to-tr from-orange-100/70 via-blue-100/50 to-sky-100/60 blur-2xl rounded-[2rem]"></div>
+                    <div class="relative bg-white border border-line rounded-2xl shadow-xl p-5">
+                        <div class="flex items-center justify-between">
+                            <div><p class="text-[10px] uppercase text-inkmute">Exemplo de projeto</p><p class="font-display font-bold">Coruja Decorativa</p></div>
+                            <div class="text-right"><p class="text-[10px] uppercase text-inkmute">Custo total</p><p class="font-display font-bold text-amber-600">R$ 14,40</p></div>
+                        </div>
+                        <p class="text-xs text-inkmute mt-1">Margem de 200% • lucro líquido igual em todos os canais</p>
+                        <div class="mt-4 overflow-hidden rounded-xl border border-line text-sm">
+                            <div class="grid grid-cols-4 gap-2 bg-surface2 px-3 py-2 text-[10px] uppercase font-bold text-inkmute"><span class="col-span-1">Canal</span><span class="text-right">Taxas</span><span class="text-right">Preço</span><span class="text-right">Lucro</span></div>
+                            <div class="grid grid-cols-4 gap-2 px-3 py-2.5 border-t border-line items-center"><span class="font-semibold text-xs">Venda direta</span><span class="text-right text-xs text-inkmute">R$ 0,00</span><span class="text-right font-bold font-mono2 text-xs">R$ 43,20</span><span class="text-right font-bold font-mono2 text-xs text-green-600">R$ 28,80</span></div>
+                            <div class="grid grid-cols-4 gap-2 px-3 py-2.5 border-t border-line items-center"><span class="font-semibold text-xs">Shopee</span><span class="text-right text-xs text-inkmute">R$ 16,43</span><span class="text-right font-bold font-mono2 text-xs">R$ 59,63</span><span class="text-right font-bold font-mono2 text-xs text-green-600">R$ 28,80</span></div>
+                            <div class="grid grid-cols-4 gap-2 px-3 py-2.5 border-t border-line items-center"><span class="font-semibold text-xs">ML Clássico</span><span class="text-right text-xs text-inkmute">R$ 13,35</span><span class="text-right font-bold font-mono2 text-xs">R$ 56,55</span><span class="text-right font-bold font-mono2 text-xs text-green-600">R$ 28,80</span></div>
+                            <div class="grid grid-cols-4 gap-2 px-3 py-2.5 border-t border-line items-center"><span class="font-semibold text-xs">ML Premium</span><span class="text-right text-xs text-inkmute">R$ 16,80</span><span class="text-right font-bold font-mono2 text-xs">R$ 60,00</span><span class="text-right font-bold font-mono2 text-xs text-green-600">R$ 28,80</span></div>
+                        </div>
+                        <p class="text-[10px] text-inkmute mt-3">Valores de exemplo, calculados com as taxas de referência de out/2026. Confirme as taxas na Central do Vendedor.</p>
+                    </div>
                 </div>
             </div>
         </section>
@@ -202,7 +241,7 @@
                         <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 19<span class="text-xl">,90</span><span class="text-sm font-medium text-inkmute"> /mês</span></p>
                         <p class="text-sm text-inkmute mt-1">Renovação manual via PIX a cada mês</p>
                         <ul class="mt-6 space-y-2.5 text-sm flex-1">
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades, inclusive preço por marketplace</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Cancele quando quiser</li>
@@ -215,7 +254,7 @@
                         <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 49<span class="text-xl">,90</span><span class="text-sm font-medium text-inkmute"> /3 meses</span></p>
                         <p class="text-sm text-inkmute mt-1">Equivale a R$ 16,63/mês • <strong class="text-green-600">16% de desconto</strong></p>
                         <ul class="mt-6 space-y-2.5 text-sm flex-1">
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades, inclusive preço por marketplace</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> 3 meses de uso por um preço menor</li>
@@ -229,7 +268,7 @@
                         <p class="font-display text-4xl font-bold tracking-tight mt-3">R$ 149<span class="text-xl">,00</span></p>
                         <p class="text-sm text-inkmute mt-1">Pagamento único, sem mensalidade</p>
                         <ul class="mt-6 space-y-2.5 text-sm flex-1">
-                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades</li>
+                            <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Todas as funcionalidades, inclusive preço por marketplace</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Projetos e vendas sem limites</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Portfólio com link público</li>
                             <li class="flex gap-2"><span class="text-green-600 font-bold">✔</span> Acesso para sempre, sem renovar</li>
@@ -246,6 +285,7 @@
             <div class="max-w-3xl mx-auto px-4">
                 <h2 class="font-display text-3xl font-bold tracking-tight text-center">Perguntas frequentes</h2>
                 <div class="mt-10 space-y-3">
+                    <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">O sistema calcula as taxas da Shopee e do Mercado Livre?</summary><p class="text-sm text-inkmute mt-2">Sim. Ao escolher o canal de venda do projeto, o preço já inclui comissão e tarifa fixa, e você vê o lucro líquido. As taxas usadas são de referência e você pode ajustá-las na aba Calculadora/Orçamento quando os marketplaces mudarem.</p></details>
                     <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Como funcionam os 5 dias grátis?</summary><p class="text-sm text-inkmute mt-2">Ao criar sua conta com nome, telefone e e-mail, você usa tudo por 5 dias sem pagar. Ao final, só continua escolhendo um plano. O teste grátis vale uma vez por pessoa: se criar outra conta com o mesmo e-mail ou telefone, o teste não será liberado de novo.</p></details>
                     <details class="bg-white border border-line rounded-xl p-4 group"><summary class="font-bold cursor-pointer">Preciso pagar todo mês?</summary><p class="text-sm text-inkmute mt-2">Só se escolher o plano mensal. O trimestral vale por 3 meses e o vitalício é um pagamento único de R$ 149,00, sem renovação. Nos planos mensal e trimestral, a renovação é feita por um novo PIX; não há cobrança automática.</p></details>
                     <details class="bg-white border border-line rounded-xl p-4"><summary class="font-bold cursor-pointer">Quanto tempo leva para liberar meu acesso?</summary><p class="text-sm text-inkmute mt-2">Assim que o pagamento for confirmado e o comprovante enviado ao administrador (informando o plano escolhido), o acesso é liberado. Na tela de espera, toque em "Já paguei, verificar".</p></details>
