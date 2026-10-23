@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#F4F5F7">
-    <title>Gestor 3D - Controle de Impressão</title>
-    <link rel="icon" type="image/png" href="icone-gestor3d.png">
+    <title>Venda 3D - Controle de Impressão</title>
+    <link rel="icon" type="image/png" href="icone-venda3d.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -68,6 +68,10 @@
         .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid #E3E6EB; background: #F1F2F5; color: #4B5563; transition: all .15s; }
         .hist-tab:hover { background: #E5E7EB; }
         .hist-tab.ativo { background: #EA580C; border-color: #EA580C; color: #FFFFFF; }
+        .ped-lbl { display:block; font-size:12px; font-weight:500; color:#6B7280; margin-bottom:4px; }
+        .ped-inp { width:100%; background:#fff; border:1px solid #E3E6EB; border-radius:10px; padding:9px 12px; font-size:14px; color:#111827; }
+        .ped-inp:focus { outline:none; border-color:#047857; box-shadow:0 0 0 3px rgba(4,120,87,.15) !important; }
+        #pedFiltros .hist-tab.ativo { background:#047857; border-color:#047857; }
         .ped-btn { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; }
         .btn-cta {
             background: linear-gradient(135deg, #EA580C, #C2410C);
@@ -80,8 +84,8 @@
 
     <header id="mobileTopBar" class="md:hidden fixed top-0 left-0 right-0 h-14 bg-surface border-b border-line flex items-center justify-between px-4 z-20 hidden">
         <div class="flex items-center gap-2">
-            <img src="icone-gestor3d.png" alt="Gestor 3D" class="h-8 w-8 object-contain">
-            <span class="font-display font-bold text-ink text-sm">Gestor 3D</span>
+            <img src="icone-venda3d.png" alt="Venda 3D" class="h-8 w-8 object-contain">
+            <span class="font-display font-bold text-ink text-sm">Venda 3D</span>
         </div>
         <button id="btnAbrirMenuMobile" class="p-2 rounded-lg bg-surface2 text-ink border border-line">
             <span class="text-xl leading-none">☰</span>
@@ -97,8 +101,8 @@
         <header class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-line">
             <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
                 <a href="#inicio" class="flex items-center gap-2 shrink-0">
-                    <img src="icone-gestor3d.png" alt="" class="h-9 w-9 object-contain">
-                    <span class="font-display font-bold text-lg tracking-tight">Gestor 3D</span>
+                    <img src="icone-venda3d.png" alt="" class="h-9 w-9 object-contain">
+                    <span class="font-display font-bold text-lg tracking-tight">Venda 3D</span>
                 </a>
                 <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-ink">
                     <a href="#funcionalidades" class="hover:text-accent transition">Funcionalidades</a>
@@ -186,7 +190,7 @@
                 <div>
                     <p class="text-sm font-bold text-blue-600 uppercase tracking-widest">Preço certo para cada canal</p>
                     <h2 class="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-2">Venda na Shopee e no Mercado Livre sem perder dinheiro nas taxas</h2>
-                    <p class="text-inkmute mt-4">Cada marketplace cobra comissão e tarifa fixa diferentes, e elas mudam conforme o preço. O Gestor 3D faz essa conta por você: escolha o canal e veja o preço que mantém a sua margem.</p>
+                    <p class="text-inkmute mt-4">Cada marketplace cobra comissão e tarifa fixa diferentes, e elas mudam conforme o preço. O Venda 3D faz essa conta por você: escolha o canal e veja o preço que mantém a sua margem.</p>
                     <ul class="mt-6 space-y-3 text-sm">
                         <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Shopee</strong> com as faixas de comissão e tarifa por item, inclusive a regra para vendedor CPF.</span></li>
                         <li class="flex gap-3"><span class="text-green-600 font-bold">✔</span><span><strong>Mercado Livre</strong> Clássico e Premium, com tarifa fixa abaixo de R$ 79 e frete grátis acima disso.</span></li>
@@ -310,14 +314,14 @@
                 <button onclick="abrirAuth('cadastro')" class="btn-cta font-bold px-8 py-3.5 rounded-full shadow-md transition mt-7">Testar 5 dias grátis ›</button>
             </div>
         </section>
-        <footer class="bg-ink border-t border-white/10 text-white/50 text-xs text-center py-6">© Gestor 3D • Controle de Produção &amp; Orçamento</footer>
+        <footer class="bg-ink border-t border-white/10 text-white/50 text-xs text-center py-6">© Venda 3D • Controle de Produção &amp; Orçamento</footer>
 
         <!-- MODAL DE LOGIN / CADASTRO -->
         <div id="modalAuth" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/50 overflow-y-auto">
             <div class="w-full max-w-md my-auto">
             <div class="layer-lines bg-surface p-8 rounded-2xl shadow-2xl border border-line w-full relative">
             <button onclick="fecharAuth()" aria-label="Fechar" class="absolute top-3 right-4 text-inkmute hover:text-ink text-2xl leading-none">×</button>
-            <img src="icone-gestor3d.png" alt="" class="h-12 w-12 object-contain mx-auto mb-2">
+            <img src="icone-venda3d.png" alt="" class="h-12 w-12 object-contain mx-auto mb-2">
             <h2 id="tituloAuth" class="font-display text-xl font-bold text-center text-ink mb-6">Entrar no Sistema</h2>
 
             <div class="space-y-4">
@@ -380,7 +384,7 @@
 
     <div id="telaCompletarCadastro" class="max-w-md mx-auto mt-10 sm:mt-16 w-full px-4 hidden">
         <div class="text-center mb-4">
-            <img src="logo-gestor3d.png" alt="Gestor 3D" class="h-28 w-auto mx-auto object-contain">
+            <img src="logo-venda3d.png" alt="Venda 3D" class="h-20 w-auto mx-auto object-contain"><p class="font-display font-bold text-3xl text-ink mt-2">Venda 3D</p>
         </div>
         <div class="bg-surface p-6 rounded-2xl shadow-lg border border-line w-full space-y-4">
             <div class="text-center">
@@ -403,7 +407,7 @@
 
     <div id="telaAcessoPendente" class="max-w-md mx-auto mt-10 sm:mt-16 w-full px-4 hidden">
         <div class="text-center mb-4">
-            <img src="logo-gestor3d.png" alt="Gestor 3D" class="h-32 w-auto mx-auto object-contain">
+            <img src="logo-venda3d.png" alt="Venda 3D" class="h-24 w-auto mx-auto object-contain"><p class="font-display font-bold text-3xl text-ink mt-2">Venda 3D</p>
         </div>
         <div class="bg-surface p-6 rounded-2xl shadow-lg border border-line w-full space-y-4">
             <div class="text-center">
@@ -434,8 +438,8 @@
         <div>
             <div class="p-4 flex items-center justify-between border-b border-line layer-lines">
                 <div class="flex items-center gap-2 overflow-hidden">
-                    <img src="icone-gestor3d.png" alt="" class="h-8 w-8 object-contain shrink-0">
-                    <h1 class="font-display font-bold text-lg text-ink tracking-tight whitespace-nowrap label-texto">Gestor 3D</h1>
+                    <img src="icone-venda3d.png" alt="" class="h-8 w-8 object-contain shrink-0">
+                    <h1 class="font-display font-bold text-lg text-ink tracking-tight whitespace-nowrap label-texto">Venda 3D</h1>
                 </div>
                 <button id="btnToggleSidebar" class="p-1.5 rounded-lg bg-surface2 hover:bg-[#E3E6EB] text-inkmute focus:outline-none">
                     <span id="iconeSeta">◀</span>
@@ -814,68 +818,62 @@
             </div>
         </div>
 
-        <div id="view-pedidos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
-            <div class="bg-surface p-5 rounded-2xl shadow-sm border border-line h-fit lg:col-span-1 space-y-3">
-                <h2 id="pedTituloForm" class="font-display text-lg font-bold text-ink border-b border-line pb-2">Novo pedido</h2>
+        <div id="view-pedidos" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
+            <div class="flex flex-wrap items-end justify-between gap-3">
                 <div>
-                    <label class="block text-xs font-medium mb-1 text-inkmute">Cliente</label>
-                    <input type="text" id="pedCliente" placeholder="Ex: Maria Souza" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium mb-1 text-inkmute">Contato (WhatsApp, opcional)</label>
-                    <input type="text" id="pedContato" placeholder="(11) 99999-9999" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                </div>
-                <div>
-                    <label class="block text-xs font-medium mb-1 text-inkmute">Projeto</label>
-                    <select id="pedProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"><option value="">-- Escolha um projeto --</option></select>
-                    <p id="pedInfoProjeto" class="text-[11px] text-inkmute mt-1"></p>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Quantidade</label>
-                        <input type="number" id="pedQtd" min="1" value="1" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Valor unitário (R$)</label>
-                        <input type="number" id="pedPreco" step="0.01" placeholder="0.00" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Prazo de entrega</label>
-                        <input type="date" id="pedPrazo" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Sinal pago (R$)</label>
-                        <input type="number" id="pedSinal" step="0.01" placeholder="0.00" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink">
-                    </div>
-                </div>
-                <p id="pedResumoValor" class="text-xs text-inkmute bg-surface2 rounded-lg px-3 py-2">Total: R$ 0,00 • Falta receber: R$ 0,00</p>
-                <div>
-                    <label class="block text-xs font-medium mb-1 text-inkmute">Observações (cor, acabamento…)</label>
-                    <textarea id="pedObs" rows="2" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"></textarea>
-                </div>
-                <div class="flex gap-2">
-                    <button id="btnSalvarPedido" class="flex-1 btn-cta font-bold py-2.5 rounded-xl text-sm">📋 Salvar pedido</button>
-                    <button id="btnCancelarEdicaoPedido" class="hidden px-4 bg-surface2 border border-line rounded-xl text-sm text-ink">Cancelar</button>
-                </div>
-            </div>
-
-            <div class="lg:col-span-2 space-y-4">
-                <div>
-                    <h2 class="font-display text-2xl font-bold text-ink">Pedidos e fila de impressão</h2>
+                    <h2 class="font-display text-2xl font-bold text-ink">Seus pedidos</h2>
                     <p class="text-sm text-inkmute mt-1">A fila mostra primeiro o que tem o prazo mais curto.</p>
                 </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Em aberto</p><p id="pedKpiAbertos" class="font-mono2 text-lg font-bold text-ink">0</p></div>
-                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Atrasados</p><p id="pedKpiAtrasados" class="font-mono2 text-lg font-bold text-red-600">0</p></div>
-                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">A receber</p><p id="pedKpiReceber" class="font-mono2 text-lg font-bold text-blue-600">R$ 0,00</p></div>
-                    <div class="bg-surface rounded-xl border border-line px-3 py-2"><p class="text-[10px] uppercase text-inkmute font-semibold">Horas de fila</p><p id="pedKpiHoras" class="font-mono2 text-lg font-bold text-amber-600">0 h</p></div>
+                <button id="btnNovoPedido" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl shadow-sm transition">+ Novo pedido</button>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div class="bg-surface rounded-2xl border border-line px-4 py-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Em aberto</p><p id="pedKpiAbertos" class="font-mono2 text-xl font-bold text-ink">0</p></div>
+                <div class="bg-surface rounded-2xl border border-line px-4 py-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Atrasados</p><p id="pedKpiAtrasados" class="font-mono2 text-xl font-bold text-red-600">0</p></div>
+                <div class="bg-surface rounded-2xl border border-line px-4 py-3"><p class="text-[10px] uppercase text-inkmute font-semibold">A receber</p><p id="pedKpiReceber" class="font-mono2 text-xl font-bold text-blue-600">R$ 0,00</p></div>
+                <div class="bg-surface rounded-2xl border border-line px-4 py-3"><p class="text-[10px] uppercase text-inkmute font-semibold">Horas de fila</p><p id="pedKpiHoras" class="font-mono2 text-xl font-bold text-amber-600">0 h</p></div>
+            </div>
+            <div class="flex gap-2 overflow-x-auto" id="pedFiltros">
+                <button type="button" data-filtro="fila" class="hist-tab ativo">Fila de produção</button>
+                <button type="button" data-filtro="entregues" class="hist-tab">Entregues</button>
+                <button type="button" data-filtro="todos" class="hist-tab">Todos</button>
+            </div>
+            <div id="listaPedidos" class="grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
+
+            <!-- Janela: Novo pedido -->
+            <div id="modalPedido" class="hidden fixed inset-0 z-50 bg-black/45 items-start justify-center overflow-y-auto p-3 sm:p-8">
+                <div class="bg-white w-full max-w-3xl rounded-2xl shadow-2xl border border-line p-5 sm:p-6 my-auto">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 id="pedTituloForm" class="font-display text-base font-bold text-ink">Novo pedido</h3>
+                        <button id="btnFecharPedido" class="text-xs font-semibold border border-line rounded-lg px-3 py-1.5 hover:bg-surface2">Fechar</button>
+                    </div>
+                    <div class="grid sm:grid-cols-2 gap-x-4 gap-y-3">
+                        <div><label class="ped-lbl">Cliente</label><input type="text" id="pedCliente" list="listaClientesPedidos" placeholder="Selecionar ou digitar cliente" class="ped-inp"><datalist id="listaClientesPedidos"></datalist></div>
+                        <div><label class="ped-lbl">Status</label><select id="pedStatus" class="ped-inp"><option value="Aguardando">Pendente (aguardando)</option><option value="Imprimindo">Imprimindo</option><option value="Pronto">Pronto</option></select></div>
+                        <div><label class="ped-lbl">Contato (WhatsApp, opcional)</label><input type="text" id="pedContato" placeholder="(11) 99999-9999" class="ped-inp"></div>
+                        <div><label class="ped-lbl">Prazo de entrega</label><input type="date" id="pedPrazo" class="ped-inp"></div>
+                        <div><label class="ped-lbl">Adicionar produto</label><select id="pedProdutoAdd" class="ped-inp"><option value="">Selecione um produto</option></select></div>
+                        <div><label class="ped-lbl">Valor de venda</label><select id="pedTipoValor" class="ped-inp"><option value="catalogo">Preço do catálogo (aba Vendas)</option><option value="usuario">Valor definido por mim</option></select></div>
+                        <div><label class="ped-lbl">Tipo de pagamento</label><select id="pedTipoPagamento" class="ped-inp"><option value="">Selecione o tipo de pagamento</option><option>PIX</option><option>Dinheiro</option><option>Cartão de crédito</option><option>Cartão de débito</option><option>Transferência</option><option>Outro</option></select></div>
+                        <div><label class="ped-lbl">Status do pagamento</label><select id="pedStatusPag" class="ped-inp"><option value="Pendente">Pendente</option><option value="Sinal pago">Sinal pago</option><option value="Pago">Pago</option></select></div>
+                        <div id="pedBoxSinal" class="hidden"><label class="ped-lbl">Valor do sinal (R$)</label><input type="number" id="pedSinal" step="0.01" placeholder="0.00" class="ped-inp"></div>
+                    </div>
+
+                    <div class="flex items-center justify-between mt-5">
+                        <h4 class="text-sm font-bold text-ink">Itens</h4>
+                        <button id="btnItemBranco" class="text-xs font-semibold border border-line rounded-lg px-3 py-1.5 hover:bg-surface2">+ Item em branco</button>
+                    </div>
+                    <div id="pedItens" class="mt-2 space-y-2"></div>
+                    <p id="pedTotais" class="text-xs text-inkmute text-right mt-3"></p>
+
+                    <div class="mt-4">
+                        <label class="ped-lbl">Observações (cor, acabamento…)</label>
+                        <textarea id="pedObs" rows="3" class="ped-inp"></textarea>
+                    </div>
+                    <div class="flex justify-end gap-2 mt-4 pt-3 border-t border-line">
+                        <button id="btnCancelarPedidoModal" class="text-sm font-semibold border border-line rounded-xl px-4 py-2.5 hover:bg-surface2">Cancelar</button>
+                        <button id="btnSalvarPedido" class="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm px-5 py-2.5 rounded-xl">Salvar pedido</button>
+                    </div>
                 </div>
-                <div class="flex gap-2 overflow-x-auto" id="pedFiltros">
-                    <button type="button" data-filtro="fila" class="hist-tab ativo">Fila de produção</button>
-                    <button type="button" data-filtro="entregues" class="hist-tab">Entregues</button>
-                    <button type="button" data-filtro="todos" class="hist-tab">Todos</button>
-                </div>
-                <div id="listaPedidos" class="space-y-3"></div>
             </div>
         </div>
 
@@ -2178,27 +2176,37 @@
         // --- PEDIDOS E FILA DE IMPRESSÃO ---
         const pedCliente = document.getElementById('pedCliente');
         const pedContato = document.getElementById('pedContato');
-        const pedProjeto = document.getElementById('pedProjeto');
-        const pedInfoProjeto = document.getElementById('pedInfoProjeto');
-        const pedQtd = document.getElementById('pedQtd');
-        const pedPreco = document.getElementById('pedPreco');
+        const pedStatus = document.getElementById('pedStatus');
         const pedPrazo = document.getElementById('pedPrazo');
+        const pedProdutoAdd = document.getElementById('pedProdutoAdd');
+        const pedTipoValor = document.getElementById('pedTipoValor');
+        const pedTipoPagamento = document.getElementById('pedTipoPagamento');
+        const pedStatusPag = document.getElementById('pedStatusPag');
+        const pedBoxSinal = document.getElementById('pedBoxSinal');
         const pedSinal = document.getElementById('pedSinal');
-        const pedResumoValor = document.getElementById('pedResumoValor');
+        const pedItens = document.getElementById('pedItens');
+        const pedTotais = document.getElementById('pedTotais');
         const pedObs = document.getElementById('pedObs');
         const btnSalvarPedido = document.getElementById('btnSalvarPedido');
-        const btnCancelarEdicaoPedido = document.getElementById('btnCancelarEdicaoPedido');
         const pedTituloForm = document.getElementById('pedTituloForm');
         const pedKpiAbertos = document.getElementById('pedKpiAbertos');
         const pedKpiAtrasados = document.getElementById('pedKpiAtrasados');
         const pedKpiReceber = document.getElementById('pedKpiReceber');
         const pedKpiHoras = document.getElementById('pedKpiHoras');
         const listaPedidos = document.getElementById('listaPedidos');
+        const modalPedido = document.getElementById('modalPedido');
+        const btnNovoPedido = document.getElementById('btnNovoPedido');
+        const btnFecharPedido = document.getElementById('btnFecharPedido');
+        const btnCancelarPedidoModal = document.getElementById('btnCancelarPedidoModal');
+        const btnItemBranco = document.getElementById('btnItemBranco');
+        const listaClientesPedidos = document.getElementById('listaClientesPedidos');
         let pedidosCache = [];
         let filtroPedidos = 'fila';
         let pedidoEditandoId = null;
+        let pedItensAtuais = [];   // [{projeto_id, nome, quantidade, preco_unitario, custo_unitario}]
         const STATUS_ATIVOS = ['Aguardando', 'Imprimindo', 'Pronto'];
-        const COR_STATUS = { Aguardando: 'bg-gray-100 text-gray-700', Imprimindo: 'bg-blue-100 text-blue-700', Pronto: 'bg-green-100 text-green-700', Entregue: 'bg-emerald-600 text-white', Cancelado: 'bg-red-100 text-red-700' };
+        const ROTULO_STATUS = { Aguardando: 'Pendente', Imprimindo: 'Imprimindo', Pronto: 'Pronto', Entregue: 'Entregue', Cancelado: 'Cancelado' };
+        const COR_STATUS = { Aguardando: 'bg-gray-100 text-gray-700', Imprimindo: 'bg-blue-100 text-blue-700', Pronto: 'bg-green-100 text-green-700', Entregue: 'bg-emerald-700 text-white', Cancelado: 'bg-red-100 text-red-700' };
         const hojeISO = () => new Date().toLocaleDateString('sv-SE');
         function diasAte(prazo) {
             if (!prazo) return null;
@@ -2207,51 +2215,120 @@
             return Math.round((alvo - h) / 86400000);
         }
         const fmtData = (d) => d ? d.split('-').reverse().join('/') : '';
+        const projPorId = (id) => projetosCacheLocal.find(x => x.id === id);
 
-        function atualizarResumoFormPedido() {
-            const total = (parseInt(pedQtd.value) || 0) * (parseFloat(pedPreco.value) || 0);
-            const falta = Math.max(0, total - (parseFloat(pedSinal.value) || 0));
-            pedResumoValor.innerText = `Total: ${brl(total)} • Falta receber: ${brl(falta)}`;
+        // Pedidos antigos tinham um único produto; novos têm lista de itens
+        function itensDoPedido(o) {
+            if (Array.isArray(o.itens) && o.itens.length) return o.itens;
+            return [{ projeto_id: o.projeto_id || null, nome: o.nome_projeto || '(item)', quantidade: o.quantidade || 1, preco_unitario: o.preco_unitario || 0, custo_unitario: 0 }];
         }
-        ['input', 'change'].forEach(ev => [pedQtd, pedPreco, pedSinal].forEach(el => el.addEventListener(ev, atualizarResumoFormPedido)));
-        pedProjeto.addEventListener('change', () => {
-            const pr = projetosCacheLocal.find(x => x.id === pedProjeto.value);
-            if (!pr) { pedInfoProjeto.innerText = ''; return; }
-            if (!pedPreco.value) pedPreco.value = (parseFloat(pr.preco_venda_total) || 0).toFixed(2);
-            const est = parseInt(pr.quantidade_estoque) || 0;
-            pedInfoProjeto.innerText = est > 0 ? `📦 ${est} peça(s) pronta(s) em estoque — a entrega abate do estoque.` : 'Sem estoque pronto: será impresso sob encomenda.';
-            atualizarResumoFormPedido();
+        function custoUnitarioItem(it) { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; return pr ? (parseFloat(pr.custo_total) || 0) : (parseFloat(it.custo_unitario) || 0); }
+        function totaisItens(itens) {
+            let vendas = 0, custo = 0, taxas = 0;
+            itens.forEach(it => {
+                const q = parseInt(it.quantidade) || 0, p = parseFloat(it.preco_unitario) || 0;
+                const pr = it.projeto_id ? projPorId(it.projeto_id) : null;
+                vendas += q * p; custo += q * custoUnitarioItem(it);
+                if (pr && pr.canal_venda && NOME_CANAL[pr.canal_venda]) taxas += q * taxasDoCanal(pr.canal_venda, p).total;
+            });
+            return { vendas, custo, taxas, lucro: vendas - taxas - custo };
+        }
+        function valorPagoPedido(o, total) {
+            if (o.status_pagamento === 'Pago') return total;
+            return Math.min(total, parseFloat(o.sinal_pago) || 0);
+        }
+
+        // ----- janela Novo pedido -----
+        function renderizarItensPedido() {
+            if (!pedItensAtuais.length) { pedItens.innerHTML = '<p class="text-xs text-inkmute py-2">Adicione produtos ou um item em branco para montar o pedido.</p>'; atualizarTotaisPedido(); return; }
+            pedItens.innerHTML = pedItensAtuais.map((it, i) => {
+                const avulso = !it.projeto_id;
+                return `<div class="grid grid-cols-12 gap-2 items-end bg-surface2 rounded-xl p-2.5">
+                    <div class="col-span-12 sm:col-span-${avulso ? 4 : 6}">${avulso ? `<label class="ped-lbl">Item</label><input data-i="${i}" data-campo="nome" value="${escHtml(it.nome)}" placeholder="Descrição" class="ped-inp">` : `<p class="text-sm font-semibold text-ink">${escHtml(it.nome)}</p><p class="text-[11px] text-inkmute">Custo ${brl(custoUnitarioItem(it))} cada</p>`}</div>
+                    <div class="col-span-3 sm:col-span-2"><label class="ped-lbl">Qtd</label><input type="number" min="1" data-i="${i}" data-campo="quantidade" value="${it.quantidade}" class="ped-inp"></div>
+                    <div class="col-span-4 sm:col-span-2"><label class="ped-lbl">Preço un.</label><input type="number" step="0.01" data-i="${i}" data-campo="preco_unitario" value="${it.preco_unitario === '' ? '' : it.preco_unitario}" class="ped-inp"></div>
+                    ${avulso ? `<div class="col-span-4 sm:col-span-3"><label class="ped-lbl">Custo un.</label><input type="number" step="0.01" data-i="${i}" data-campo="custo_unitario" value="${it.custo_unitario || ''}" class="ped-inp"></div>` : ''}
+                    <div class="col-span-1 text-right"><button type="button" data-rm="${i}" class="text-red-600 text-lg leading-none px-1" title="Remover">✕</button></div>
+                </div>`;
+            }).join('');
+            pedItens.querySelectorAll('input[data-campo]').forEach(inp => inp.addEventListener('input', () => {
+                const it = pedItensAtuais[+inp.dataset.i];
+                it[inp.dataset.campo] = inp.dataset.campo === 'nome' ? inp.value : inp.value;
+                atualizarTotaisPedido();
+            }));
+            pedItens.querySelectorAll('button[data-rm]').forEach(b => b.addEventListener('click', () => { pedItensAtuais.splice(+b.dataset.rm, 1); renderizarItensPedido(); }));
+            atualizarTotaisPedido();
+        }
+        function atualizarTotaisPedido() {
+            const t = totaisItens(pedItensAtuais);
+            pedTotais.innerHTML = `Total de vendas: <strong class="text-ink">${brl(t.vendas)}</strong> &nbsp; Custo: <strong class="text-ink">${brl(t.custo)}</strong> &nbsp; Lucro estimado: <strong class="${t.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">${brl(t.lucro)}</strong>`;
+        }
+        pedProdutoAdd.addEventListener('change', () => {
+            const pr = projPorId(pedProdutoAdd.value); if (!pr) return;
+            const existente = pedItensAtuais.find(x => x.projeto_id === pr.id);
+            if (existente) existente.quantidade = (parseInt(existente.quantidade) || 0) + 1;
+            else pedItensAtuais.push({ projeto_id: pr.id, nome: rotuloProjeto(pr), quantidade: 1, preco_unitario: pedTipoValor.value === 'catalogo' ? +(parseFloat(pr.preco_venda_total) || 0).toFixed(2) : '', custo_unitario: 0 });
+            pedProdutoAdd.value = '';
+            renderizarItensPedido();
         });
+        btnItemBranco.addEventListener('click', () => { pedItensAtuais.push({ projeto_id: null, nome: '', quantidade: 1, preco_unitario: '', custo_unitario: '' }); renderizarItensPedido(); });
+        pedStatusPag.addEventListener('change', () => pedBoxSinal.classList.toggle('hidden', pedStatusPag.value !== 'Sinal pago'));
 
-        function limparFormPedido() {
-            pedidoEditandoId = null;
-            [pedCliente, pedContato, pedPreco, pedPrazo, pedSinal, pedObs].forEach(el => el.value = '');
-            pedQtd.value = 1; pedProjeto.value = ''; pedInfoProjeto.innerText = '';
-            pedTituloForm.innerText = 'Novo pedido';
-            btnSalvarPedido.innerText = '📋 Salvar pedido';
-            btnCancelarEdicaoPedido.classList.add('hidden');
-            atualizarResumoFormPedido();
+        function preencherListasPedido() {
+            const atual = pedProdutoAdd.value;
+            pedProdutoAdd.innerHTML = '<option value="">Selecione um produto</option>' + projetosCacheLocal.map(p => `<option value="${p.id}">${escHtml(rotuloProjeto(p))}</option>`).join('');
+            pedProdutoAdd.value = atual;
+            const nomes = [...new Set(pedidosCache.map(o => o.cliente).filter(Boolean))];
+            listaClientesPedidos.innerHTML = nomes.map(n => `<option value="${escHtml(n)}"></option>`).join('');
         }
-        btnCancelarEdicaoPedido.addEventListener('click', limparFormPedido);
+        function abrirModalPedido(o) {
+            preencherListasPedido();
+            pedidoEditandoId = o ? o.id : null;
+            pedTituloForm.innerText = o ? 'Editar pedido' : 'Novo pedido';
+            pedCliente.value = o ? (o.cliente || '') : '';
+            pedContato.value = o ? (o.contato || '') : '';
+            pedStatus.value = o && STATUS_ATIVOS.includes(o.status) ? o.status : 'Aguardando';
+            pedPrazo.value = o ? (o.prazo || '') : '';
+            pedTipoValor.value = o && o.tipo_valor ? o.tipo_valor : 'catalogo';
+            pedTipoPagamento.value = o ? (o.tipo_pagamento || '') : '';
+            pedStatusPag.value = o ? (o.status_pagamento || ((parseFloat(o.sinal_pago) || 0) > 0 ? 'Sinal pago' : 'Pendente')) : 'Pendente';
+            pedSinal.value = o ? (o.sinal_pago || '') : '';
+            pedBoxSinal.classList.toggle('hidden', pedStatusPag.value !== 'Sinal pago');
+            pedObs.value = o ? (o.observacoes || '') : '';
+            pedItensAtuais = o ? JSON.parse(JSON.stringify(itensDoPedido(o))) : [];
+            renderizarItensPedido();
+            modalPedido.classList.remove('hidden'); modalPedido.classList.add('flex');
+        }
+        function fecharModalPedido() { modalPedido.classList.add('hidden'); modalPedido.classList.remove('flex'); pedidoEditandoId = null; }
+        btnNovoPedido.addEventListener('click', () => abrirModalPedido(null));
+        btnFecharPedido.addEventListener('click', fecharModalPedido);
+        btnCancelarPedidoModal.addEventListener('click', fecharModalPedido);
+        modalPedido.addEventListener('mousedown', (e) => { if (e.target === modalPedido) fecharModalPedido(); });
 
         btnSalvarPedido.addEventListener('click', async () => {
-            const pr = projetosCacheLocal.find(x => x.id === pedProjeto.value);
             const cliente = pedCliente.value.trim();
-            const qtd = parseInt(pedQtd.value) || 0;
-            const preco = parseFloat(pedPreco.value) || 0;
-            if (!cliente || !pr || qtd < 1 || preco <= 0) return alert('Informe cliente, projeto, quantidade e valor unitário.');
+            if (!cliente) return alert('Informe o cliente.');
+            if (!pedItensAtuais.length) return alert('Adicione pelo menos um produto ou item em branco.');
+            const itens = [];
+            for (const it of pedItensAtuais) {
+                const q = parseInt(it.quantidade) || 0, p = parseFloat(it.preco_unitario) || 0;
+                if (q < 1 || p <= 0) return alert('Confira quantidade e preço de todos os itens.');
+                if (!it.projeto_id && !String(it.nome).trim()) return alert('Dê um nome ao item em branco.');
+                itens.push({ projeto_id: it.projeto_id || null, nome: String(it.nome).trim(), quantidade: q, preco_unitario: p, custo_unitario: it.projeto_id ? 0 : (parseFloat(it.custo_unitario) || 0) });
+            }
+            const total = itens.reduce((a, it) => a + it.quantidade * it.preco_unitario, 0);
             const dados = {
-                cliente, contato: pedContato.value.trim(),
-                projeto_id: pr.id, nome_projeto: rotuloProjeto(pr),
-                quantidade: qtd, preco_unitario: preco,
-                prazo: pedPrazo.value || '', sinal_pago: parseFloat(pedSinal.value) || 0,
-                observacoes: pedObs.value.trim()
+                cliente, contato: pedContato.value.trim(), status: pedStatus.value, prazo: pedPrazo.value || '',
+                itens, total, tipo_valor: pedTipoValor.value, tipo_pagamento: pedTipoPagamento.value,
+                status_pagamento: pedStatusPag.value, sinal_pago: pedStatusPag.value === 'Sinal pago' ? (parseFloat(pedSinal.value) || 0) : 0,
+                observacoes: pedObs.value.trim(),
+                nome_projeto: itens.map(i => i.nome).join(', '), projeto_id: itens[0].projeto_id || null
             };
             btnSalvarPedido.disabled = true;
             try {
                 if (pedidoEditandoId) await colecao('pedidos_3d').doc(pedidoEditandoId).update(dados);
-                else await colecao('pedidos_3d').add({ ...dados, status: 'Aguardando', user_id: usuarioAtual.uid, created_at: new Date().toISOString() });
-                limparFormPedido();
+                else await colecao('pedidos_3d').add({ ...dados, user_id: usuarioAtual.uid, created_at: new Date().toISOString() });
+                fecharModalPedido();
                 await carregarPedidos();
             } catch (e) { alert('Erro ao salvar pedido: ' + e.message); }
             btnSalvarPedido.disabled = false;
@@ -2265,9 +2342,6 @@
 
         async function carregarPedidos() {
             if (!projetosCacheLocal.length) { try { await carregarProjetos3d(); } catch (e) {} }
-            const atual = pedProjeto.value;
-            pedProjeto.innerHTML = '<option value="">-- Escolha um projeto --</option>' + projetosCacheLocal.map(p => `<option value="${p.id}">${escHtml(rotuloProjeto(p))}</option>`).join('');
-            pedProjeto.value = atual;
             try {
                 const snap = await colecao('pedidos_3d').where('user_id', '==', usuarioAtual.uid).get();
                 pedidosCache = snapshotParaArray(snap) || [];
@@ -2275,36 +2349,34 @@
                 listaPedidos.innerHTML = '<p class="text-sm text-red-600">Não foi possível carregar os pedidos: ' + escHtml(e.message) + '</p>';
                 return;
             }
+            preencherListasPedido();
             renderizarPedidos();
         }
 
         function renderizarPedidos() {
             const ativos = pedidosCache.filter(o => STATUS_ATIVOS.includes(o.status));
-            // KPIs
             let atras = 0, receber = 0, minutos = 0;
             ativos.forEach(o => {
+                const itens = itensDoPedido(o), tot = totaisItens(itens).vendas;
                 const d = diasAte(o.prazo); if (d !== null && d < 0) atras++;
-                receber += Math.max(0, (o.quantidade || 0) * (o.preco_unitario || 0) - (o.sinal_pago || 0));
-                if (o.status !== 'Pronto') { const pr = projetosCacheLocal.find(x => x.id === o.projeto_id); minutos += ((pr && pr.tempo_total_min) || 0) * (o.quantidade || 0); }
+                receber += Math.max(0, tot - valorPagoPedido(o, tot));
+                if (o.status !== 'Pronto') itens.forEach(it => { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; minutos += ((pr && pr.tempo_total_min) || 0) * (it.quantidade || 0); });
             });
             pedKpiAbertos.innerText = ativos.length; pedKpiAtrasados.innerText = atras;
             pedKpiReceber.innerText = brl(receber); pedKpiHoras.innerText = `${(minutos / 60).toFixed(1).replace('.', ',')} h`;
 
             let lista;
-            if (filtroPedidos === 'fila') {
-                lista = [...ativos].sort((a, b) => (a.prazo || '9999-99-99').localeCompare(b.prazo || '9999-99-99') || (a.created_at || '').localeCompare(b.created_at || ''));
-            } else if (filtroPedidos === 'entregues') {
-                lista = pedidosCache.filter(o => o.status === 'Entregue').sort((a, b) => (b.data_entrega || '').localeCompare(a.data_entrega || ''));
-            } else {
-                lista = [...pedidosCache].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
-            }
+            if (filtroPedidos === 'fila') lista = [...ativos].sort((a, b) => (a.prazo || '9999-99-99').localeCompare(b.prazo || '9999-99-99') || (a.created_at || '').localeCompare(b.created_at || ''));
+            else if (filtroPedidos === 'entregues') lista = pedidosCache.filter(o => o.status === 'Entregue').sort((a, b) => (b.data_entrega || '').localeCompare(a.data_entrega || ''));
+            else lista = [...pedidosCache].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
+
             if (!lista.length) {
-                listaPedidos.innerHTML = '<div class="bg-surface rounded-2xl border border-line p-8 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Cadastre um pedido ao lado.' : 'Nada por aqui ainda.') + '</div>';
+                listaPedidos.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-10 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Clique em <strong>+ Novo pedido</strong> para começar.' : 'Nada por aqui ainda.') + '</div>';
                 return;
             }
             listaPedidos.innerHTML = lista.map((o, i) => {
-                const total = (o.quantidade || 0) * (o.preco_unitario || 0);
-                const falta = Math.max(0, total - (o.sinal_pago || 0));
+                const itens = itensDoPedido(o), tt = totaisItens(itens), total = tt.vendas;
+                const pago = valorPagoPedido(o, total), falta = Math.max(0, total - pago);
                 const d = ativos.includes(o) ? diasAte(o.prazo) : null;
                 let prazoHtml = o.prazo ? `<span class="text-inkmute">Prazo ${fmtData(o.prazo)}</span>` : '<span class="text-inkmute">Sem prazo</span>';
                 if (d !== null) {
@@ -2312,24 +2384,27 @@
                     else if (d === 0) prazoHtml = '<span class="font-bold text-amber-600">Entrega hoje</span>';
                     else if (d <= 3) prazoHtml = `<span class="font-bold text-amber-600">Entrega em ${d} dia${d === 1 ? '' : 's'} (${fmtData(o.prazo)})</span>`;
                 }
-                const pr = projetosCacheLocal.find(x => x.id === o.projeto_id);
-                const est = pr ? (parseInt(pr.quantidade_estoque) || 0) : 0;
-                const horas = pr && pr.tempo_total_min ? ((pr.tempo_total_min * o.quantidade) / 60).toFixed(1).replace('.', ',') + ' h de impressão' : '';
+                const horasMin = itens.reduce((a, it) => { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; return a + ((pr && pr.tempo_total_min) || 0) * (it.quantidade || 0); }, 0);
+                const comEstoque = ativos.includes(o) && itens.every(it => { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; return pr && (parseInt(pr.quantidade_estoque) || 0) >= it.quantidade; });
+                const pagBadge = falta <= 0 ? '<span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-semibold">Pago</span>' : (pago > 0 ? `<span class="px-2 py-0.5 rounded-full bg-blue-100 text-blue-800 font-semibold">Sinal ${brl(pago)} • falta ${brl(falta)}</span>` : `<span class="px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 font-semibold">Pagamento pendente</span>`);
                 let botoes = '';
                 if (o.status === 'Aguardando') botoes = `<button onclick="avancarPedido('${o.id}','Imprimindo')" class="ped-btn bg-blue-600 text-white">▶ Iniciar impressão</button><button onclick="avancarPedido('${o.id}','Pronto')" class="ped-btn bg-surface2 border border-line text-ink">⏩ Já está pronto</button>`;
                 else if (o.status === 'Imprimindo') botoes = `<button onclick="avancarPedido('${o.id}','Pronto')" class="ped-btn bg-green-600 text-white">✅ Marcar pronto</button>`;
-                else if (o.status === 'Pronto') botoes = `<button onclick="entregarPedido('${o.id}')" class="ped-btn bg-emerald-600 text-white">📦 Entregar e lançar venda</button>`;
+                else if (o.status === 'Pronto') botoes = `<button onclick="entregarPedido('${o.id}')" class="ped-btn bg-emerald-700 text-white">📦 Entregar e lançar venda</button>`;
                 else if (o.status === 'Cancelado') botoes = `<button onclick="avancarPedido('${o.id}','Aguardando')" class="ped-btn bg-surface2 border border-line text-ink">↩ Reabrir</button>`;
+                if (falta > 0 && o.status !== 'Cancelado') botoes += `<button onclick="marcarPedidoPago('${o.id}')" class="ped-btn bg-surface2 border border-line text-ink">💲 Marcar como pago</button>`;
                 const podeEditar = STATUS_ATIVOS.includes(o.status);
                 return `<div class="bg-surface rounded-2xl border border-line p-4 shadow-sm">
-                    <div class="flex flex-wrap items-start justify-between gap-2">
+                    <div class="flex items-start justify-between gap-2">
                         <div class="min-w-0">
-                            <p class="text-sm font-bold text-ink">${filtroPedidos === 'fila' ? `<span class="text-inkmute font-mono2 mr-1">#${i + 1}</span>` : ''}${escHtml(o.nome_projeto)} <span class="text-inkmute font-normal">× ${o.quantidade}</span></p>
-                            <p class="text-xs text-inkmute mt-0.5">${escHtml(o.cliente)}${o.contato ? ' • ' + escHtml(o.contato) : ''}</p>
+                            <p class="text-sm font-bold text-ink truncate">${filtroPedidos === 'fila' ? `<span class="text-inkmute font-mono2 mr-1">#${i + 1}</span>` : ''}${escHtml(o.cliente)}</p>
+                            ${o.contato ? `<p class="text-[11px] text-inkmute">${escHtml(o.contato)}</p>` : ''}
                         </div>
-                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full ${COR_STATUS[o.status] || ''}">${o.status}</span>
+                        <span class="text-[10px] font-bold uppercase px-2 py-1 rounded-full whitespace-nowrap ${COR_STATUS[o.status] || ''}">${ROTULO_STATUS[o.status] || o.status}</span>
                     </div>
-                    <div class="flex flex-wrap gap-x-4 gap-y-1 text-xs mt-2">${prazoHtml}<span class="text-inkmute">Total ${brl(total)}</span><span class="${falta > 0 ? 'text-blue-600 font-semibold' : 'text-green-600 font-semibold'}">${falta > 0 ? 'Falta ' + brl(falta) : 'Pago'}${o.sinal_pago > 0 && falta > 0 ? ' (sinal ' + brl(o.sinal_pago) + ')' : ''}</span>${horas ? `<span class="text-inkmute">⏱ ${horas}</span>` : ''}${est >= o.quantidade && STATUS_ATIVOS.includes(o.status) ? '<span class="text-green-600">📦 tem em estoque</span>' : ''}</div>
+                    <ul class="mt-2 text-xs text-ink space-y-0.5">${itens.map(it => `<li class="flex justify-between gap-2"><span class="truncate">${escHtml(it.nome)} <span class="text-inkmute">× ${it.quantidade}</span></span><span class="font-mono2 text-inkmute">${brl(it.quantidade * it.preco_unitario)}</span></li>`).join('')}</ul>
+                    <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs mt-2 pt-2 border-t border-line">${prazoHtml}<span class="font-bold text-ink">Total ${brl(total)}</span><span class="${tt.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro est. ${brl(tt.lucro)}</span>${horasMin ? `<span class="text-inkmute">⏱ ${(horasMin / 60).toFixed(1).replace('.', ',')} h</span>` : ''}${comEstoque ? '<span class="text-green-600">📦 tem em estoque</span>' : ''}</div>
+                    <div class="flex flex-wrap items-center gap-2 text-[11px] mt-2">${pagBadge}${o.tipo_pagamento ? `<span class="text-inkmute">${escHtml(o.tipo_pagamento)}</span>` : ''}</div>
                     ${o.observacoes ? `<p class="text-xs text-inkmute mt-2 italic">${escHtml(o.observacoes)}</p>` : ''}
                     <div class="flex flex-wrap items-center gap-2 mt-3">${botoes}
                         ${podeEditar ? `<button onclick="editarPedido('${o.id}')" class="text-[11px] text-sky-600 font-semibold ml-auto">✏️ Editar</button><button onclick="avancarPedido('${o.id}','Cancelado')" class="text-[11px] text-amber-600 font-semibold">Cancelar</button>` : '<span class="ml-auto"></span>'}
@@ -2343,34 +2418,41 @@
             try { await colecao('pedidos_3d').doc(id).update({ status: novo }); await carregarPedidos(); }
             catch (e) { alert(e.message); }
         };
-        window.editarPedido = function(id) {
-            const o = pedidosCache.find(x => x.id === id); if (!o) return;
-            pedidoEditandoId = id;
-            pedCliente.value = o.cliente || ''; pedContato.value = o.contato || '';
-            pedProjeto.value = o.projeto_id || ''; pedQtd.value = o.quantidade || 1;
-            pedPreco.value = o.preco_unitario || ''; pedPrazo.value = o.prazo || '';
-            pedSinal.value = o.sinal_pago || ''; pedObs.value = o.observacoes || '';
-            pedTituloForm.innerText = 'Editar pedido';
-            btnSalvarPedido.innerText = '💾 Salvar alterações';
-            btnCancelarEdicaoPedido.classList.remove('hidden');
-            atualizarResumoFormPedido();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        };
-        window.excluirPedido = async function(id) {
-            if (!confirm('Excluir este pedido? Vendas já lançadas não são apagadas.')) return;
-            try { await colecao('pedidos_3d').doc(id).delete(); if (pedidoEditandoId === id) limparFormPedido(); await carregarPedidos(); }
+        window.marcarPedidoPago = async function(id) {
+            try { await colecao('pedidos_3d').doc(id).update({ status_pagamento: 'Pago' }); await carregarPedidos(); }
             catch (e) { alert(e.message); }
         };
+        window.editarPedido = function(id) { const o = pedidosCache.find(x => x.id === id); if (o) abrirModalPedido(o); };
+        window.excluirPedido = async function(id) {
+            if (!confirm('Excluir este pedido? Vendas já lançadas não são apagadas.')) return;
+            try { await colecao('pedidos_3d').doc(id).delete(); await carregarPedidos(); }
+            catch (e) { alert(e.message); }
+        };
+
+        // Venda de item em branco (sem projeto cadastrado): sem estoque, sem taxas de canal
+        async function lancarVendaAvulsa(nome, cliente, preco, custo, dataV, pedidoId) {
+            await colecao('vendas_3d').add({
+                estoque_baixado: false, projeto_id: null, nome_projeto: nome, cliente, preco_venda_final: preco,
+                taxa_percentual: 0, taxas_canal_valor: 0, canal_venda: 'direta', custo_producao_retido: custo,
+                lucro_liquido: preco - custo, data_venda: dataV, pedido_id: pedidoId, user_id: usuarioAtual.uid, created_at: new Date().toISOString()
+            });
+        }
         window.entregarPedido = async function(id) {
             const o = pedidosCache.find(x => x.id === id); if (!o) return;
             if (o.venda_registrada) return alert('A venda deste pedido já foi lançada.');
-            const pr = projetosCacheLocal.find(x => x.id === o.projeto_id);
-            if (!pr) return alert('O projeto deste pedido não existe mais. Não dá para lançar a venda automaticamente.');
-            const total = o.quantidade * o.preco_unitario;
-            if (!confirm(`Entregar o pedido de ${o.cliente} e lançar ${o.quantidade} venda(s) de ${brl(o.preco_unitario)} (total ${brl(total)})?\nPeças prontas em estoque serão abatidas.`)) return;
+            const itens = itensDoPedido(o);
+            for (const it of itens) if (it.projeto_id && !projPorId(it.projeto_id)) return alert(`O projeto "${it.nome}" não existe mais. Edite o pedido e troque por um item em branco.`);
+            const unidades = itens.reduce((a, it) => a + it.quantidade, 0), total = totaisItens(itens).vendas;
+            if (!confirm(`Entregar o pedido de ${o.cliente} e lançar ${unidades} venda(s) (total ${brl(total)})?\nPeças prontas em estoque serão abatidas.`)) return;
             try {
                 const hoje = hojeISO();
-                for (let i = 0; i < o.quantidade; i++) await lancarVendaUnidade(pr, o.cliente, o.preco_unitario, hoje, o.id);
+                for (const it of itens) {
+                    const pr = it.projeto_id ? projPorId(it.projeto_id) : null;
+                    for (let i = 0; i < it.quantidade; i++) {
+                        if (pr) await lancarVendaUnidade(pr, o.cliente, it.preco_unitario, hoje, o.id);
+                        else await lancarVendaAvulsa(it.nome, o.cliente, it.preco_unitario, parseFloat(it.custo_unitario) || 0, hoje, o.id);
+                    }
+                }
                 await colecao('pedidos_3d').doc(id).update({ status: 'Entregue', venda_registrada: true, data_entrega: hoje });
                 await carregarPedidos();
                 carregarProjetos3d();
