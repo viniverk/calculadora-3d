@@ -490,6 +490,7 @@
         <div class="p-3 border-t border-line bg-surface2/40 space-y-2">
             <button id="btnTema" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span id="btnTemaIcone">🌙</span><span class="label-texto whitespace-nowrap" id="btnTemaTxt">Modo escuro</span></button>
             <button onclick="mudarAba('marca')" data-aba="marca" class="item-menu-btn w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span>🎨</span><span class="label-texto whitespace-nowrap">Minha marca</span></button>
+            <button id="btnTour" type="button" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span>🧭</span><span class="label-texto whitespace-nowrap">Tour guiado</span></button>
             <div class="overflow-hidden label-texto px-1">
                 <p class="text-xs text-ink truncate font-medium" id="usuarioLogado">...</p>
             </div>
@@ -2086,6 +2087,7 @@
                 if (perfilOk === 'completar') { mostrarTelaCompletarCadastro(); return; }
                 if (!usuarioTemAcesso()) { mostrarTelaAcessoPendente(); return; }
                 mostrarApp();
+                iniciarTourSeNovo();
                 carregarConfigCustos();
                 carregarMaquinas();
                 carregarMarca();
@@ -2617,6 +2619,107 @@
             try { await colecao('marcas').doc(usuarioAtual.uid).set(dados); marcaAtual = dados; renderizarMarcaPortfolio(); renderizerPortfolioCliente(); alert('Marca salva! Ela aparece no topo do seu catálogo público.'); }
             catch (e) { alert('Erro ao salvar: ' + e.message); }
         });
+
+        // --- TOUR GUIADO (primeiro acesso) ---
+        const PASSOS_TOUR = [
+            { centro: true, titulo: 'Bem-vindo ao Venda 3D! 👋', texto: 'Em 1 minuto você conhece o caminho: da máquina ao pedido entregue. Vou destacar cada área do menu. Você pode pular quando quiser e rever depois em “Tour guiado”.' },
+            { aba: 'maquinas', titulo: '1. Cadastre sua impressora', texto: 'Comece por aqui: informe o valor, a vida útil e a potência. O app calcula o custo por hora de máquina, que entra em todos os seus preços.' },
+            { aba: 'filamentos', titulo: '2. Estoque de filamentos', texto: 'Cadastre seus rolos com preço e peso. O custo por grama vem daqui, e o estoque é abatido automaticamente a cada impressão.' },
+            { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: coloque peso e tempo de uma peça e veja o custo e o preço sugerido por canal de venda (venda direta, Shopee, Mercado Livre...).' },
+            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Aqui você monta cada produto com suas peças, cor e máquina. Esta tela mostra só o custo; o preço de venda você define no final do projeto.' },
+            { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
+            { aba: 'vendas', titulo: '6. Vendas', texto: 'Lance vendas rápidas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra.' },
+            { aba: 'portfolio-cliente', titulo: '7. Portfólio', texto: 'Seu catálogo para clientes, com cores disponíveis e preços. Copie o link público e compartilhe: quem abrir não precisa de login.' },
+            { aba: 'buscador', titulo: '8. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez e salve o modelo achado como projeto.' },
+            { aba: 'dashboard', titulo: '9. Visão geral', texto: 'Faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
+            { aba: 'marca', titulo: '10. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público.' },
+            { centro: true, final: true, titulo: 'Tudo pronto! 🚀', texto: 'Sugestão de ordem: cadastre a máquina, depois os filamentos e, por fim, seu primeiro projeto em Impressões. Para rever este guia, use “Tour guiado” no menu.' }
+        ];
+        let tourPasso = -1, tourEls = null;
+        const chaveTour = () => 'tourVisto_' + (usuarioAtual ? usuarioAtual.uid : 'anon');
+        function tourJaVisto() { try { return localStorage.getItem(chaveTour()) === '1'; } catch (e) { return false; } }
+        function tourMarcarVisto() { try { localStorage.setItem(chaveTour(), '1'); } catch (e) {} }
+        function iniciarTourSeNovo() {
+            if (tourJaVisto()) return;
+            setTimeout(() => { if (usuarioAtual && !tourEls && !tourJaVisto()) iniciarTour(); }, 1500);
+        }
+        function iniciarTour() {
+            if (tourEls) return;
+            const bloqueio = document.createElement('div'); bloqueio.style.cssText = 'position:fixed;inset:0;z-index:9998;background:transparent;';
+            const foco = document.createElement('div'); foco.style.cssText = 'position:fixed;z-index:9998;border-radius:12px;pointer-events:none;box-shadow:0 0 0 9999px rgba(15,23,42,.62),0 0 0 3px #34d399 inset;transition:all .25s ease;left:0;top:0;width:0;height:0;';
+            const caixa = document.createElement('div'); caixa.setAttribute('role', 'dialog'); caixa.setAttribute('aria-live', 'polite');
+            caixa.className = 'bg-surface text-ink border border-line rounded-2xl shadow-2xl p-5';
+            caixa.style.cssText = 'position:fixed;z-index:9999;width:340px;max-width:calc(100vw - 24px);';
+            document.body.append(bloqueio, foco, caixa);
+            tourEls = { bloqueio, foco, caixa };
+            document.addEventListener('keydown', tourTeclas);
+            window.addEventListener('resize', tourReposicionar);
+            mostrarPassoTour(0);
+        }
+        function tourTeclas(e) {
+            if (!tourEls) return;
+            if (e.key === 'Escape') encerrarTour();
+            else if (e.key === 'ArrowRight') mostrarPassoTour(tourPasso + 1);
+            else if (e.key === 'ArrowLeft') mostrarPassoTour(tourPasso - 1);
+        }
+        function encerrarTour(irPara) {
+            if (!tourEls) return;
+            tourMarcarVisto();
+            tourEls.bloqueio.remove(); tourEls.foco.remove(); tourEls.caixa.remove(); tourEls = null; tourPasso = -1;
+            document.removeEventListener('keydown', tourTeclas); window.removeEventListener('resize', tourReposicionar);
+            if (window.innerWidth < 768) fecharMenuMobile();
+            mudarAba(typeof irPara === 'string' ? irPara : 'dashboard');
+        }
+        function mostrarPassoTour(i) {
+            if (!tourEls) return;
+            if (i < 0) i = 0;
+            if (i >= PASSOS_TOUR.length) return encerrarTour();
+            tourPasso = i;
+            const p = PASSOS_TOUR[i], ultimo = i === PASSOS_TOUR.length - 1;
+            const mobile = window.innerWidth < 768;
+            if (p.aba) { mudarAba(p.aba); if (mobile) abrirMenuMobile(); }
+            else if (mobile) fecharMenuMobile();
+            tourEls.caixa.innerHTML = `
+                <p class="text-[10px] font-bold uppercase tracking-widest text-emerald-700 mb-1">Passo ${i + 1} de ${PASSOS_TOUR.length}</p>
+                <h3 class="font-display text-lg font-bold text-ink leading-snug" style="color:rgb(var(--c-ink)) !important">${p.titulo}</h3>
+                <p class="text-sm text-inkmute mt-2 leading-relaxed">${p.texto}</p>
+                <div class="flex items-center justify-between gap-2 mt-4">
+                    <button type="button" id="tourPular" class="text-xs font-semibold text-inkmute hover:text-ink underline">${ultimo ? 'Fechar' : 'Pular tour'}</button>
+                    <div class="flex gap-2">
+                        ${i > 0 ? '<button type="button" id="tourVoltar" class="text-xs font-bold border border-line rounded-lg px-3 py-2 text-ink hover:bg-surface2">Voltar</button>' : ''}
+                        <button type="button" id="tourProximo" class="text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white rounded-lg px-4 py-2">${ultimo ? 'Começar pela máquina' : (i === 0 ? 'Começar' : 'Próximo')}</button>
+                    </div>
+                </div>`;
+            tourEls.caixa.querySelector('#tourPular').addEventListener('click', () => encerrarTour());
+            const v = tourEls.caixa.querySelector('#tourVoltar'); if (v) v.addEventListener('click', () => mostrarPassoTour(tourPasso - 1));
+            tourEls.caixa.querySelector('#tourProximo').addEventListener('click', () => ultimo ? encerrarTour('maquinas') : mostrarPassoTour(tourPasso + 1));
+            const alvo = p.aba ? document.querySelector(`#sidebarApp [data-aba="${p.aba}"]`) : null;
+            if (alvo) alvo.scrollIntoView({ block: 'center' });
+            setTimeout(tourReposicionar, mobile && p.aba ? 340 : 60);
+        }
+        function tourReposicionar() {
+            if (!tourEls || tourPasso < 0) return;
+            const p = PASSOS_TOUR[tourPasso], { foco, caixa, bloqueio } = tourEls;
+            const alvo = p.aba ? document.querySelector(`#sidebarApp [data-aba="${p.aba}"]`) : null;
+            const mobile = window.innerWidth < 768, bh = caixa.offsetHeight, bw = caixa.offsetWidth;
+            caixa.style.transform = 'none'; caixa.style.right = 'auto'; caixa.style.bottom = 'auto';
+            if (!alvo || !alvo.offsetParent) {
+                foco.style.width = '0'; foco.style.height = '0'; foco.style.boxShadow = 'none'; bloqueio.style.background = 'rgba(15,23,42,.62)';
+                caixa.style.left = '50%'; caixa.style.top = '50%'; caixa.style.transform = 'translate(-50%,-50%)';
+                return;
+            }
+            bloqueio.style.background = 'transparent';
+            const r = alvo.getBoundingClientRect(), pad = 4;
+            foco.style.boxShadow = '0 0 0 9999px rgba(15,23,42,.62), 0 0 0 3px #34d399 inset';
+            foco.style.left = (r.left - pad) + 'px'; foco.style.top = (r.top - pad) + 'px'; foco.style.width = (r.width + pad * 2) + 'px'; foco.style.height = (r.height + pad * 2) + 'px';
+            if (mobile) { caixa.style.left = '12px'; caixa.style.top = 'auto'; caixa.style.bottom = '12px'; caixa.style.width = 'calc(100vw - 24px)'; }
+            else {
+                caixa.style.width = '340px';
+                caixa.style.left = Math.min(r.right + 18, window.innerWidth - bw - 16) + 'px';
+                caixa.style.top = Math.max(16, Math.min(r.top + r.height / 2 - bh / 2, window.innerHeight - bh - 16)) + 'px';
+            }
+        }
+        document.getElementById('btnTour').addEventListener('click', () => { if (window.innerWidth < 768) abrirMenuMobile(); iniciarTour(); });
 
         // --- MODO ESCURO ---
         function aplicarTema() {
