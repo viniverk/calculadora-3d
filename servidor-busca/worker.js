@@ -20,9 +20,16 @@ async function printables(q) {
   let ultimoErro = 'sem resposta';
   for (const query of tentativas) {
     const r = await fetch('https://api.printables.com/graphql/', {
-      method: 'POST', headers: { 'content-type': 'application/json', 'user-agent': UA },
+      method: 'POST',
+      headers: {
+        'content-type': 'application/json', accept: 'application/json', 'accept-language': 'en-US,en;q=0.9',
+        origin: 'https://www.printables.com', referer: 'https://www.printables.com/',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36',
+      },
       body: JSON.stringify({ query, variables: { q } }),
+      cf: { cacheTtl: 300, cacheEverything: false },
     });
+    if (r.status === 429) { ultimoErro = 'HTTP 429 (limite de pedidos do Printables; tente de novo em alguns minutos)'; break; }
     const d = await r.json().catch(() => null);
     if (d && d.data && d.data.result && d.data.result.items) {
       return d.data.result.items.map((it) => ({
