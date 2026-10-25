@@ -64,7 +64,9 @@ async function thingiverse(q, env) {
 // ---------- MyMiniFactory (chave gratuita) ----------
 async function myminifactory(q, env) {
   if (!env.MMF_KEY) throw new Error('sem chave (MMF_KEY)');
-  const r = await fetch(`https://www.myminifactory.com/api/v2/search?q=${encodeURIComponent(q)}&per_page=24&key=${encodeURIComponent(env.MMF_KEY)}`, { headers: { 'user-agent': UA } });
+  const base = `https://www.myminifactory.com/api/v2/search?q=${encodeURIComponent(q)}&per_page=24`;
+  let r = await fetch(`${base}&key=${encodeURIComponent(env.MMF_KEY.trim())}`, { headers: { 'user-agent': UA } });
+  if (r.status === 401 || r.status === 403) r = await fetch(base, { headers: { 'user-agent': UA, authorization: 'Bearer ' + env.MMF_KEY.trim() } });
   if (!r.ok) { const t = (await r.text().catch(() => '')).replace(/\s+/g, ' ').slice(0, 120); throw new Error('HTTP ' + r.status + (t ? ' — ' + t : '')); }
   const d = await r.json();
   return (d.items || []).map((it) => {
