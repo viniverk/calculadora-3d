@@ -968,18 +968,6 @@
                         </div>
                     </div>
                     <p class="text-[11px] text-inkmute">Use termos específicos, de preferência em inglês, para resultados mais relevantes.</p>
-                    <details id="buscConfig" class="rounded-xl border border-line bg-surface2/50 text-sm">
-                        <summary class="cursor-pointer px-3 py-2 font-semibold text-ink">⚙️ Servidor de busca <span id="buscServStatus" class="text-[11px] font-normal text-inkmute ml-1"></span></summary>
-                        <div class="px-3 pb-3 space-y-2">
-                            <p class="text-[11px] text-inkmute">Com o servidor ligado, os resultados aparecem aqui dentro, com imagem, autor, curtidas e filtro de gratuitos (Printables, Thingiverse, MyMiniFactory e Cults3D). Sem ele, o app abre as buscas nos sites. Passo a passo no arquivo README do servidor.</p>
-                            <div class="flex flex-col sm:flex-row gap-2">
-                                <input id="buscServUrl" type="url" placeholder="https://busca-modelos.seu-usuario.workers.dev" class="ped-inp flex-1">
-                                <button id="btnBuscServSalvar" type="button" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold px-4 py-2 rounded-lg">Salvar</button>
-                                <button id="btnBuscServTestar" type="button" class="border border-line text-ink text-xs font-bold px-4 py-2 rounded-lg hover:bg-surface2">Testar</button>
-                            </div>
-                            <p id="buscServMsg" class="text-[11px] text-inkmute"></p>
-                        </div>
-                    </details>
                     <div id="buscRecentes" class="flex flex-wrap items-center gap-2"></div>
                 </div>
 
@@ -2535,31 +2523,8 @@
             document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
         }
         const FONTES_API = ['printables', 'thingiverse', 'myminifactory', 'cults3d'];
-        const buscServidor = () => { try { return (localStorage.getItem('buscServidor') || '').replace(/\/+$/, ''); } catch (e) { return ''; } };
-        function atualizarStatusServidor() {
-            const u = buscServidor();
-            document.getElementById('buscServUrl').value = u;
-            document.getElementById('buscServStatus').innerText = u ? '• ligado' : '• desligado (usa links)';
-        }
-        document.getElementById('btnBuscServSalvar').addEventListener('click', () => {
-            const v = document.getElementById('buscServUrl').value.trim();
-            if (v && !/^https:\/\//i.test(v)) return alert('O endereço precisa começar com https://');
-            try { localStorage.setItem('buscServidor', v); } catch (e) {}
-            atualizarStatusServidor();
-            document.getElementById('buscServMsg').innerText = v ? 'Salvo. Clique em Testar para conferir.' : 'Servidor removido.';
-        });
-        document.getElementById('btnBuscServTestar').addEventListener('click', async () => {
-            const msg = document.getElementById('buscServMsg'); const u = buscServidor();
-            if (!u) { msg.innerText = 'Salve o endereço primeiro.'; return; }
-            msg.innerText = 'Testando…';
-            try {
-                const r = await fetch(u + '/search?q=benchy&fontes=' + FONTES_API.join(','));
-                const d = await r.json();
-                const erros = Object.entries(d.erros || {}).map(([k, v]) => `${k}: ${v}`);
-                msg.innerText = `Funcionou: ${(d.resultados || []).length} resultado(s).` + (erros.length ? ' Fontes com problema → ' + erros.join(' | ') : '');
-            } catch (e) { msg.innerText = 'Não consegui falar com o servidor (' + e.message + '). Confira o endereço e se o Worker foi publicado.'; }
-        });
-        atualizarStatusServidor();
+        const SERVIDOR_BUSCA = 'https://busca-modelos.discipulos-pagamento.workers.dev';
+        const buscServidor = () => SERVIDOR_BUSCA;
 
         let buscDados = null, buscOrdem = 'relevantes', buscSoGratis = false;
         function htmlCartoesLinks(fontes, q, titulo) {
