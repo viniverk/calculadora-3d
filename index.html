@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light">
-    <meta name="theme-color" content="#F4F5F7">
+    <meta name="theme-color" content="#F1F7F5">
     <title>Venda 3D - Controle de Impressão</title>
     <link rel="icon" type="image/png" href="icone-venda3d.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -28,7 +28,7 @@
                         gold2: '#B45309',
                     },
                     fontFamily: {
-                        display: ['"Space Grotesk"', 'sans-serif'],
+                        display: ['"Plus Jakarta Sans"', '"Inter"', 'sans-serif'],
                         sans: ['"Inter"', 'sans-serif'],
                         mono2: ['"JetBrains Mono"', 'monospace'],
                     }
@@ -46,8 +46,8 @@
         .aba-conteudo { display: none; }
         .aba-conteudo.active { display: grid; }
 
-        :root { --c-base: 244 245 247; --c-surface: 255 255 255; --c-surface2: 241 242 245; --c-line: 227 230 235; --c-ink: 17 24 39; --c-inkmute: 107 114 128; }
-        body.tema-escuro { --c-base: 15 17 21; --c-surface: 24 27 33; --c-surface2: 33 37 45; --c-line: 52 58 69; --c-ink: 233 236 241; --c-inkmute: 156 163 175; color-scheme: dark; }
+        :root { --c-base: 241 247 245; --c-surface: 255 255 255; --c-surface2: 238 244 242; --c-line: 222 232 228; --c-ink: 15 23 42; --c-inkmute: 100 116 139; }
+        body.tema-escuro { --c-base: 11 17 16; --c-surface: 20 28 27; --c-surface2: 29 40 38; --c-line: 44 60 57; --c-ink: 232 240 237; --c-inkmute: 148 168 162; color-scheme: dark; }
         body { background: rgb(var(--c-base)); }
         body.tema-escuro input, body.tema-escuro select, body.tema-escuro textarea { color: rgb(var(--c-ink)); }
         body.tema-escuro ::placeholder { color: rgb(var(--c-inkmute) / .7); }
@@ -74,31 +74,70 @@
             background-image: repeating-linear-gradient(180deg, rgba(17,24,39,0.02) 0px, rgba(17,24,39,0.02) 1px, transparent 1px, transparent 7px);
         }
         .font-mono2 { font-family: 'JetBrains Mono', monospace; letter-spacing: -0.01em; }
-        .font-display { font-family: 'Space Grotesk', sans-serif; }
+        .font-display { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; letter-spacing: -0.02em; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 8px; }
-        ::-webkit-scrollbar-thumb:hover { background: #EA580C; }
-        input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(234,88,12,0.15) !important; }
+        ::-webkit-scrollbar-thumb:hover { background: #10B981; }
+        input:focus, select:focus, textarea:focus { box-shadow: 0 0 0 3px rgba(16,185,129,0.18) !important; }
         .item-menu-btn.ativo-nav {
-            background: linear-gradient(90deg, rgba(234,88,12,0.08), transparent);
-            border-left: 3px solid #EA580C;
+            background: linear-gradient(90deg, rgba(16,185,129,0.16), rgba(16,185,129,0.04));
+            border-left: 3px solid #10B981;
             color: rgb(var(--c-ink));
         }
         #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink, #view-pedidos h2, #view-pedidos .text-ink { color: rgb(var(--c-ink)) !important; }
         .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-surface2)); color: rgb(var(--c-inkmute)); transition: all .15s; }
         .hist-tab:hover { filter: brightness(.96); }
-        .hist-tab.ativo { background: #EA580C; border-color: #EA580C; color: #FFFFFF; }
+        .hist-tab.ativo { background: linear-gradient(135deg,#10B981,#0D9488); border-color: transparent; color: #FFFFFF; box-shadow: 0 6px 14px -6px rgba(16,185,129,.6); }
         .ped-lbl { display:block; font-size:12px; font-weight:500; color:rgb(var(--c-inkmute)); margin-bottom:4px; }
         .ped-inp { width:100%; background:rgb(var(--c-surface)); border:1px solid rgb(var(--c-line)); border-radius:10px; padding:9px 12px; font-size:14px; color:rgb(var(--c-ink)); }
         .ped-inp:focus { outline:none; border-color:#047857; box-shadow:0 0 0 3px rgba(4,120,87,.15) !important; }
         #pedFiltros .hist-tab.ativo { background:#047857; border-color:#047857; }
         .ped-btn { font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 10px; }
         .btn-cta {
-            background: linear-gradient(135deg, #EA580C, #C2410C);
+            background: linear-gradient(135deg, #10B981, #0D9488);
             color: #FFFFFF;
+            box-shadow: 0 10px 20px -10px rgba(16,185,129,.7);
         }
-        .btn-cta:hover { filter: brightness(1.08); }
+        .btn-cta:hover { filter: brightness(1.06); transform: translateY(-1px); }
+
+        /* ===== Camada visual moderna (colorida e amigável) ===== */
+        body { font-feature-settings: 'cv11', 'ss01'; -webkit-font-smoothing: antialiased; }
+        body:not(.tema-escuro) { background: radial-gradient(900px 500px at 8% -5%, rgba(16,185,129,.14), transparent 60%), radial-gradient(800px 480px at 98% 4%, rgba(56,189,248,.12), transparent 55%), radial-gradient(700px 420px at 60% 110%, rgba(251,191,36,.10), transparent 55%), rgb(var(--c-base)); background-attachment: fixed; }
+        body.tema-escuro { background: radial-gradient(900px 500px at 8% -5%, rgba(16,185,129,.12), transparent 60%), radial-gradient(800px 480px at 98% 4%, rgba(99,102,241,.10), transparent 55%), rgb(var(--c-base)); background-attachment: fixed; }
+        h1, h2, h3 { letter-spacing: -0.02em; }
+        #conteudoPainel h2.font-display { font-weight: 800; }
+        /* cartões */
+        .bg-surface.border.border-line { border-color: rgb(var(--c-line)); box-shadow: 0 1px 2px rgba(15,23,42,.04), 0 12px 28px -16px rgba(15,23,42,.16); }
+        body.tema-escuro .bg-surface.border.border-line { box-shadow: 0 1px 2px rgba(0,0,0,.3), 0 14px 30px -18px rgba(0,0,0,.6); }
+        body .rounded-2xl { border-radius: 1.25rem; }
+        body .rounded-xl { border-radius: 0.95rem; }
+        button, a { transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease, transform .15s ease, filter .15s ease; }
+        /* botões principais */
+        .bg-emerald-700, .bg-emerald-600 { background-image: linear-gradient(135deg, #10B981, #0D9488); background-color: #0D9488; box-shadow: 0 8px 18px -10px rgba(16,185,129,.8); }
+        .bg-emerald-700:hover, .bg-emerald-600:hover, .hover\:bg-emerald-800:hover, .hover\:bg-emerald-700:hover { filter: brightness(1.07); transform: translateY(-1px); }
+        .bg-lime-300 { background-image: linear-gradient(135deg, #BEF264, #84CC16); box-shadow: 0 8px 18px -10px rgba(132,204,22,.9); }
+        /* menu lateral */
+        #sidebarApp { box-shadow: 8px 0 30px -22px rgba(15,23,42,.35); }
+        #sidebarApp .item-menu-btn { border-radius: 0.8rem; }
+        #sidebarApp .item-menu-btn:hover { transform: translateX(2px); }
+        #sidebarApp nav p { letter-spacing: .14em; }
+        /* campos */
+        .ped-inp, input.rounded-lg, select.rounded-lg, textarea.rounded-lg { border-radius: 0.8rem; }
+        .ped-inp:focus { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.18) !important; }
+        #pedFiltros .hist-tab.ativo { background: linear-gradient(135deg,#10B981,#0D9488); }
+        /* indicadores coloridos da visão geral */
+        #view-dashboard > div:nth-child(3) > div { position: relative; overflow: hidden; }
+        #view-dashboard > div:nth-child(3) > div::after { content: ''; position: absolute; right: -22px; top: -22px; width: 84px; height: 84px; border-radius: 50%; opacity: .55; }
+        #view-dashboard > div:nth-child(3) > div:nth-child(1) { background: linear-gradient(135deg, rgba(99,102,241,.14), rgba(99,102,241,0) 62%), rgb(var(--c-surface)); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(1)::after { background: radial-gradient(circle, rgba(99,102,241,.35), transparent 70%); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(2) { background: linear-gradient(135deg, rgba(13,148,136,.16), rgba(13,148,136,0) 62%), rgb(var(--c-surface)); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(2)::after { background: radial-gradient(circle, rgba(13,148,136,.35), transparent 70%); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(3) { background: linear-gradient(135deg, rgba(249,115,22,.15), rgba(249,115,22,0) 62%), rgb(var(--c-surface)); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(3)::after { background: radial-gradient(circle, rgba(249,115,22,.35), transparent 70%); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(4) { background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(16,185,129,0) 62%), rgb(var(--c-surface)); }
+        #view-dashboard > div:nth-child(3) > div:nth-child(4)::after { background: radial-gradient(circle, rgba(16,185,129,.4), transparent 70%); }
+        body .font-mono2 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
     </style>
 </head>
 <body class="bg-base text-ink min-h-screen font-sans flex">
