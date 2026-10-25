@@ -1,6 +1,6 @@
 # Servidor de busca de modelos (Cloudflare Worker)
 
-Faz a ponte entre o Venda 3D e as bibliotecas de modelos. É gratuito (plano Free da Cloudflare: 100 mil pedidos por dia).
+Faz a ponte entre o Cliente 3D e as bibliotecas de modelos. É gratuito (plano Free da Cloudflare: 100 mil pedidos por dia).
 
 ## 1. Criar o Worker (uns 5 minutos)
 1. Crie uma conta grátis em https://dash.cloudflare.com
@@ -21,4 +21,4 @@ No Worker: **Settings → Variables and Secrets → Add** (tipo **Secret**). Sem
 Opcional: `ALLOWED_ORIGIN` = `https://viniverk.github.io` (já é o padrão). Só esse site consegue usar o seu Worker pelo navegador.
 
 ## 3. Ligar no app
-No Venda 3D → **Buscar modelos** → **⚙️ Servidor de busca** → cole o endereço do Worker → **Salvar** → **Testar**.
+No Cliente 3D → **Buscar modelos** → **⚙️ Servidor de busca** → cole o endereço do Worker → **Salvar** → **Testar**.

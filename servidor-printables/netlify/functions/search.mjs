@@ -1,10 +1,10 @@
 // Busca no Printables (GraphQL interno do site, sem chave) para o Venda 3D.
 // Roda na Netlify porque o Printables limita (429) os servidores da Cloudflare.
-const ORIGEM = 'https://viniverk.github.io';
+const ORIGENS = ['https://viniverk.github.io', 'https://cliente3d.com.br', 'https://www.cliente3d.com.br'];
 const cache = new Map(); // cache simples enquanto a função está "quente"
 
 const cors = (origin) => ({
-  'access-control-allow-origin': origin === ORIGEM ? origin : ORIGEM,
+  'access-control-allow-origin': ORIGENS.includes(origin) ? origin : ORIGENS[0],
   'access-control-allow-methods': 'GET, OPTIONS',
   'access-control-allow-headers': 'content-type',
   vary: 'Origin',
