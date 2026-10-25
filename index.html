@@ -1028,6 +1028,43 @@
                 <div><h2 class="font-display text-2xl font-bold text-ink">Máquinas</h2><p class="text-sm text-inkmute mt-1">Suas impressoras, custo por hora e horas de uso.</p></div>
                 <div id="listaMaquinas" class="grid grid-cols-1 xl:grid-cols-2 gap-3"></div>
             </div>
+            <div class="lg:col-span-3 bg-surface p-6 rounded-xl shadow-sm border border-line">
+                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2 mb-4">
+                    <h2 class="font-display text-xl font-semibold text-amber-600">⚙️ Custos do negócio (energia, mão de obra, manutenção e taxas)</h2>
+                    <span class="text-xs text-inkmute">Usados no cálculo de custo e preço de todos os projetos novos</span>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Energia (R$ por kWh)</label><input type="number" step="0.01" min="0" id="cfgKwh" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Consumo da impressora (W)</label><input type="number" step="1" min="0" id="cfgWatts" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Valor da impressora (R$)</label><input type="number" step="1" min="0" id="cfgValorImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Vida útil estimada (horas)</label><input type="number" step="100" min="1" id="cfgVidaImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Mão de obra (R$ por hora)</label><input type="number" step="0.1" min="0" id="cfgMaoObra" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Embalagem + frete (R$ por projeto)</label><input type="number" step="0.1" min="0" id="cfgFixoProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Margem para manutenções (%)</label><input type="number" step="0.5" min="0" max="50" id="cfgManutencao" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    <div class="flex items-end"><button id="btnSalvarConfigCustos" class="w-full btn-cta font-bold py-2 rounded-lg text-sm transition">Salvar custos</button></div>
+                </div>
+                <p id="cfgResumoHora" class="text-xs text-inkmute mt-3"></p>
+
+                <div class="mt-5 pt-4 border-t border-line">
+                    <h3 class="font-display font-semibold text-sm text-ink mb-1">🛒 Taxas dos marketplaces</h3>
+                    <p class="text-[11px] text-inkmute mb-3">Valores de referência conferidos em outubro/2026. As taxas mudam com frequência e variam por categoria: confirme na Central do Vendedor e ajuste aqui se precisar.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Clássico — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlClassico" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Premium — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlPremium" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML tarifa fixa abaixo de R$ 79 (R$)</label><input type="number" step="0.1" min="0" id="cfgMlFixa" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML frete grátis pago por você, de R$ 79 em diante (R$)</label><input type="number" step="0.5" min="0" id="cfgMlFrete" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
+                    </div>
+                    <label class="flex items-start gap-2 text-xs text-inkmute mt-3"><input type="checkbox" id="cfgShopeeCpf" class="mt-0.5"> <span>Shopee: sou vendedor CPF com mais de 450 pedidos em 90 dias (soma R$ 3,00 por item)</span></label>
+                    <details class="mt-3 text-xs text-inkmute"><summary class="cursor-pointer font-bold text-ink">Ver tabela da Shopee usada no cálculo</summary>
+                        <ul class="mt-2 space-y-0.5 list-disc list-inside">
+                            <li>Até R$ 79,99: 20% + R$ 4,50 por item (abaixo de R$ 9, a tarifa fixa é metade do preço)</li>
+                            <li>R$ 80 a R$ 99,99: 14% + R$ 16,00</li>
+                            <li>R$ 100 a R$ 199,99: 14% + R$ 20,00</li>
+                            <li>A partir de R$ 200: 14% + R$ 26,00</li>
+                        </ul>
+                    </details>
+                </div>
+            </div>
         </div>
 
         <div id="view-marca" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
@@ -1209,7 +1246,7 @@
                 <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
                     <div class="rounded-2xl border border-line p-4 sm:p-5 space-y-4">
                         <div class="flex items-center justify-between gap-3">
-                            <h3 class="font-display text-base font-bold text-ink">Dados da peça</h3>
+                            <h3 class="font-display text-[1rem] font-bold text-ink">Dados da peça</h3>
                             <div class="flex rounded-full bg-surface2 p-1 text-xs font-bold">
                                 <button type="button" id="calcModoManual" class="px-4 py-1.5 rounded-full bg-emerald-700 text-white">Manual</button>
                                 <button type="button" id="calcModo3mf" class="px-4 py-1.5 rounded-full text-inkmute">Enviar 3MF</button>
@@ -1252,7 +1289,7 @@
                     </div>
 
                     <div class="rounded-2xl border border-line p-4 sm:p-5 space-y-4">
-                        <h3 class="font-display text-base font-bold text-ink">Resultado</h3>
+                        <h3 class="font-display text-[1rem] font-bold text-ink">Resultado</h3>
                         <div class="grid grid-cols-2 gap-3">
                             <div class="rounded-xl border border-line p-4"><p class="text-[11px] uppercase tracking-wide text-inkmute font-semibold">Custo total de produção</p><p id="calcCustoTotal" class="font-mono2 text-2xl text-ink mt-1">R$ 0,00</p></div>
                             <div class="rounded-xl border border-emerald-300 bg-emerald-50 p-4"><p class="text-[11px] uppercase tracking-wide text-emerald-800 font-semibold">Custo unitário</p><p id="calcCustoUnit" class="font-mono2 text-2xl text-ink mt-1">R$ 0,00</p></div>
@@ -1282,43 +1319,6 @@
             <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-4 text-purple-600 border-b border-line pb-2">Seu Catálogo de Preços</h2>
                 <div id="listaModelos" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2"></div>
-            </div>
-            <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line">
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2 mb-4">
-                    <h2 class="font-display text-xl font-semibold text-amber-600">⚙️ Custos do seu negócio</h2>
-                    <span class="text-xs text-inkmute">Usados no cálculo de custo e preço de todos os projetos novos</span>
-                </div>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Energia (R$ por kWh)</label><input type="number" step="0.01" min="0" id="cfgKwh" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Consumo da impressora (W)</label><input type="number" step="1" min="0" id="cfgWatts" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Valor da impressora (R$)</label><input type="number" step="1" min="0" id="cfgValorImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Vida útil estimada (horas)</label><input type="number" step="100" min="1" id="cfgVidaImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Mão de obra (R$ por hora)</label><input type="number" step="0.1" min="0" id="cfgMaoObra" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Embalagem + frete (R$ por projeto)</label><input type="number" step="0.1" min="0" id="cfgFixoProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Margem para manutenções (%)</label><input type="number" step="0.5" min="0" max="50" id="cfgManutencao" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div class="flex items-end"><button id="btnSalvarConfigCustos" class="w-full btn-cta font-bold py-2 rounded-lg text-sm transition">Salvar custos</button></div>
-                </div>
-                <p id="cfgResumoHora" class="text-xs text-inkmute mt-3"></p>
-
-                <div class="mt-5 pt-4 border-t border-line">
-                    <h3 class="font-display font-semibold text-sm text-ink mb-1">🛒 Taxas dos marketplaces</h3>
-                    <p class="text-[11px] text-inkmute mb-3">Valores de referência conferidos em outubro/2026. As taxas mudam com frequência e variam por categoria: confirme na Central do Vendedor e ajuste aqui se precisar.</p>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Clássico — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlClassico" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML Premium — comissão (%)</label><input type="number" step="0.5" min="0" max="40" id="cfgMlPremium" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML tarifa fixa abaixo de R$ 79 (R$)</label><input type="number" step="0.1" min="0" id="cfgMlFixa" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                        <div><label class="block text-xs font-medium mb-1 text-inkmute">ML frete grátis pago por você, de R$ 79 em diante (R$)</label><input type="number" step="0.5" min="0" id="cfgMlFrete" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    </div>
-                    <label class="flex items-start gap-2 text-xs text-inkmute mt-3"><input type="checkbox" id="cfgShopeeCpf" class="mt-0.5"> <span>Shopee: sou vendedor CPF com mais de 450 pedidos em 90 dias (soma R$ 3,00 por item)</span></label>
-                    <details class="mt-3 text-xs text-inkmute"><summary class="cursor-pointer font-bold text-ink">Ver tabela da Shopee usada no cálculo</summary>
-                        <ul class="mt-2 space-y-0.5 list-disc list-inside">
-                            <li>Até R$ 79,99: 20% + R$ 4,50 por item (abaixo de R$ 9, a tarifa fixa é metade do preço)</li>
-                            <li>R$ 80 a R$ 99,99: 14% + R$ 16,00</li>
-                            <li>R$ 100 a R$ 199,99: 14% + R$ 20,00</li>
-                            <li>A partir de R$ 200: 14% + R$ 26,00</li>
-                        </ul>
-                    </details>
-                </div>
             </div>
         </div>
 
@@ -3891,14 +3891,16 @@
             calcEl('calcLinhas').innerHTML = linha('Filamento', filamento) + linha('Materiais extras', extras) + linha('Energia', energia) + (desgaste > 0 ? linha('Desgaste da impressora', desgaste) : '') + linha('Mão de obra', mao) + linha(`Margem para manutenções (${manutPct.toString().replace('.', ',')}%)`, manut) + (fixo > 0 ? linha('Embalagem / custo fixo', fixo) : '');
             calcEl('calcCustoTotal').innerText = brl(total); calcEl('calcCustoUnit').innerText = brl(unit);
             const mRev = Math.max(1, parseFloat(calcEl('calcMultRev').value) || 3), mCons = Math.max(1, parseFloat(calcEl('calcMultCons').value) || 5);
-            const pRev = unit * mRev, pCons = unit * mCons;
-            calcEl('calcRevenda').innerText = brl(pRev); calcEl('calcRevendaLucro').innerText = `(Lucro ${brl(pRev - unit)})`;
-            calcEl('calcConsumidor').innerText = brl(pCons); calcEl('calcConsumidorLucro').innerText = `(Lucro ${brl(pCons - unit)})`;
+            const arred = (v) => Math.ceil(v * 10 - 1e-9) / 10;   // arredonda para cima, de R$ 0,10 em R$ 0,10
+            const pRev = arred(unit * mRev), pCons = arred(unit * mCons);
+            const pct = (p) => unit > 0 ? ` • ${Math.round((p - unit) / unit * 100)}%` : '';
+            calcEl('calcRevenda').innerText = brl(pRev); calcEl('calcRevendaLucro').innerText = `(Lucro ${brl(pRev - unit)}${pct(pRev)})`;
+            calcEl('calcConsumidor').innerText = brl(pCons); calcEl('calcConsumidorLucro').innerText = `(Lucro ${brl(pCons - unit)}${pct(pCons)})`;
             const custoCanal = unit + frete;
             calcEl('calcCanais').innerHTML = ['shopee', 'ml_classico', 'ml_premium'].map(c => {
                 const preco = precoParaCanal(custoCanal * (1 + margem / 100), c);
                 const lucro = preco - taxasDoCanal(c, preco).total - custoCanal;
-                return `<div class="flex items-center justify-between gap-3 px-4 py-3"><span class="text-sm font-semibold text-ink">Preço para ${NOME_CANAL[c].replace('Mercado Livre Clássico', 'Mercado Livre clássico').replace('Mercado Livre Premium', 'Mercado Livre premium')}</span><span class="text-right"><span class="font-mono2 text-base text-ink">${brl(preco)}</span> <span class="text-[11px] text-emerald-700 font-semibold">(Lucro ${brl(lucro)})</span></span></div>`;
+                return `<div class="flex items-center justify-between gap-3 px-4 py-3"><span class="text-sm font-semibold text-ink">Preço para ${NOME_CANAL[c].replace('Mercado Livre Clássico', 'Mercado Livre clássico').replace('Mercado Livre Premium', 'Mercado Livre premium')}</span><span class="text-right"><span class="font-mono2 text-[1rem] text-ink">${brl(preco)}</span> <span class="text-[11px] text-emerald-700 font-semibold">(Lucro ${brl(lucro)})</span></span></div>`;
             }).join('');
             calcUltimo = { filamento, extras, energia, desgaste, mao, manut, fixo, total, unit, qtd, peso, horas, pCons, pRev };
             return calcUltimo;
