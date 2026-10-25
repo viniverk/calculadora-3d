@@ -2522,7 +2522,8 @@
             document.getElementById('buscRecentes').innerHTML = rec.length ? '<span class="text-[11px] text-inkmute">Recentes:</span>' + rec.map(t => `<button type="button" data-q="${escHtml(t)}" class="text-[11px] border border-line rounded-full px-3 py-1 bg-surface2 text-ink">${escHtml(t)}</button>`).join('') : '';
             document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
         }
-        const FONTES_API = ['thingiverse', 'myminifactory', 'cults3d'];   // Printables ficou só como link: o site limita (429) pedidos de servidores
+        const SERVIDOR_PRINTABLES = '';   // endereço da função Netlify do Printables (vazio = Printables só como link)
+        const FONTES_API = [...(SERVIDOR_PRINTABLES ? ['printables'] : []), 'thingiverse', 'myminifactory', 'cults3d'];
         const SERVIDOR_BUSCA = 'https://busca-modelos.discipulos-pagamento.workers.dev';
         const buscServidor = () => SERVIDOR_BUSCA;
 
@@ -2592,13 +2593,23 @@
             box.innerHTML = '<p class="text-sm text-inkmute text-center py-8">🔎 Buscando nas bibliotecas…</p>';
             const meuTermo = termo; buscUltimaBusca = meuTermo + '|' + Date.now(); const marca = buscUltimaBusca;
             try {
-                const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 20000);
-                const r = await fetch(`${servidor}/search?q=${q}&fontes=${viaApi.map(f => f.id).join(',')}`, { signal: ctrl.signal }); clearTimeout(t);
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                const d = await r.json();
+                const pedir = async (url, rotulo) => {
+                    const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 20000);
+                    try { const r = await fetch(url, { signal: ctrl.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); const j = await r.json(); return { resultados: Array.isArray(j.resultados) ? j.resultados : [], erros: j.erros || {} }; }
+                    catch (e) { return { resultados: [], erros: { [rotulo]: e.name === 'AbortError' ? 'demorou demais' : e.message } }; }
+                    finally { clearTimeout(t); }
+                };
+                const viaWorker = viaApi.filter(f => f.id !== 'printables'), querPrint = !!SERVIDOR_PRINTABLES && viaApi.some(f => f.id === 'printables');
+                const vazio = { resultados: [], erros: {} };
+                const [dw, dp] = await Promise.all([
+                    viaWorker.length ? pedir(`${servidor}/search?q=${q}&fontes=${viaWorker.map(f => f.id).join(',')}`, 'servidor') : vazio,
+                    querPrint ? pedir(`${SERVIDOR_PRINTABLES.replace(/\/+$/, '')}/search?q=${q}`, 'printables') : vazio
+                ]);
                 if (marca !== buscUltimaBusca) return;
-                const resultados = Array.isArray(d.resultados) ? d.resultados : [];
-                if (!resultados.length) return mostrarLinks('O servidor não trouxe resultados' + (d.erros && Object.keys(d.erros).length ? ' (' + Object.entries(d.erros).map(([k, v]) => k + ': ' + v).join(' | ') + ')' : '') + '. Use os links abaixo.');
+                const d = { erros: { ...dw.erros, ...dp.erros } };
+                const resultados = []; const maxN = Math.max(dw.resultados.length, dp.resultados.length);
+                for (let k = 0; k < maxN; k++) { if (dp.resultados[k]) resultados.push(dp.resultados[k]); if (dw.resultados[k]) resultados.push(dw.resultados[k]); }
+                if (!resultados.length) return mostrarLinks('O servidor não trouxe resultados' + (Object.keys(d.erros).length ? ' (' + Object.entries(d.erros).map(([k, v]) => k + ': ' + v).join(' | ') + ')' : '') + '. Use os links abaixo.');
                 buscDados = { termo, q, fontes, resultados, erros: d.erros || {} };
                 renderizarCartoesModelos();
             } catch (e) { if (marca === buscUltimaBusca) { buscDados = null; mostrarLinks('Servidor de busca indisponível (' + (e.name === 'AbortError' ? 'demorou demais' : e.message) + '). Mostrando os links.'); } }
