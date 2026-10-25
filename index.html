@@ -1203,6 +1203,86 @@
         </div>
 
         <div id="view-calculadora" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="lg:col-span-2 bg-surface rounded-2xl border border-line shadow-sm p-5 sm:p-6">
+                <h2 class="font-display text-xl font-bold text-ink">Calculadora de custo</h2>
+                <p class="text-xs text-inkmute mt-1 mb-5">Filamento + materiais + energia + mão de obra + manutenções. Preencha e, se quiser, salve como produto.</p>
+                <div class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+                    <div class="rounded-2xl border border-line p-4 sm:p-5 space-y-4">
+                        <div class="flex items-center justify-between gap-3">
+                            <h3 class="font-display text-base font-bold text-ink">Dados da peça</h3>
+                            <div class="flex rounded-full bg-surface2 p-1 text-xs font-bold">
+                                <button type="button" id="calcModoManual" class="px-4 py-1.5 rounded-full bg-emerald-700 text-white">Manual</button>
+                                <button type="button" id="calcModo3mf" class="px-4 py-1.5 rounded-full text-inkmute">Enviar 3MF</button>
+                            </div>
+                        </div>
+                        <div id="calc3mfBox" class="hidden rounded-xl border border-dashed border-line p-4 text-center">
+                            <input type="file" id="calcArquivo3mf" accept=".3mf" class="text-xs text-inkmute">
+                            <p id="calc3mfMsg" class="text-[11px] text-inkmute mt-2">Envie o .3mf já fatiado (Bambu Studio / Orca). O app lê peso e tempo do arquivo; o arquivo não é guardado.</p>
+                        </div>
+                        <div>
+                            <label class="ped-lbl">Nome do modelo (opcional)</label>
+                            <input type="text" id="nomeModelo" placeholder="Ex: Suporte de fone" class="ped-inp">
+                        </div>
+                        <div>
+                            <label class="ped-lbl">Filamento</label>
+                            <select id="selectFilamento" class="ped-inp"><option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option></select>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="ped-lbl">Peso total da mesa (g)</label><input type="number" id="pesoGrams" value="10" min="0" step="0.1" class="ped-inp"></div>
+                            <div><label class="ped-lbl">Quantidade na mesa</label><input type="number" id="calcQtd" value="1" min="1" step="1" class="ped-inp"></div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-3 items-end">
+                            <div><label class="ped-lbl">Impressora usada</label><select id="calcMaquina" class="ped-inp"><option value="">Padrão das Configurações</option></select></div>
+                            <div><label class="ped-lbl">Tempo de impressão (h:mm)</label><input type="text" id="tempoHoras" value="1:00" inputmode="numeric" placeholder="1:00" class="ped-inp"></div>
+                            <button type="button" id="btnEditarKwh" class="ped-inp !w-auto font-bold text-ink hover:bg-surface2">Editar kWh</button>
+                        </div>
+                        <div id="calcKwhBox" class="hidden"><label class="ped-lbl">Energia (R$ por kWh) só para este cálculo</label><input type="number" id="calcKwh" step="0.01" min="0" class="ped-inp"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="ped-lbl">Tempo de mão de obra (h:mm)</label><input type="text" id="calcMaoTempo" value="0:00" inputmode="numeric" placeholder="0:00" class="ped-inp"></div>
+                            <div><label class="ped-lbl">Margem de lucro em marketplace (%)</label><input type="number" id="calcMargemMkt" value="0" min="0" step="1" class="ped-inp"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="ped-lbl">Frete por unidade (opcional)</label><input type="number" id="calcFrete" value="0" min="0" step="0.01" class="ped-inp"></div>
+                        </div>
+                        <div>
+                            <h4 class="font-display text-sm font-bold text-ink mb-2">Materiais extras</h4>
+                            <div id="calcExtras" class="space-y-2"></div>
+                            <button type="button" id="btnAddExtra" class="mt-2 text-xs font-bold border border-line rounded-lg px-3 py-2 text-ink hover:bg-surface2">+ Adicionar material extra</button>
+                        </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-line p-4 sm:p-5 space-y-4">
+                        <h3 class="font-display text-base font-bold text-ink">Resultado</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="rounded-xl border border-line p-4"><p class="text-[11px] uppercase tracking-wide text-inkmute font-semibold">Custo total de produção</p><p id="calcCustoTotal" class="font-mono2 text-2xl text-ink mt-1">R$ 0,00</p></div>
+                            <div class="rounded-xl border border-emerald-300 bg-emerald-50 p-4"><p class="text-[11px] uppercase tracking-wide text-emerald-800 font-semibold">Custo unitário</p><p id="calcCustoUnit" class="font-mono2 text-2xl text-ink mt-1">R$ 0,00</p></div>
+                        </div>
+                        <div class="border-t border-line pt-3">
+                            <p class="text-[11px] font-bold text-ink mb-2">Custos da mesa inteira</p>
+                            <div id="calcLinhas" class="space-y-1.5 text-sm"></div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="rounded-xl border border-line p-4">
+                                <p class="text-xs text-inkmute">Preço para revendedor ×<input id="calcMultRev" type="number" min="1" step="0.5" value="3" class="w-12 bg-transparent border-b border-line text-center text-ink font-bold"></p>
+                                <div class="flex items-end justify-between mt-1 gap-2"><p id="calcRevenda" class="font-mono2 text-xl text-ink">R$ 0,00</p><p id="calcRevendaLucro" class="text-[11px] text-emerald-700 font-semibold">(Lucro R$ 0,00)</p></div>
+                            </div>
+                            <div class="rounded-xl border border-amber-300 bg-amber-50 p-4">
+                                <p class="text-xs text-amber-800">Preço para consumidor final ×<input id="calcMultCons" type="number" min="1" step="0.5" value="5" class="w-12 bg-transparent border-b border-amber-300 text-center text-ink font-bold"></p>
+                                <div class="flex items-end justify-between mt-1 gap-2"><p id="calcConsumidor" class="font-mono2 text-xl text-ink">R$ 0,00</p><p id="calcConsumidorLucro" class="text-[11px] text-emerald-700 font-semibold">(Lucro R$ 0,00)</p></div>
+                            </div>
+                        </div>
+                        <div class="rounded-xl border border-line divide-y divide-line">
+                            <div id="calcCanais"></div>
+                        </div>
+                        <p class="text-[11px] text-inkmute">Preços de marketplace cobrem o custo unitário + frete + a margem acima, já descontadas as taxas do canal (editáveis em Custos do seu negócio, mais abaixo).</p>
+                        <button id="btnSalvar" class="w-full btn-cta font-bold py-3 rounded-xl transition">Salvar como produto</button>
+                    </div>
+                </div>
+            </div>
+            <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
+                <h2 class="font-display text-xl font-semibold mb-4 text-purple-600 border-b border-line pb-2">Seu Catálogo de Preços</h2>
+                <div id="listaModelos" class="grid sm:grid-cols-2 xl:grid-cols-3 gap-3 max-h-[500px] overflow-y-auto pr-2"></div>
+            </div>
             <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2 mb-4">
                     <h2 class="font-display text-xl font-semibold text-amber-600">⚙️ Custos do seu negócio</h2>
@@ -1215,7 +1295,7 @@
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Vida útil estimada (horas)</label><input type="number" step="100" min="1" id="cfgVidaImp" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Mão de obra (R$ por hora)</label><input type="number" step="0.1" min="0" id="cfgMaoObra" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
                     <div><label class="block text-xs font-medium mb-1 text-inkmute">Embalagem + frete (R$ por projeto)</label><input type="number" step="0.1" min="0" id="cfgFixoProjeto" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
-                    <div class="hidden"></div>
+                    <div><label class="block text-xs font-medium mb-1 text-inkmute">Margem para manutenções (%)</label><input type="number" step="0.5" min="0" max="50" id="cfgManutencao" class="w-full bg-surface2 p-2 rounded border border-line text-sm"></div>
                     <div class="flex items-end"><button id="btnSalvarConfigCustos" class="w-full btn-cta font-bold py-2 rounded-lg text-sm transition">Salvar custos</button></div>
                 </div>
                 <p id="cfgResumoHora" class="text-xs text-inkmute mt-3"></p>
@@ -1239,45 +1319,6 @@
                         </ul>
                     </details>
                 </div>
-            </div>
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
-                <h2 class="font-display text-xl font-semibold mb-4 text-teal2 border-b border-line pb-2">Orçamento / Modelo Estimado</h2>
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Nome do Modelo</label>
-                        <input type="text" id="nomeModelo" placeholder="Ex: Protótipo Base" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-accent">
-                    </div>
-                    <div>
-                        <label class="block text-sm font-medium mb-1">Selecione o Filamento Base</label>
-                        <select id="selectFilamento" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-accent text-ink">
-                            <option value="padrao">Preço Médio Padrão (R$ 0,12 /g)</option>
-                        </select>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Peso Estimado (g)</label>
-                            <input type="number" id="pesoGrams" value="50" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium mb-1">Tempo Estimado (Horas)</label>
-                            <input type="number" id="tempoHoras" value="3" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none">
-                        </div>
-                    </div>
-                    <div class="bg-surface2/50 p-4 rounded-lg border border-line">
-                        <p id="labelCustoInsumo" class="text-xs text-inkmute mb-1">Base de Custo: R$ 0,1200 /g</p>
-                        <p id="labelCustoHora" class="text-xs text-inkmute mb-2">Custo de máquina por hora: R$ 1,50</p>
-                        <hr class="border-line my-2">
-                        <div class="flex justify-between items-center">
-                            <span class="font-bold text-sm">Preço Sugerido (Lucro 3x):</span>
-                            <span id="custoTotal" class="text-xl font-black text-green-600 font-mono2">R$ 0,00</span>
-                        </div>
-                    </div>
-                    <button id="btnSalvar" class="w-full btn-cta font-bold py-2 rounded-lg transition">Salvar no Catálogo</button>
-                </div>
-            </div>
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
-                <h2 class="font-display text-xl font-semibold mb-4 text-purple-600 border-b border-line pb-2">Seu Catálogo de Preços</h2>
-                <div id="listaModelos" class="space-y-3 max-h-[500px] overflow-y-auto pr-2"></div>
             </div>
         </div>
 
@@ -1411,10 +1452,8 @@
         const nomeInput = document.getElementById('nomeModelo');
         const pesoInput = document.getElementById('pesoGrams');
         const tempoInput = document.getElementById('tempoHoras');
-        const custoTexto = document.getElementById('custoTotal');
         const btnSalvar = document.getElementById('btnSalvar');
         const listaContainer = document.getElementById('listaModelos');
-        const labelCustoInsumo = document.getElementById('labelCustoInsumo');
         const selectFilamento = document.getElementById('selectFilamento');
 
         const filNome = document.getElementById('filNome');
@@ -1540,7 +1579,7 @@
             });
 
             if (abaDestino === 'dashboard') carregarDashboard();
-            if (abaDestino === 'calculadora') carregarModelos();
+            if (abaDestino === 'calculadora') { carregarModelos(); preencherMaquinasCalc(); calcularAbaBase(); }
             if (abaDestino === 'inserir-impressao') carregarProjetos3d();
             if (abaDestino === 'portfolio-cliente') renderizerPortfolioCliente();
             if (abaDestino === 'vendas') carregarJanelaVendas();
@@ -2402,6 +2441,7 @@
                 const snap = await colecao('maquinas_3d').where('user_id', '==', usuarioAtual.uid).get();
                 maquinasCache = ordenarPor(snapshotParaArray(snap) || [], 'created_at', 'asc');
             } catch (e) { console.error('maquinas', e); maquinasCache = []; }
+            preencherMaquinasCalc();
             const atual = projMaquina.value;
             projMaquina.innerHTML = '<option value="">Padrão das Configurações</option>' + maquinasCache.map(m => `<option value="${m.id}">${escHtml(m.nome)}</option>`).join('');
             projMaquina.value = maquinasCache.some(m => m.id === atual) ? atual : '';
@@ -3129,7 +3169,7 @@
         });
 
         // --- CUSTOS DO NEGÓCIO (configuráveis por usuário) ---
-        const CONFIG_PADRAO = { custo_kwh: 0.90, potencia_w: 150, impressora_valor: 0, impressora_vida_h: 5000, mao_obra_hora: 1.50, custo_fixo_projeto: 0, ml_comissao_classico: 13, ml_comissao_premium: 18, ml_tarifa_fixa: 6, ml_frete_vendedor: 0, shopee_cpf_alto_volume: false };
+        const CONFIG_PADRAO = { custo_kwh: 0.90, potencia_w: 150, impressora_valor: 0, impressora_vida_h: 5000, mao_obra_hora: 1.50, custo_fixo_projeto: 0, manutencao_pct: 5, ml_comissao_classico: 13, ml_comissao_premium: 18, ml_tarifa_fixa: 6, ml_frete_vendedor: 0, shopee_cpf_alto_volume: false };
         let configCustos = { ...CONFIG_PADRAO };
         const num = (v, d) => { const n = parseFloat(v); return isNaN(n) ? d : n; };
 
@@ -3208,14 +3248,14 @@
             const t = taxasDoCanal(canal, preco);
             return { fixo, canal, custoTotal, preco, taxas: t, taxaValor: t.total, taxa: preco > 0 ? t.total / preco * 100 : 0, lucroLiquido: preco - t.total - custoTotal };
         }
-        const brl = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
+        const brl = (v) => 'R$ ' + (Math.abs(v || 0) < 0.005 ? 0 : (v || 0)).toFixed(2).replace('.', ',');
 
         function preencherConfigCustos() {
             const c = configCustos;
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
             set('cfgKwh', c.custo_kwh); set('cfgWatts', c.potencia_w); set('cfgValorImp', c.impressora_valor);
             set('cfgVidaImp', c.impressora_vida_h); set('cfgMaoObra', c.mao_obra_hora);
-            set('cfgFixoProjeto', c.custo_fixo_projeto);
+            set('cfgFixoProjeto', c.custo_fixo_projeto); set('cfgManutencao', c.manutencao_pct);
             set('cfgMlClassico', c.ml_comissao_classico); set('cfgMlPremium', c.ml_comissao_premium); set('cfgMlFixa', c.ml_tarifa_fixa); set('cfgMlFrete', c.ml_frete_vendedor);
             const cpf = document.getElementById('cfgShopeeCpf'); if (cpf) cpf.checked = !!c.shopee_cpf_alto_volume;
             atualizarResumoConfigCustos();
@@ -3237,6 +3277,7 @@
                 impressora_vida_h: Math.max(1, num(document.getElementById('cfgVidaImp').value, 5000)),
                 mao_obra_hora: num(document.getElementById('cfgMaoObra').value, 0),
                 custo_fixo_projeto: num(document.getElementById('cfgFixoProjeto').value, 0),
+                manutencao_pct: Math.min(50, Math.max(0, num(document.getElementById('cfgManutencao').value, 5))),
                 ml_comissao_classico: Math.min(40, Math.max(0, num(document.getElementById('cfgMlClassico').value, 13))),
                 ml_comissao_premium: Math.min(40, Math.max(0, num(document.getElementById('cfgMlPremium').value, 18))),
                 ml_tarifa_fixa: Math.max(0, num(document.getElementById('cfgMlFixa').value, 6)),
@@ -3253,7 +3294,7 @@
             atualizarAcumuladoresMaster();
             calcularAbaBase();
         }
-        ['cfgKwh','cfgWatts','cfgValorImp','cfgVidaImp','cfgMaoObra','cfgFixoProjeto','cfgMlClassico','cfgMlPremium','cfgMlFixa','cfgMlFrete','cfgShopeeCpf'].forEach(id => {
+        ['cfgKwh','cfgWatts','cfgValorImp','cfgVidaImp','cfgMaoObra','cfgFixoProjeto','cfgManutencao','cfgMlClassico','cfgMlPremium','cfgMlFixa','cfgMlFrete','cfgShopeeCpf'].forEach(id => {
             document.getElementById(id).addEventListener(id === 'cfgShopeeCpf' ? 'change' : 'input', () => {
                 const antigo = configCustos; configCustos = { ...CONFIG_PADRAO, ...lerConfigCustosDoFormulario() };
                 atualizarResumoConfigCustos(); calcularAbaBase();
@@ -3802,34 +3843,137 @@
         }
 
         // --- CALCULADORA ---
-        function calcularAbaBase() {
-            const custoPorGrama = selectFilamento.value === 'padrao' ? 0.12 : (parseFloat(selectFilamento.value) || 0.12);
-            const peso = parseFloat(pesoInput.value) || 0;
-            const horas = parseFloat(tempoInput.value) || 0;
-            const custoTotalCalc = calcularCustoPeca(peso, horas, custoPorGrama).total + num(configCustos.custo_fixo_projeto, 0);
-            const precoSugerido = custoTotalCalc * 3; // Lucro 3x, conforme rótulo da tela
-
-            labelCustoInsumo.innerText = `Base de Custo: R$ ${custoPorGrama.toFixed(4)} /g`;
-            custoTexto.innerText = `R$ ${precoSugerido.toFixed(2)}`;
-            return precoSugerido;
+        const calcEl = (id) => document.getElementById(id);
+        function lerHoras(txt) {
+            const t = String(txt || '').trim().replace(',', '.');
+            if (!t) return 0;
+            if (t.includes(':')) { const [h, m] = t.split(':'); return Math.max(0, (parseInt(h, 10) || 0) + (parseInt(m, 10) || 0) / 60); }
+            return Math.max(0, parseFloat(t) || 0);
         }
-        pesoInput.addEventListener('input', calcularAbaBase);
-        tempoInput.addEventListener('input', calcularAbaBase);
-        selectFilamento.addEventListener('change', calcularAbaBase);
+        function horasParaTexto(h) { const min = Math.round(h * 60); return `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`; }
+        function preencherMaquinasCalc() {
+            const sel = calcEl('calcMaquina'); if (!sel) return;
+            const atual = sel.value;
+            sel.innerHTML = '<option value="">Padrão das Configurações</option>' + maquinasCache.map(m => `<option value="${m.id}">${escHtml(m.nome)}</option>`).join('');
+            const padrao = maquinasCache.find(m => m.padrao);
+            sel.value = maquinasCache.some(m => m.id === atual) ? atual : (padrao ? padrao.id : '');
+        }
+        function adicionarLinhaExtra(nome, valor) {
+            const div = document.createElement('div'); div.className = 'flex gap-2 items-center';
+            div.innerHTML = `<input type="text" placeholder="Material (ex: ímã, parafuso)" value="${escHtml(nome || '')}" class="ped-inp calc-extra-nome"><input type="number" min="0" step="0.01" placeholder="R$" value="${valor || ''}" class="ped-inp calc-extra-valor !w-28"><button type="button" class="text-red-600 font-bold px-2" title="Remover">✕</button>`;
+            div.querySelector('button').addEventListener('click', () => { div.remove(); calcularAbaBase(); });
+            div.querySelectorAll('input').forEach(i => i.addEventListener('input', calcularAbaBase));
+            calcEl('calcExtras').appendChild(div);
+        }
+        let calcUltimo = null;
+        function calcularAbaBase() {
+            if (!calcEl('calcLinhas')) return null;
+            const custoPorGrama = selectFilamento.value === 'padrao' ? 0.12 : (parseFloat(selectFilamento.value) || 0.12);
+            const peso = Math.max(0, parseFloat(pesoInput.value) || 0);
+            const qtd = Math.max(1, parseInt(calcEl('calcQtd').value, 10) || 1);
+            const horas = lerHoras(tempoInput.value), horasMao = lerHoras(calcEl('calcMaoTempo').value);
+            const maq = maquinasCache.find(m => m.id === calcEl('calcMaquina').value) || null;
+            const hMaq = custoHoraMaquina(maq);
+            const kwhManual = calcEl('calcKwhBox').classList.contains('hidden') ? null : parseFloat(calcEl('calcKwh').value);
+            const potencia = maq ? num(maq.potencia_w, num(configCustos.potencia_w, 0)) : num(configCustos.potencia_w, 0);
+            const energiaHora = (kwhManual != null && !isNaN(kwhManual)) ? (potencia / 1000) * kwhManual : hMaq.energia;
+            let extras = 0; document.querySelectorAll('#calcExtras .calc-extra-valor').forEach(i => { extras += parseFloat(i.value) || 0; });
+            const filamento = peso * custoPorGrama, energia = horas * energiaHora, desgaste = horas * hMaq.desgaste, mao = horasMao * hMaq.mao;
+            const base = filamento + extras + energia + desgaste + mao;
+            const manutPct = num(configCustos.manutencao_pct, 5);
+            const manut = base * manutPct / 100;
+            const fixo = num(configCustos.custo_fixo_projeto, 0);
+            const total = base + manut + fixo;
+            const unit = total / qtd;
+            const frete = Math.max(0, parseFloat(calcEl('calcFrete').value) || 0);
+            const margem = Math.max(0, parseFloat(calcEl('calcMargemMkt').value) || 0);
+            const linha = (nome, v) => `<div class="flex justify-between"><span class="text-inkmute">${nome}</span><span class="font-bold text-ink">${brl(v)}</span></div>`;
+            calcEl('calcLinhas').innerHTML = linha('Filamento', filamento) + linha('Materiais extras', extras) + linha('Energia', energia) + (desgaste > 0 ? linha('Desgaste da impressora', desgaste) : '') + linha('Mão de obra', mao) + linha(`Margem para manutenções (${manutPct.toString().replace('.', ',')}%)`, manut) + (fixo > 0 ? linha('Embalagem / custo fixo', fixo) : '');
+            calcEl('calcCustoTotal').innerText = brl(total); calcEl('calcCustoUnit').innerText = brl(unit);
+            const mRev = Math.max(1, parseFloat(calcEl('calcMultRev').value) || 3), mCons = Math.max(1, parseFloat(calcEl('calcMultCons').value) || 5);
+            const pRev = unit * mRev, pCons = unit * mCons;
+            calcEl('calcRevenda').innerText = brl(pRev); calcEl('calcRevendaLucro').innerText = `(Lucro ${brl(pRev - unit)})`;
+            calcEl('calcConsumidor').innerText = brl(pCons); calcEl('calcConsumidorLucro').innerText = `(Lucro ${brl(pCons - unit)})`;
+            const custoCanal = unit + frete;
+            calcEl('calcCanais').innerHTML = ['shopee', 'ml_classico', 'ml_premium'].map(c => {
+                const preco = precoParaCanal(custoCanal * (1 + margem / 100), c);
+                const lucro = preco - taxasDoCanal(c, preco).total - custoCanal;
+                return `<div class="flex items-center justify-between gap-3 px-4 py-3"><span class="text-sm font-semibold text-ink">Preço para ${NOME_CANAL[c].replace('Mercado Livre Clássico', 'Mercado Livre clássico').replace('Mercado Livre Premium', 'Mercado Livre premium')}</span><span class="text-right"><span class="font-mono2 text-base text-ink">${brl(preco)}</span> <span class="text-[11px] text-emerald-700 font-semibold">(Lucro ${brl(lucro)})</span></span></div>`;
+            }).join('');
+            calcUltimo = { filamento, extras, energia, desgaste, mao, manut, fixo, total, unit, qtd, peso, horas, pCons, pRev };
+            return calcUltimo;
+        }
+        ['pesoGrams', 'calcQtd', 'tempoHoras', 'calcMaoTempo', 'calcMargemMkt', 'calcFrete', 'calcMultRev', 'calcMultCons', 'calcKwh'].forEach(id => calcEl(id).addEventListener('input', calcularAbaBase));
+        ['selectFilamento', 'calcMaquina'].forEach(id => calcEl(id).addEventListener('change', calcularAbaBase));
+        calcEl('btnAddExtra').addEventListener('click', () => adicionarLinhaExtra());
+        calcEl('btnEditarKwh').addEventListener('click', () => {
+            const box = calcEl('calcKwhBox'); box.classList.toggle('hidden');
+            if (!box.classList.contains('hidden') && !calcEl('calcKwh').value) calcEl('calcKwh').value = num(configCustos.custo_kwh, 0);
+            calcularAbaBase();
+        });
+        function calcDefinirModo(modo3mf) {
+            calcEl('calc3mfBox').classList.toggle('hidden', !modo3mf);
+            calcEl('calcModoManual').className = 'px-4 py-1.5 rounded-full ' + (modo3mf ? 'text-inkmute' : 'bg-emerald-700 text-white');
+            calcEl('calcModo3mf').className = 'px-4 py-1.5 rounded-full ' + (modo3mf ? 'bg-emerald-700 text-white' : 'text-inkmute');
+        }
+        calcEl('calcModoManual').addEventListener('click', () => calcDefinirModo(false));
+        calcEl('calcModo3mf').addEventListener('click', () => calcDefinirModo(true));
+        // Leitura do .3mf (arquivo zip): procura peso e tempo previstos em Metadata/slice_info.config
+        async function lerZipTexto(buf, nomeAlvo) {
+            const dv = new DataView(buf), u8 = new Uint8Array(buf);
+            let eocd = -1; for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 70000); i--) { if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; } }
+            if (eocd < 0) throw new Error('não é um arquivo zip válido');
+            const n = dv.getUint16(eocd + 10, true); let p = dv.getUint32(eocd + 16, true);
+            for (let k = 0; k < n; k++) {
+                if (dv.getUint32(p, true) !== 0x02014b50) break;
+                const metodo = dv.getUint16(p + 10, true), comp = dv.getUint32(p + 20, true), nl = dv.getUint16(p + 28, true), el = dv.getUint16(p + 30, true), cl = dv.getUint16(p + 32, true), off = dv.getUint32(p + 42, true);
+                const nome = new TextDecoder().decode(u8.subarray(p + 46, p + 46 + nl));
+                p += 46 + nl + el + cl;
+                if (nome.toLowerCase() !== nomeAlvo.toLowerCase()) continue;
+                const ini = off + 30 + dv.getUint16(off + 26, true) + dv.getUint16(off + 28, true);
+                const dados = u8.subarray(ini, ini + comp);
+                if (metodo === 0) return new TextDecoder().decode(dados);
+                const ds = new DecompressionStream('deflate-raw');
+                const resp = new Response(new Blob([dados]).stream().pipeThrough(ds));
+                return await resp.text();
+            }
+            return null;
+        }
+        calcEl('calcArquivo3mf').addEventListener('change', async (e) => {
+            const f = e.target.files[0]; const msg = calcEl('calc3mfMsg'); if (!f) return;
+            msg.innerText = 'Lendo o arquivo…';
+            try {
+                const txt = await lerZipTexto(await f.arrayBuffer(), 'Metadata/slice_info.config');
+                if (!txt) throw new Error('o arquivo não tem dados de fatiamento (precisa ser fatiado no Bambu Studio / Orca)');
+                let peso = 0, seg = 0, achou = false;
+                for (const m of txt.matchAll(/key="weight"\s+value="([\d.]+)"/g)) { peso += parseFloat(m[1]) || 0; achou = true; }
+                for (const m of txt.matchAll(/key="prediction"\s+value="([\d.]+)"/g)) { seg += parseFloat(m[1]) || 0; achou = true; }
+                if (!achou) throw new Error('não encontrei peso/tempo dentro do arquivo');
+                if (peso > 0) pesoInput.value = Math.round(peso * 100) / 100;
+                if (seg > 0) tempoInput.value = horasParaTexto(seg / 3600);
+                if (!nomeInput.value.trim()) nomeInput.value = f.name.replace(/\.3mf$/i, '');
+                msg.innerText = `Lido: ${peso.toFixed(1).replace('.', ',')} g e ${horasParaTexto(seg / 3600)} h. Confira os valores e escolha o filamento.`;
+                calcularAbaBase();
+            } catch (err) { msg.innerText = 'Não consegui ler: ' + err.message + '. Use o modo Manual.'; }
+        });
+        preencherMaquinasCalc();
 
         async function carregarModelos() {
             try {
                 const snap = await colecao('catalogo_modelos').where('user_id', '==', usuarioAtual.uid).get();
                 const data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
-                listaContainer.innerHTML = data.map(item => `<div class="bg-surface2 p-3 rounded border border-line flex justify-between items-center shadow-sm"><div><h3 class="font-bold text-ink">${item.nome_modelo}</h3><p class="text-xs text-inkmute">${item.peso_estimado_g}g</p></div><div class="text-right"><span class="text-green-600 font-bold block">R$ ${parseFloat(item.preco_venda_sugerido).toFixed(2)}</span><button onclick="deletarModelo('${item.id}')" class="text-xs text-red-600 hover:underline">Excluir</button></div></div>`).join('');
+                listaContainer.innerHTML = data.length ? data.map(item => `<div class="bg-surface2 p-3 rounded-xl border border-line flex justify-between items-center gap-3"><div class="min-w-0"><h3 class="font-bold text-ink truncate">${escHtml(item.nome_modelo)}</h3><p class="text-xs text-inkmute">${item.peso_estimado_g}g • ${horasParaTexto((item.tempo_estimado_min || 0) / 60)}h${item.custo_unitario != null ? ' • custo ' + brl(item.custo_unitario) : ''}</p></div><div class="text-right shrink-0"><span class="font-mono2 text-lg text-emerald-700">${brl(item.preco_venda_sugerido)}</span><button onclick="deletarModelo('${item.id}')" class="block ml-auto text-[11px] text-red-600 mt-1">Excluir</button></div></div>`).join('') : '<p class="text-sm text-inkmute">Nenhum produto salvo ainda.</p>';
             } catch (error) { console.error(error); }
         }
 
         btnSalvar.addEventListener('click', async () => {
-            const nome = nomeInput.value.trim(); const peso = parseFloat(pesoInput.value) || 0; const tempoHoras = parseFloat(tempoInput.value) || 0; const precoVenda = calcularAbaBase();
-            if (!nome || peso <= 0 || tempoHoras <= 0) return alert('Preencha os dados.');
-            await colecao('catalogo_modelos').add({ nome_modelo: nome, tempo_estimado_min: Math.round(tempoHoras * 60), peso_estimado_g: peso, preco_venda_sugerido: precoVenda, user_id: usuarioAtual.uid, created_at: new Date().toISOString() });
-            nomeInput.value = ''; carregarModelos();
+            const r = calcularAbaBase(); const nome = nomeInput.value.trim();
+            if (!nome) { nomeInput.focus(); return alert('Dê um nome ao modelo para salvar como produto.'); }
+            if (!r || r.peso <= 0 || r.horas <= 0) return alert('Informe peso e tempo de impressão.');
+            try {
+                await colecao('catalogo_modelos').add({ nome_modelo: nome, tempo_estimado_min: Math.round(r.horas * 60), peso_estimado_g: r.peso / r.qtd, quantidade_mesa: r.qtd, custo_unitario: r.unit, preco_revendedor: r.pRev, preco_venda_sugerido: r.pCons, user_id: usuarioAtual.uid, created_at: new Date().toISOString() });
+                nomeInput.value = ''; carregarModelos();
+            } catch (e) { alert('Erro ao salvar: ' + e.message); }
         });
 
         async function deletarModelo(id) { if (confirm('Excluir?')) { await colecao('catalogo_modelos').doc(id).delete(); carregarModelos(); } }
