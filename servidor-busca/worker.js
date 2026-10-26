@@ -106,8 +106,8 @@ async function cults3d(q, env) {
 }
 
 // ---------- Nexprint (API interna do próprio site; NÃO oficial, pode mudar ou bloquear) ----------
-async function nexprint(q) {
-  const r = await fetch(`https://www.nexprint.com/gateway/api/v1/model-library-server/model-base-info/search?pageSize=24&pageNo=1&sortType=6&loadGeneratorInfo=true&keyword=${encodeURIComponent(q)}`, {
+async function nexprint(q, env, pagina = 1) {
+  const r = await fetch(`https://www.nexprint.com/gateway/api/v1/model-library-server/model-base-info/search?pageSize=24&pageNo=${pagina}&sortType=6&loadGeneratorInfo=true&keyword=${encodeURIComponent(q)}`, {
     headers: { accept: 'application/json', 'accept-language': 'en-US,en;q=0.9', referer: 'https://www.nexprint.com/en/search/works?keyword=' + encodeURIComponent(q),
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' },
     cf: { cacheTtl: 300, cacheEverything: true },
@@ -127,8 +127,8 @@ async function nexprint(q) {
 }
 
 // ---------- MakerWorld (API interna do próprio site; NÃO oficial, pode mudar ou bloquear) ----------
-async function makerworld(q) {
-  const r = await fetch(`https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&limit=24&offset=0&keyword=${encodeURIComponent(q)}`, {
+async function makerworld(q, env, pagina = 1) {
+  const r = await fetch(`https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&limit=24&offset=${(pagina - 1) * 24}&keyword=${encodeURIComponent(q)}`, {
     headers: { accept: 'application/json', 'accept-language': 'en-US,en;q=0.9', referer: 'https://makerworld.com/en/search/models?keyword=' + encodeURIComponent(q),
       'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' },
     cf: { cacheTtl: 300, cacheEverything: true },
@@ -193,15 +193,16 @@ export default {
 
     const q = (url.searchParams.get('q') || '').trim().slice(0, 100);
     if (!q) return json({ resultados: [], erros: {} }, cors);
+    const pagina = Math.min(10, Math.max(1, parseInt(url.searchParams.get('pagina') || '1', 10) || 1));
     const pedidas = (url.searchParams.get('fontes') || Object.keys(BUSCADORES).join(',')).split(',').filter((f) => BUSCADORES[f]);
 
-    const chaveCache = new Request(`https://cache.local/search?q=${encodeURIComponent(q.toLowerCase())}&f=${pedidas.sort().join(',')}`);
+    const chaveCache = new Request(`https://cache.local/search?q=${encodeURIComponent(q.toLowerCase())}&f=${pedidas.sort().join(',')}&p=${pagina}`);
     const cache = caches.default;
     const emCache = await cache.match(chaveCache);
     if (emCache) return new Response(emCache.body, { headers: { 'content-type': 'application/json; charset=utf-8', 'x-cache': 'HIT', ...cors } });
 
     const partes = await Promise.all(pedidas.map(async (f) => {
-      try { return [f, await comTimeout(BUSCADORES[f](q, env), 9000), null]; }
+      try { return [f, await comTimeout(BUSCADORES[f](q, env, pagina), 9000), null]; }
       catch (e) { return [f, [], String((e && e.message) || e).slice(0, 200)]; }
     }));
     const erros = {}; const listas = [];

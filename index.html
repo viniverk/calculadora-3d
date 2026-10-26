@@ -2859,12 +2859,32 @@
                         <div class="mt-auto pt-2 flex items-center justify-between text-[11px] text-inkmute"><span>♥ ${fmt(r.curtidas)} • ⬇ ${fmt(r.downloads)}</span><a href="${escHtml(r.url)}" target="_blank" rel="noopener noreferrer" class="text-emerald-700 font-bold text-sm" title="Abrir no site">↗</a></div>
                         <button type="button" data-salvar="${i}" class="mt-1 text-[11px] font-bold border border-line rounded-lg py-1.5 text-ink hover:bg-surface2">➕ Salvar como projeto</button>
                     </div></article>`; }).join('')}</div>` : '<p class="text-sm text-inkmute text-center py-6">Nenhum modelo encontrado com esses filtros.</p>'}
+                ${(buscDados.maisFontes && buscDados.maisFontes.length) ? `<div class="text-center mt-5"><button type="button" id="btnBuscMais" class="text-sm font-bold border border-emerald-700 text-emerald-700 hover:bg-emerald-50 px-6 py-2.5 rounded-xl">${buscDados.carregandoMais ? 'Carregando…' : 'Carregar mais modelos'}</button><p class="text-[11px] text-inkmute mt-1">Mais resultados de ${escHtml(buscDados.maisFontes.map(id => nomeFonte(id).nome).join(', '))}</p></div>` : ''}
                 ${restantes.length ? `<div class="mt-6 pt-4 border-t border-line">${htmlCartoesLinks(restantes, q, 'Outras fontes (abrem no site de origem):')}</div>` : ''}`;
+            const bMais = document.getElementById('btnBuscMais');
+            if (bMais) bMais.addEventListener('click', carregarMaisModelos);
             document.getElementById('buscOrdem').value = buscOrdem;
             document.getElementById('buscOrdem').addEventListener('change', (e) => { buscOrdem = e.target.value; renderizarCartoesModelos(); });
             document.getElementById('buscSoGratis').addEventListener('change', (e) => { buscSoGratis = e.target.checked; renderizarCartoesModelos(); });
             box.querySelectorAll('[data-salvar]').forEach(b => b.addEventListener('click', () => { const r = lista[+b.dataset.salvar]; document.getElementById('buscSalvarNome').value = r.titulo || ''; document.getElementById('buscSalvarLink').value = r.url || ''; document.getElementById('buscSalvarImg').value = r.imagem || ''; document.getElementById('buscSalvarNome').scrollIntoView({ behavior: 'smooth', block: 'center' }); }));
             box.querySelectorAll('[data-abrir-todas]').forEach(b => b.addEventListener('click', () => restantes.forEach(f => window.open(f.url(q), '_blank', 'noopener,noreferrer'))));
+        }
+        const FONTES_PAGINAVEIS = ['nexprint', 'makerworld'];
+        async function carregarMaisModelos() {
+            const d = buscDados; if (!d || d.carregandoMais || !d.maisFontes || !d.maisFontes.length) return;
+            const marca = buscUltimaBusca; d.carregandoMais = true; renderizarCartoesModelos();
+            const prox = (d.pagina || 1) + 1, ids = d.maisFontes.slice();
+            try {
+                const ctrl = new AbortController(); const t = setTimeout(() => ctrl.abort(), 20000);
+                const r = await fetch(`${buscServidor()}/search?q=${d.q}&fontes=${ids.join(',')}&pagina=${prox}`, { signal: ctrl.signal }); clearTimeout(t);
+                if (!r.ok) throw new Error('HTTP ' + r.status);
+                const j = await r.json(); if (marca !== buscUltimaBusca) return;
+                const novos = (Array.isArray(j.resultados) ? j.resultados : []).filter(n => !d.resultados.some(o => o.url === n.url));
+                d.resultados = d.resultados.concat(novos); d.pagina = prox;
+                d.maisFontes = ids.filter(id => (j.resultados || []).filter(x => x.fonte === id).length >= 20);
+                Object.assign(d.erros, j.erros || {});
+            } catch (e) { d.erros.servidor = e.name === 'AbortError' ? 'demorou demais' : e.message; }
+            d.carregandoMais = false; if (marca === buscUltimaBusca) renderizarCartoesModelos();
         }
         async function pesquisarModelos(silencioso) {
             const termo = buscQuery.value.trim();
@@ -2903,7 +2923,7 @@
                 const resultados = []; const maxN = Math.max(dw.resultados.length, dp.resultados.length);
                 for (let k = 0; k < maxN; k++) { if (dp.resultados[k]) resultados.push(dp.resultados[k]); if (dw.resultados[k]) resultados.push(dw.resultados[k]); }
                 if (!resultados.length) return mostrarLinks('O servidor não trouxe resultados' + (Object.keys(d.erros).length ? ' (' + Object.entries(d.erros).map(([k, v]) => k + ': ' + v).join(' | ') + ')' : '') + '. Use os links abaixo.');
-                buscDados = { termo, q, fontes, resultados, erros: d.erros || {} };
+                buscDados = { termo, q, fontes, resultados, erros: d.erros || {}, pagina: 1, maisFontes: FONTES_PAGINAVEIS.filter(id => viaWorker.some(f => f.id === id) && dw.resultados.filter(x => x.fonte === id).length >= 20) };
                 renderizarCartoesModelos();
             } catch (e) { if (marca === buscUltimaBusca) { buscDados = null; mostrarLinks('Servidor de busca indisponível (' + (e.name === 'AbortError' ? 'demorou demais' : e.message) + '). Mostrando os links.'); } }
         }
