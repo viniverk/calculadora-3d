@@ -1019,7 +1019,7 @@
                 <div>
                     <label class="ped-lbl">Modelo da impressora</label>
                     <div class="flex gap-3 items-center">
-                        <div id="maqImgPreview" class="h-20 w-24 shrink-0 rounded-xl border border-line bg-white flex items-center justify-center overflow-hidden text-3xl">🖨️</div>
+                        <div id="maqImgPreview" class="h-24 w-28 shrink-0 rounded-xl border border-line bg-white flex items-center justify-center overflow-hidden text-3xl p-1">🖨️</div>
                         <div class="flex-1 min-w-0 space-y-1.5">
                             <select id="maqCatalogo" class="ped-inp"></select>
                             <select id="maqTipo" class="ped-inp hidden">
@@ -2482,7 +2482,7 @@
         let maquinaEditandoId = null;
         // Catálogo de impressoras (ilustrações geradas no app, sem fotos externas)
         const CAT_MARCAS = {
-            'Elegoo': { cor: '#2563EB', itens: [['neptune-3-pro','Neptune 3 Pro','aberta',350],['neptune-3-plus','Neptune 3 Plus','aberta',350],['neptune-4','Neptune 4','aberta',350],['neptune-4-pro','Neptune 4 Pro','aberta',350],['neptune-4-plus','Neptune 4 Plus','aberta',400],['neptune-4-max','Neptune 4 Max','aberta',400],['centauri-carbon','Centauri Carbon','fechada',350],['saturn-3-ultra','Saturn 3 Ultra','resina',100],['mars-5','Mars 5','resina',60]] },
+            'Elegoo': { cor: '#2563EB', itens: [['neptune-3-pro','Neptune 3 Pro','aberta',350],['neptune-3-plus','Neptune 3 Plus','aberta',350],['neptune-4','Neptune 4','aberta',350],['neptune-4-pro','Neptune 4 Pro','aberta',350],['neptune-4-plus','Neptune 4 Plus','aberta',400],['neptune-4-max','Neptune 4 Max','aberta',400],['centauri-carbon','Centauri Carbon','fechada',350],['centauri-carbon-2','Centauri Carbon 2','fechada',350],['saturn-3-ultra','Saturn 3 Ultra','resina',100],['mars-5','Mars 5','resina',60]] },
             'Creality': { cor: '#0EA5E9', itens: [['ender-3','Ender 3','aberta',270],['ender-3-v2','Ender 3 V2','aberta',270],['ender-3-v3-se','Ender 3 V3 SE','aberta',350],['ender-3-v3-ke','Ender 3 V3 KE','aberta',350],['ender-3-v3','Ender 3 V3','aberta',350],['ender-5-plus','Ender 5 Plus','aberta',350],['cr-10-smart-pro','CR-10 Smart Pro','aberta',350],['k1','K1','fechada',350],['k1c','K1C','fechada',350],['k1-max','K1 Max','fechada',400],['k2-plus','K2 Plus','fechada',1200],['halot-mage','Halot-Mage','resina',100]] },
             'Bambu Lab': { cor: '#16A34A', itens: [['a1-mini','A1 Mini','aberta',150],['a1','A1','aberta',350],['p1p','P1P','aberta',350],['p1s','P1S','fechada',350],['x1-carbon','X1 Carbon','fechada',350],['h2d','H2D','fechada',700]] },
             'Anycubic': { cor: '#F59E0B', itens: [['kobra-2','Kobra 2','aberta',300],['kobra-2-pro','Kobra 2 Pro','aberta',300],['kobra-3','Kobra 3','aberta',400],['kobra-s1','Kobra S1','fechada',400],['photon-mono-4','Photon Mono 4','resina',60],['photon-mono-m7','Photon Mono M7','resina',120]] },
@@ -2494,7 +2494,7 @@
         };
         const CAT_PLANO = {};
         Object.entries(CAT_MARCAS).forEach(([marca, d]) => d.itens.forEach(([id, nome, tipo, w]) => { CAT_PLANO[marca.toLowerCase().replace(/\s+/g, '-') + '-' + id] = { marca, nome, tipo, w, cor: d.cor }; }));
-        function svgImpressora(tipo, cor) {
+        function svgImpressora(tipo, cor, marca) {
             cor = cor || '#10B981';
             const f = '#E2E8F0', e = '#475569', d = '#1E293B';
             const corpos = {
@@ -2503,11 +2503,11 @@
                 resina: `<rect x="20" y="62" width="80" height="30" rx="5" fill="${d}"/><rect x="26" y="68" width="68" height="4" rx="2" fill="${cor}"/><path d="M26 62 L34 24 H86 L94 62 Z" fill="${cor}" opacity=".35" stroke="${cor}" stroke-width="2"/><rect x="42" y="42" width="36" height="6" rx="1" fill="${e}"/><rect x="58" y="14" width="4" height="30" fill="${e}"/><rect x="48" y="10" width="24" height="6" rx="2" fill="${d}"/><circle cx="92" cy="80" r="4" fill="${f}"/>`,
                 delta: `<rect x="22" y="86" width="76" height="7" rx="2" fill="${d}"/><rect x="24" y="12" width="6" height="74" fill="${e}"/><rect x="90" y="12" width="6" height="74" fill="${e}"/><rect x="57" y="18" width="6" height="68" fill="${e}"/><rect x="20" y="8" width="80" height="7" rx="2" fill="${cor}"/><ellipse cx="60" cy="78" rx="26" ry="6" fill="${f}" stroke="${e}"/><path d="M60 30L34 14M60 30L86 14M60 30L60 14" stroke="${e}" stroke-width="1.5"/><rect x="52" y="30" width="16" height="12" rx="2" fill="${d}"/><path d="M57 42h6l-3 8z" fill="${cor}"/>`
             };
-            return `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full" role="img" aria-label="Impressora 3D">${corpos[tipo] || corpos.aberta}</svg>`;
+            return `<svg viewBox="0 0 120 ${marca ? 114 : 100}" xmlns="http://www.w3.org/2000/svg" class="w-full h-full" role="img" aria-label="Impressora 3D${marca ? ' ' + marca : ''}">${corpos[tipo] || corpos.aberta}${marca ? `<text x="60" y="110" text-anchor="middle" font-family="Plus Jakarta Sans, Inter, Arial, sans-serif" font-weight="800" font-size="12" letter-spacing=".5" fill="${cor}">${marca.toUpperCase()}</text>` : ''}</svg>`;
         }
         function imagemMaquina(m) {
             const c = m && CAT_PLANO[m.catalogo_id];
-            if (c) return svgImpressora(c.tipo, c.cor);
+            if (c) return svgImpressora(c.tipo, c.cor, c.marca);
             if (m && m.tipo) return svgImpressora(m.tipo, '#10B981');
             return '<span class="text-5xl">🖨️</span>';
         }
@@ -2522,7 +2522,7 @@
         function atualizarPreviewMaquina() {
             const box = document.getElementById('maqImgPreview'), v = maqCatalogo.value;
             maqTipo.classList.toggle('hidden', v !== 'outra');
-            if (CAT_PLANO[v]) box.innerHTML = svgImpressora(CAT_PLANO[v].tipo, CAT_PLANO[v].cor);
+            if (CAT_PLANO[v]) box.innerHTML = svgImpressora(CAT_PLANO[v].tipo, CAT_PLANO[v].cor, CAT_PLANO[v].marca);
             else if (v === 'outra') box.innerHTML = svgImpressora(maqTipo.value, '#10B981');
             else box.textContent = '🖨️';
         }
