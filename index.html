@@ -2,11 +2,17 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <meta name="color-scheme" content="light">
     <meta name="theme-color" content="#F1F7F5">
     <title>Cliente 3D - Controle de Impressão</title>
     <link rel="icon" type="image/png" href="icone-venda3d.png">
+    <link rel="manifest" href="manifest.webmanifest">
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cliente 3D">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
@@ -150,7 +156,28 @@
         #view-dashboard > div:nth-child(3) > div:nth-child(4) { background: linear-gradient(135deg, rgba(16,185,129,.18), rgba(16,185,129,0) 62%), rgb(var(--c-surface)); }
         #view-dashboard > div:nth-child(3) > div:nth-child(4)::after { background: radial-gradient(circle, rgba(16,185,129,.4), transparent 70%); }
         body .font-mono2 { font-family: 'Plus Jakarta Sans', 'Inter', sans-serif; font-weight: 800; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-    </style>
+    
+        /* ---- Celular: barra inferior, toque e segurança de área ---- */
+        #navInferior { display: none; }
+        @media (max-width: 767px) {
+            body:has(#mobileTopBar:not(.hidden):not([style*="none"])) #navInferior { display: grid; }
+            #navInferior { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; grid-template-columns: repeat(5, 1fr);
+                background: rgb(var(--c-surface)); border-top: 1px solid rgb(var(--c-line)); padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
+                box-shadow: 0 -8px 24px -16px rgba(15,23,42,.35); }
+            #navInferior button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; border-radius: 12px; font-size: 10px; font-weight: 700; color: rgb(var(--c-inkmute)); -webkit-tap-highlight-color: transparent; }
+            #navInferior button .ico { font-size: 20px; line-height: 1.1; }
+            #navInferior button.nav-ativo { background: rgba(16,185,129,.14); color: #047857; }
+            body.tema-escuro #navInferior button.nav-ativo { color: #6ee7b7; }
+            #conteudoPainel { padding-bottom: calc(5.5rem + env(safe-area-inset-bottom)) !important; }
+            #mobileTopBar { padding-top: env(safe-area-inset-top); height: calc(3.5rem + env(safe-area-inset-top)); }
+            #conteudoPainel { margin-top: calc(3.5rem + env(safe-area-inset-top)) !important; }
+            input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=color]), select, textarea { font-size: 16px !important; }
+            #conteudoPainel button, #conteudoPainel select { min-height: 36px; }
+            body { overflow-x: hidden; }
+            #conteudoPainel .overflow-x-auto, #conteudoPainel table { -webkit-overflow-scrolling: touch; }
+        }
+        @media (display-mode: standalone) { body { overscroll-behavior-y: none; } }
+</style>
 </head>
 <body class="bg-base text-ink min-h-screen font-sans flex">
 
@@ -165,6 +192,14 @@
     </header>
 
     <div id="overlayMobile" class="md:hidden fixed inset-0 bg-black/60 z-10 hidden"></div>
+
+    <nav id="navInferior" class="md:hidden" aria-label="Navegação principal">
+        <button type="button" data-nav="dashboard" onclick="mudarAba('dashboard')"><span class="ico">📊</span>Início</button>
+        <button type="button" data-nav="calculadora" onclick="mudarAba('calculadora')"><span class="ico">🧮</span>Calcular</button>
+        <button type="button" data-nav="inserir-impressao" onclick="mudarAba('inserir-impressao')"><span class="ico">🖨️</span>Projetos</button>
+        <button type="button" data-nav="pedidos" onclick="mudarAba('pedidos')"><span class="ico">📋</span>Pedidos</button>
+        <button type="button" data-nav="mais" onclick="abrirMenuMobile()"><span class="ico">☰</span>Mais</button>
+    </nav>
 
 
     <div id="telaAutenticacao" class="w-full min-h-screen bg-white text-ink">
@@ -541,6 +576,7 @@
         <div class="p-3 border-t border-line bg-surface2/40 space-y-2">
             <button id="btnTema" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span id="btnTemaIcone">🌙</span><span class="label-texto whitespace-nowrap" id="btnTemaTxt">Modo escuro</span></button>
             <button onclick="mudarAba('marca')" data-aba="marca" class="item-menu-btn w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span>🎨</span><span class="label-texto whitespace-nowrap">Minha marca</span></button>
+            <button id="btnInstalar" type="button" class="hidden w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-emerald-300 bg-emerald-50 text-sm font-semibold text-emerald-800 hover:bg-emerald-100"><span>📲</span><span class="label-texto whitespace-nowrap">Instalar app no celular</span></button>
             <button id="btnTour" type="button" class="w-full flex items-center gap-2 px-3 py-2 rounded-xl border border-line bg-surface text-sm font-semibold text-ink hover:bg-surface2"><span>🧭</span><span class="label-texto whitespace-nowrap">Tour guiado</span></button>
             <div class="overflow-hidden label-texto px-1">
                 <p class="text-xs text-ink truncate font-medium" id="usuarioLogado">...</p>
@@ -1607,11 +1643,30 @@
         });
         overlayMobile.addEventListener('click', fecharMenuMobile);
 
+        // --- APP INSTALÁVEL (PWA) ---
+        if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !modoPublicoAtivoPWA()) {
+            window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+        }
+        function modoPublicoAtivoPWA() { return new URLSearchParams(location.search).get('modo') === 'publico'; }
+        let eventoInstalar = null;
+        const jaInstalado = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); eventoInstalar = e; if (!jaInstalado()) document.getElementById('btnInstalar').classList.remove('hidden'); });
+        window.addEventListener('appinstalled', () => { eventoInstalar = null; document.getElementById('btnInstalar').classList.add('hidden'); });
+        (function () {
+            const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            if (ios && !jaInstalado()) document.getElementById('btnInstalar').classList.remove('hidden');
+            document.getElementById('btnInstalar').addEventListener('click', async () => {
+                if (eventoInstalar) { eventoInstalar.prompt(); try { await eventoInstalar.userChoice; } catch (e) {} eventoInstalar = null; document.getElementById('btnInstalar').classList.add('hidden'); }
+                else alert(ios ? 'Para instalar no iPhone: toque no botão Compartilhar do Safari e escolha “Adicionar à Tela de Início”.' : 'Para instalar: abra o menu do navegador (⋮) e escolha “Instalar app” ou “Adicionar à tela inicial”.');
+            });
+        })();
+
         function mudarAba(abaDestino) {
             if (modoPublicoAtivo) return; 
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
             fecharMenuMobile();
+            document.querySelectorAll('#navInferior button').forEach(b => b.classList.toggle('nav-ativo', b.dataset.nav === abaDestino));
 
             document.querySelectorAll('.item-menu-btn').forEach(btn => {
                 if (btn.getAttribute('data-aba') === abaDestino) {
