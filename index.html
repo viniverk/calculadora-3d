@@ -1753,6 +1753,27 @@
         prepararCartoesMobile();
         overlayMobile.addEventListener('click', fecharMenuMobile);
 
+        // --- CELULAR EM "SITE PARA COMPUTADOR": avisa e tenta voltar ao modo celular ---
+        (function detectarModoComputadorNoCelular() {
+            try {
+                const tocavel = (navigator.maxTouchPoints || 0) > 0 && window.matchMedia('(pointer: coarse)').matches;
+                const telaPequena = Math.min(screen.width, screen.height) <= 820;
+                if (!(tocavel && telaPequena && window.innerWidth > 820) || modoPublicoAtivo) return;
+                const mv = document.querySelector('meta[name="viewport"]');
+                if (mv) mv.setAttribute('content', 'width=' + Math.min(screen.width, screen.height) + ', initial-scale=1, viewport-fit=cover');
+                setTimeout(() => {
+                    if (window.innerWidth <= 820) return; // o ajuste funcionou
+                    let aviso = null; try { aviso = sessionStorage.getItem('c3d_aviso_desktop'); } catch (e) {}
+                    if (aviso) return;
+                    const d = document.createElement('div');
+                    d.style.cssText = 'position:fixed;left:0;right:0;top:0;z-index:99999;background:#fef3c7;color:#78350f;border-bottom:2px solid #f59e0b;padding:14px 16px;font:600 22px/1.35 Inter,sans-serif;display:flex;gap:14px;align-items:flex-start';
+                    d.innerHTML = '<span style="flex:1">📱 Você está vendo a versão de <b>computador</b>. No Chrome do celular, abra o menu ⋮, desmarque <b>“Site para computador”</b> e abra o app de novo para ver a versão do celular.</span><button type="button" style="font-size:28px;line-height:1;padding:4px 10px" aria-label="Fechar">✕</button>';
+                    d.querySelector('button').onclick = () => { d.remove(); try { sessionStorage.setItem('c3d_aviso_desktop', '1'); } catch (e) {} };
+                    document.body.appendChild(d);
+                }, 800);
+            } catch (e) {}
+        })();
+
         // --- APP INSTALÁVEL (PWA) ---
         if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !modoPublicoAtivoPWA()) {
             window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
