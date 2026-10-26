@@ -865,6 +865,11 @@
                             <option value="Projeto Finalizado">Projeto Finalizado</option>
                             <option value="Vendido">Vendido</option>
                         </select>
+                        <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Impressora:</label>
+                        <select id="selectFiltroMaquinaPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
+                            <option value="__todas">Todas</option>
+                            <option value="__sem">⚠️ Sem impressora</option>
+                        </select>
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Ordenar por:</label>
                         <select id="selectOrdenacaoPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
                             <option value="created_at">Data de Cadastro</option>
@@ -3597,6 +3602,24 @@
         selectOrdenacaoPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
         selectFiltroStatusPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
         buscaProjetoNome.addEventListener('input', () => { renderizarProjetosOrdenados(); });
+        selectFiltroMaquinaPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
+
+        function atualizarFiltroMaquinas() {
+            const sel = document.getElementById('selectFiltroMaquinaPortfolio');
+            if (!sel) return;
+            const atual = sel.value;
+            const semMaq = (projetosCacheLocal || []).filter(p => !p.maquina_id).length;
+            const idsUsados = new Set((projetosCacheLocal || []).map(p => p.maquina_id).filter(Boolean));
+            const maqs = (typeof maquinasCache !== 'undefined' && maquinasCache) ? maquinasCache : [];
+            const cont = id => (projetosCacheLocal || []).filter(p => p.maquina_id === id).length;
+            let html = '<option value="__todas">Todas</option>' + `<option value="__sem">⚠️ Sem impressora (${semMaq})</option>`;
+            maqs.forEach(m => { html += `<option value="${escHtml(m.id)}">🖨️ ${escHtml(m.nome || 'Máquina')} (${cont(m.id)})</option>`; });
+            // projetos ligados a uma máquina que já não existe
+            const orfas = [...idsUsados].filter(id => !maqs.some(m => m.id === id));
+            if (orfas.length) html += `<option value="__orfa">❓ Máquina removida (${(projetosCacheLocal || []).filter(p => orfas.includes(p.maquina_id)).length})</option>`;
+            sel.innerHTML = html;
+            sel.value = [...sel.options].some(o => o.value === atual) ? atual : '__todas';
+        }
 
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
@@ -3604,6 +3627,11 @@
             const termoBusca = buscaProjetoNome.value.trim().toLowerCase();
             let projetosOrdenados = filtroStatus === 'Todos' ? [...projetosCacheLocal] : projetosCacheLocal.filter(p => p.status === filtroStatus);
             if (termoBusca) { projetosOrdenados = projetosOrdenados.filter(p => (p.nome_projeto || '').toLowerCase().includes(termoBusca)); }
+            atualizarFiltroMaquinas();
+            const filtroMaq = selectFiltroMaquinaPortfolio.value;
+            if (filtroMaq === '__sem') projetosOrdenados = projetosOrdenados.filter(p => !p.maquina_id);
+            else if (filtroMaq === '__orfa') { const ids = new Set(((typeof maquinasCache !== 'undefined' && maquinasCache) || []).map(m => m.id)); projetosOrdenados = projetosOrdenados.filter(p => p.maquina_id && !ids.has(p.maquina_id)); }
+            else if (filtroMaq !== '__todas') projetosOrdenados = projetosOrdenados.filter(p => p.maquina_id === filtroMaq);
             projetosOrdenados.sort((a, b) => typeof a[criterio] === 'string' ? a[criterio].localeCompare(b[criterio]) : b[criterio] - a[criterio]);
 
             const container = document.getElementById('listaProjetosSalvos');
@@ -3616,7 +3644,7 @@
                 const subPecasHtml = proj.pecas ? proj.pecas.map(p => `<div class="flex justify-between text-[11px] text-inkmute bg-base/40 px-1.5 py-0.5 rounded"><span>${p.nome_peca}</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`).join('') : '';
                 const badgePortfolio = deveAparecerNoPortfolio(proj) ? `<span class="text-[9px] bg-teal2/15 text-teal2 px-1.5 py-0.5 rounded font-bold" title="Aparece no Portfólio de Clientes">👁️ No Portfólio</span>` : `<span class="text-[9px] bg-surface2 text-inkmute/70 px-1.5 py-0.5 rounded font-bold" title="Não aparece no Portfólio de Clientes">🙈 Oculto</span>`;
 
-                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
+                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${proj.maquina_id ? `<span class="text-[9px] bg-surface text-inkmute border border-line px-1.5 py-0.5 rounded font-bold">🖨️ ${escHtml(proj.maquina_nome || 'Máquina')}</span>` : `<span class="text-[9px] bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded font-bold" title="Cadastre a impressora deste projeto">⚠️ Sem impressora</span>`}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
             }).join('');
         }
 
