@@ -3280,7 +3280,7 @@
             if (link !== projLink3mf.value.trim()) return;
             if (!achou) { st.className = 'text-[11px] text-amber-600 mt-1'; st.textContent = 'Não consegui pegar a imagem deste link. Cole o endereço da imagem no campo acima.'; projLinkUltimo = ''; return; }
             projImgAuto = achou.imagem; projImagemUrl.value = achou.imagem; projImagemUrl.dispatchEvent(new Event('input'));
-            if (!projNome.value.trim() && achou.titulo) projNome.value = achou.titulo.replace(/\s*[|\-–·]\s*(Free\s+)?3D\s+(Print\s+)?Model.*$/i, '').replace(/\s*[|\-–·]\s*(MakerWorld|Printables|Thingiverse|MyMiniFactory|Cults).*$/i, '').trim();
+            if (!projNome.value.trim() && achou.titulo) projNome.value = achou.titulo.replace(/\s*[|\-–·]\s*(Free\b|Modelo\b|Gratuito\b|3D\b|Mod[eè]le\b).*$/i, '').replace(/\s*[|\-–·]\s*(MakerWorld|Printables|Thingiverse|MyMiniFactory|Cults).*$/i, '').trim();
             st.className = 'text-[11px] text-emerald-600 mt-1'; st.textContent = '✅ Imagem do projeto carregada automaticamente.';
         }
         let projLinkTimer;
