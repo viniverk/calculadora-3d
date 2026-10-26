@@ -105,6 +105,35 @@ async function cults3d(q, env) {
   throw new Error(ultimoErro);
 }
 
+const HOSTS_PREVIEW = ['makerworld.com', 'printables.com', 'thingiverse.com', 'myminifactory.com', 'cults3d.com', 'thangs.com', 'crealitycloud.com', 'nexprint.com', 'cgtrader.com', 'yeggi.com'];
+const metaTag = (html, nomes) => {
+  const metas = html.match(/<meta\b[^>]*>/gi) || [];
+  for (const n of nomes) {
+    for (const tag of metas) {
+      const nome = (tag.match(/(?:property|name)\s*=\s*["']([^"']+)["']/i) || [])[1];
+      if (!nome || nome.toLowerCase() !== n) continue;
+      const c = (tag.match(/content\s*=\s*["']([^"']+)["']/i) || [])[1];
+      if (c) return c.replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+    }
+  }
+  return '';
+};
+async function previewModelo(url, cors) {
+  let alvo;
+  try { alvo = new URL(url.searchParams.get('url') || ''); } catch { return json({ ok: false, erro: 'url inválida' }, cors, 400); }
+  const host = alvo.hostname.replace(/^www\./, '');
+  if (!/^https?:$/.test(alvo.protocol) || !HOSTS_PREVIEW.some((h) => host === h || host.endsWith('.' + h))) return json({ ok: false, erro: 'site não suportado' }, cors, 400);
+  try {
+    const r = await comTimeout(fetch(alvo.toString(), { headers: { 'user-agent': 'Mozilla/5.0 (compatible; Cliente3D-Preview/1.0; +https://cliente3d.com.br)', accept: 'text/html', 'accept-language': 'pt-BR,en;q=0.8' }, redirect: 'follow' }), 8000);
+    if (!r.ok) return json({ ok: false, erro: 'HTTP ' + r.status }, cors);
+    const html = (await r.text()).slice(0, 400000);
+    let imagem = metaTag(html, ['og:image', 'twitter:image']);
+    if (imagem) { try { imagem = new URL(imagem, alvo).toString(); } catch {} }
+    const titulo = metaTag(html, ['og:title', 'twitter:title']);
+    return new Response(JSON.stringify({ ok: !!imagem, imagem, titulo }), { headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'public, max-age=86400', ...cors } });
+  } catch (e) { return json({ ok: false, erro: String((e && e.message) || e).slice(0, 120) }, cors); }
+}
+
 const BUSCADORES = { printables, thingiverse, myminifactory, cults3d };
 
 function json(corpo, cors, status = 200) {
@@ -121,6 +150,7 @@ export default {
       'access-control-allow-methods': 'GET, OPTIONS', 'access-control-allow-headers': 'content-type',
     };
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
+    if (url.pathname === '/preview') return previewModelo(url, cors);
     if (url.pathname !== '/search') return json({ ok: true, servico: 'busca-modelos', fontes: Object.keys(BUSCADORES) }, cors);
 
     const q = (url.searchParams.get('q') || '').trim().slice(0, 100);

@@ -735,6 +735,7 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Link de Download do Arquivo (.3mf)</label>
                     <input type="url" id="projLink3mf" placeholder="https://drive.google.com/..." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
+                <p id="projLinkStatus" class="text-[11px] text-inkmute mt-1 hidden"></p>
                 </div>
             </div>
 
@@ -3254,6 +3255,37 @@
                 previewContainer.classList.add('hidden');
             }
         });
+        // Colou o link da página do modelo (MakerWorld, Printables...) → busca a imagem sozinho
+        let projLinkUltimo = '', projImgAuto = '';
+        async function buscarImagemDoLink() {
+            const link = projLink3mf.value.trim(), st = document.getElementById('projLinkStatus');
+            if (!/^https?:\/\//i.test(link) || link === projLinkUltimo) return;
+            if (projImagemUrl.value.trim() && projImagemUrl.value.trim() !== projImgAuto) return; // não sobrescreve imagem colada à mão
+            projLinkUltimo = link;
+            st.className = 'text-[11px] text-inkmute mt-1'; st.textContent = '🔎 Buscando imagem do projeto...';
+            let achou = null;
+            try {
+                if (typeof SERVIDOR_BUSCA !== 'undefined' && SERVIDOR_BUSCA) {
+                    const r = await fetch(SERVIDOR_BUSCA.replace(/\/$/, '') + '/preview?url=' + encodeURIComponent(link));
+                    const d = await r.json(); if (d && d.ok && d.imagem) achou = d;
+                }
+            } catch (e) {}
+            if (!achou) {
+                try {
+                    const r = await fetch('https://api.microlink.io/?url=' + encodeURIComponent(link));
+                    const d = await r.json();
+                    if (d && d.status === 'success' && d.data && d.data.image && d.data.image.url) achou = { imagem: d.data.image.url, titulo: d.data.title || '' };
+                } catch (e) {}
+            }
+            if (link !== projLink3mf.value.trim()) return;
+            if (!achou) { st.className = 'text-[11px] text-amber-600 mt-1'; st.textContent = 'Não consegui pegar a imagem deste link. Cole o endereço da imagem no campo acima.'; projLinkUltimo = ''; return; }
+            projImgAuto = achou.imagem; projImagemUrl.value = achou.imagem; projImagemUrl.dispatchEvent(new Event('input'));
+            if (!projNome.value.trim() && achou.titulo) projNome.value = achou.titulo.replace(/\s*[|\-–·]\s*(Free\s+)?3D\s+(Print\s+)?Model.*$/i, '').replace(/\s*[|\-–·]\s*(MakerWorld|Printables|Thingiverse|MyMiniFactory|Cults).*$/i, '').trim();
+            st.className = 'text-[11px] text-emerald-600 mt-1'; st.textContent = '✅ Imagem do projeto carregada automaticamente.';
+        }
+        let projLinkTimer;
+        projLink3mf.addEventListener('input', () => { clearTimeout(projLinkTimer); projLinkTimer = setTimeout(buscarImagemDoLink, 600); });
+        projLink3mf.addEventListener('change', buscarImagemDoLink);
         imgPreview.addEventListener('error', function() {
             previewContainer.classList.add('hidden');
         });
