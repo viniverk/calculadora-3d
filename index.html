@@ -187,6 +187,30 @@
             #navInferior button .ico { font-size: 22px; }
             #conteudoPainel .overflow-x-auto, #conteudoPainel table { -webkit-overflow-scrolling: touch; }
         }
+        /* ---- Celular: cartões de formulário recolhíveis, botão + e folha "Mais" ---- */
+        #fabNovo, #sheetMais { display: none; }
+        @media (max-width: 767px) {
+            .card-form-mob .cfm-cab { display: flex; align-items: center; justify-content: space-between; gap: 10px; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+            .card-form-mob .cfm-cab::after { content: '+'; flex-shrink: 0; width: 34px; height: 34px; border-radius: 999px; background: rgba(16,185,129,.15); color: #047857; display: flex; align-items: center; justify-content: center; font: 700 22px/1 Inter, sans-serif; }
+            .card-form-mob.aberto .cfm-cab::after { content: '−'; }
+            .card-form-mob:not(.aberto) > :not(.cfm-cab):not(.cfm-wrap) { display: none !important; }
+            .card-form-mob:not(.aberto) > .cfm-wrap > :not(.cfm-cab) { display: none !important; }
+            .card-form-mob:not(.aberto) { padding-top: 14px !important; padding-bottom: 14px !important; }
+            .card-form-mob:not(.aberto) .cfm-cab { border-bottom: 0 !important; padding-bottom: 0 !important; margin-bottom: 0 !important; }
+            #view-inserir-impressao > .lista-primeiro { order: -1; }
+            #fabNovo.visivel { display: flex; position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 24; height: 56px; padding: 0 22px; border-radius: 999px; align-items: center; gap: 8px; background: linear-gradient(135deg, #10b981, #047857); color: #fff; font-weight: 800; font-size: 16px; box-shadow: 0 12px 28px -10px rgba(4,120,87,.7); }
+            #sheetMais.aberto { display: block; position: fixed; inset: 0; z-index: 40; }
+            #sheetMais .sm-fundo { position: absolute; inset: 0; background: rgba(15,23,42,.55); }
+            #sheetMais .sm-painel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow-y: auto; background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); border-radius: 28px 28px 0 0; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px -20px rgba(0,0,0,.5); }
+            #sheetMais .sm-alca { width: 44px; height: 5px; border-radius: 999px; background: rgb(var(--c-line)); margin: 4px auto 14px; }
+            #sheetMais .sm-grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            #sheetMais .sm-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 6px; border-radius: 18px; background: rgb(var(--c-surface2)); border: 1px solid rgb(var(--c-line)); font-size: 13px; font-weight: 700; min-height: 84px; }
+            #sheetMais .sm-item .ico { font-size: 26px; line-height: 1.1; }
+            #sheetMais .sm-item.sm-ativo { background: rgba(16,185,129,.15); border-color: #10b981; color: #047857; }
+            #sheetMais .sm-acoes { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+            #sheetMais .sm-acoes button { width: 100%; text-align: left; padding: 13px 16px; border-radius: 14px; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-surface)); font-size: 15px; font-weight: 700; }
+            #sheetMais .sm-acoes .sm-sair { color: #dc2626; border-color: #fecaca; }
+        }
         @media (display-mode: standalone) { body { overscroll-behavior-y: none; } }
 </style>
 </head>
@@ -209,8 +233,19 @@
         <button type="button" data-nav="calculadora" onclick="mudarAba('calculadora')"><span class="ico">🧮</span>Calcular</button>
         <button type="button" data-nav="inserir-impressao" onclick="mudarAba('inserir-impressao')"><span class="ico">🖨️</span>Projetos</button>
         <button type="button" data-nav="pedidos" onclick="mudarAba('pedidos')"><span class="ico">📋</span>Pedidos</button>
-        <button type="button" data-nav="mais" onclick="abrirMenuMobile()"><span class="ico">☰</span>Mais</button>
+        <button type="button" data-nav="mais" onclick="abrirSheetMais()"><span class="ico">☰</span>Mais</button>
     </nav>
+
+    <button type="button" id="fabNovo" aria-label="Novo"><span style="font-size:26px;line-height:1">+</span><span id="fabNovoTxt">Novo</span></button>
+
+    <div id="sheetMais" class="md:hidden" role="dialog" aria-label="Menu">
+        <div class="sm-fundo" onclick="fecharSheetMais()"></div>
+        <div class="sm-painel">
+            <div class="sm-alca"></div>
+            <div class="sm-grade" id="smGrade"></div>
+            <div class="sm-acoes" id="smAcoes"></div>
+        </div>
+    </div>
 
 
     <div id="telaAutenticacao" class="w-full min-h-screen bg-white text-ink">
@@ -1649,9 +1684,63 @@
             overlayMobile.classList.add('hidden');
             btnAbrirMenuMobile.innerHTML = '<span class="text-xl leading-none">☰</span>';
         }
-        btnAbrirMenuMobile.addEventListener('click', () => {
-            menuMobileAberto ? fecharMenuMobile() : abrirMenuMobile();
+        btnAbrirMenuMobile.addEventListener('click', () => { abrirSheetMais(); });
+
+        // --- FOLHA "MAIS", BOTÃO + E CARTÕES RECOLHÍVEIS (CELULAR) ---
+        const ITENS_MAIS = [
+            ['dashboard', '📊', 'Início'], ['calculadora', '🧮', 'Calcular'], ['inserir-impressao', '🖨️', 'Projetos'],
+            ['pedidos', '📋', 'Pedidos'], ['vendas', '💰', 'Vendas'], ['portfolio-cliente', '🖼️', 'Catálogo'],
+            ['filamentos', '🧵', 'Estoque'], ['maquinas', '⚙️', 'Máquinas'], ['buscador', '🔎', 'Buscar modelos'], ['marca', '🎨', 'Minha marca']
+        ];
+        let abaAtualMobile = 'calculadora';
+        function abrirSheetMais() {
+            const g = document.getElementById('smGrade'), ac = document.getElementById('smAcoes');
+            let h = ITENS_MAIS.map(([a, i, n]) => `<button type="button" class="sm-item ${a === abaAtualMobile ? 'sm-ativo' : ''}" onclick="mudarAba('${a}')"><span class="ico">${i}</span>${n}</button>`).join('');
+            const adm = document.getElementById('abaAdminBtn');
+            if (adm && !adm.classList.contains('hidden')) h += `<button type="button" class="sm-item" onclick="mudarAba('admin')"><span class="ico">🛡️</span>Usuários</button>`;
+            g.innerHTML = h;
+            const inst = document.getElementById('btnInstalar');
+            ac.innerHTML = `<button type="button" onclick="document.getElementById('btnTema').click();fecharSheetMais()">🌙 Alternar tema claro/escuro</button>` +
+                (inst && !inst.classList.contains('hidden') ? `<button type="button" onclick="fecharSheetMais();document.getElementById('btnInstalar').click()">📲 Instalar app no celular</button>` : '') +
+                `<button type="button" onclick="fecharSheetMais();document.getElementById('btnTour').click()">🧭 Tour guiado</button>` +
+                `<button type="button" class="sm-sair" onclick="fecharSheetMais();document.getElementById('btnSair').click()">Sair da conta</button>`;
+            document.getElementById('sheetMais').classList.add('aberto');
+        }
+        function fecharSheetMais() { document.getElementById('sheetMais').classList.remove('aberto'); }
+        // Cartões de formulário: recolhidos no celular, abrem ao tocar no título
+        function prepararCartoesMobile() {
+            const alvos = [['view-inserir-impressao', [0, 1]], ['view-filamentos', [0]], ['view-maquinas', [0]]];
+            alvos.forEach(([vid, idxs]) => {
+                const v = document.getElementById(vid); if (!v) return;
+                const filhos = [...v.children];
+                idxs.forEach(i => {
+                    const card = filhos[i]; if (!card || card.classList.contains('card-form-mob')) return;
+                    const cab = card.querySelector(':scope > h2') || card.querySelector(':scope > div:first-child > h2'); if (!cab) return;
+                    if (cab.parentElement !== card) cab.parentElement.classList.add('cfm-wrap');
+                    card.classList.add('card-form-mob'); cab.classList.add('cfm-cab');
+                    cab.addEventListener('click', () => { if (window.matchMedia('(max-width: 767px)').matches) card.classList.toggle('aberto'); atualizarFab(abaAtualMobile); });
+                });
+                if (vid === 'view-inserir-impressao' && filhos[2]) filhos[2].classList.add('lista-primeiro');
+            });
+        }
+        function abrirCartaoFormMobile(...els) { els.forEach(el => { const c = el && el.closest && el.closest('.card-form-mob'); if (c) c.classList.add('aberto'); }); }
+        const FAB_ABAS = { 'inserir-impressao': 'Novo projeto', 'filamentos': 'Nova compra', 'maquinas': 'Nova máquina' };
+        function atualizarFab(aba) {
+            const fab = document.getElementById('fabNovo'); if (!fab) return;
+            abaAtualMobile = aba;
+            const formAberto = !!document.querySelector('#view-' + aba + ' .card-form-mob.aberto');
+            if (FAB_ABAS[aba] && !formAberto) { document.getElementById('fabNovoTxt').textContent = FAB_ABAS[aba]; fab.classList.add('visivel'); } else fab.classList.remove('visivel');
+        }
+        document.getElementById('fabNovo').addEventListener('click', () => {
+            const aba = abaAtualMobile;
+            let alvo = null;
+            if (aba === 'inserir-impressao') { alvo = document.getElementById('projNome'); abrirCartaoFormMobile(alvo, document.getElementById('btnRecalcularCustos')); }
+            else if (aba === 'filamentos') { alvo = document.getElementById('btnSalvarFilamento'); abrirCartaoFormMobile(alvo); alvo = document.getElementById('filNome') || alvo; }
+            else if (aba === 'maquinas') { alvo = document.getElementById('maqNome'); abrirCartaoFormMobile(alvo); }
+            atualizarFab(aba);
+            if (alvo) { alvo.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => { try { alvo.focus({ preventScroll: true }); } catch (e) {} }, 350); }
         });
+        prepararCartoesMobile();
         overlayMobile.addEventListener('click', fecharMenuMobile);
 
         // --- APP INSTALÁVEL (PWA) ---
@@ -1676,7 +1765,7 @@
             if (modoPublicoAtivo) return; 
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
-            fecharMenuMobile();
+            fecharMenuMobile(); fecharSheetMais(); atualizarFab(abaDestino);
             document.querySelectorAll('#navInferior button').forEach(b => b.classList.toggle('nav-ativo', b.dataset.nav === abaDestino));
 
             document.querySelectorAll('.item-menu-btn').forEach(btn => {
@@ -2656,6 +2745,7 @@
             } catch (e) { alert('Erro ao salvar máquina: ' + e.message); }
         });
         window.editarMaquina = function(id) {
+            abrirCartaoFormMobile(document.getElementById('maqNome'));
             const m = maquinasCache.find(x => x.id === id); if (!m) return; maquinaEditandoId = id;
             maqNome.value = m.nome || ''; maqModelo.value = m.modelo || ''; maqValor.value = m.valor || ''; maqVida.value = m.vida_h || ''; maqPotencia.value = m.potencia_w || ''; maqHorasIni.value = m.horas_iniciais || 0; maqPadrao.checked = !!m.padrao; maqCatalogo.value = CAT_PLANO[m.catalogo_id] ? m.catalogo_id : (m.tipo ? 'outra' : ''); if (m.tipo) maqTipo.value = m.tipo; atualizarPreviewMaquina();
             document.getElementById('maqTitulo').innerText = 'Editar máquina'; document.getElementById('btnCancelarMaquina').classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -3735,6 +3825,7 @@
         btnCancelarEdicao.addEventListener('click', limparFormularioProjeto);
 
         window.editarProjeto3d = function(id) {
+            abrirCartaoFormMobile(document.getElementById('projNome'), document.getElementById('btnRecalcularCustos'));
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
@@ -4033,6 +4124,7 @@
         btnCancelarFilamento.addEventListener('click', limparFormularioFilamento);
 
         window.editarFilamento = function(id) {
+            abrirCartaoFormMobile(document.getElementById('btnSalvarFilamento'));
             const item = filamentosCache.find(f => f.id === id);
             if (!item) return alert('Lote não localizado.');
             idFilamentoEmEdicao = id;
