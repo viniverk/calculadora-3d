@@ -2785,7 +2785,7 @@
 
         // --- BUSCADOR DE MODELOS 3D (pesquisa unificada por links) ---
         const FONTES_MODELOS = [
-            { id: 'printables', nome: 'Printables', cor: '#E8590C', url: q => `https://www.printables.com/search/models?q=${q}` },
+            { id: 'printables', nome: 'Printables', cor: '#E8590C', url: q => `https://www.printables.com/model?q=${q}` },
             { id: 'thingiverse', nome: 'Thingiverse', cor: '#1D6FD8', url: q => `https://www.thingiverse.com/search?q=${q}&type=things&sort=relevant` },
             { id: 'myminifactory', nome: 'MyMiniFactory', cor: '#374151', url: q => `https://www.myminifactory.com/search?query=${q}` },
             { id: 'cults3d', nome: 'Cults3D', cor: '#B0267B', url: q => `https://cults3d.com/en/search?q=${q}` },
@@ -2834,7 +2834,7 @@
             else if (buscOrdem === 'nome') lista = [...lista].sort((a, b) => String(a.titulo).localeCompare(String(b.titulo), 'pt-BR'));
             const nomeFonte = (id) => (FONTES_MODELOS.find(f => f.id === id) || { nome: id, cor: '#6B7280' });
             const fmt = (n) => n == null ? '–' : n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1).replace('.', ',') + ' mil' : String(n);
-            const avisos = Object.entries(erros || {}).filter(([k]) => buscFontesSel.has(k) && !/sem chave/.test(erros[k])).map(([k, v]) => `${nomeFonte(k).nome}: ${v}`);
+            const avisos = Object.entries(erros || {}).filter(([k]) => k !== 'printables' && buscFontesSel.has(k) && !/sem chave/.test(erros[k])).map(([k, v]) => `${nomeFonte(k).nome}: ${v}`);
             const semChave = Object.keys(erros || {}).filter(k => buscFontesSel.has(k) && /sem chave/.test(erros[k])).map(k => nomeFonte(k).nome);
             const restantes = fontes.filter(f => !FONTES_API.includes(f.id));
             box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
