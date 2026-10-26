@@ -100,6 +100,18 @@
             box-shadow: 0 10px 20px -10px rgba(16,185,129,.7);
         }
         .btn-cta:hover { filter: brightness(1.06); transform: translateY(-1px); }
+        .rolo-svg { transition: transform .7s cubic-bezier(.2,.8,.2,1); filter: drop-shadow(0 6px 8px rgba(15,23,42,.18)); }
+        .rolo-card { transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; animation: rolo-entra .35s ease both; }
+        .rolo-card:hover { transform: translateY(-3px); box-shadow: 0 16px 30px -18px rgba(15,23,42,.35); border-color: rgba(16,185,129,.55); }
+        .rolo-card:hover .rolo-svg { transform: rotate(75deg); }
+        .rolo-barra { animation: rolo-barra .9s cubic-bezier(.2,.8,.2,1) both; }
+        @keyframes rolo-barra { from { width: 0; } }
+        @keyframes rolo-entra { from { opacity: 0; transform: translateY(8px); } }
+        body.tema-escuro .rl-fl { fill: #475569; stroke: #94A3B8; }
+        body.tema-escuro .rl-hb { fill: #94A3B8; stroke: #CBD5E1; }
+        .swatch { width: 26px; height: 26px; border-radius: 999px; border: 2px solid rgba(148,163,184,.55); cursor: pointer; transition: transform .15s ease, box-shadow .15s ease; }
+        .swatch:hover { transform: scale(1.18); }
+        .swatch.ativo { box-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 4px #10B981; transform: scale(1.12); }
 
         /* ===== Camada visual moderna (colorida e amigável) ===== */
         body { font-feature-settings: 'cv11', 'ss01'; -webkit-font-smoothing: antialiased; }
@@ -1139,8 +1151,8 @@
             </div>
         </div>
 
-        <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
+        <div id="view-filamentos" class="aba-conteudo grid grid-cols-1 lg:grid-cols-5 gap-6 hidden">
+            <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-4 text-emerald-600 border-b border-line pb-2">Cadastrar Compra de Filamento</h2>
                 <div class="space-y-4">
                     <div>
@@ -1155,6 +1167,20 @@
                         <div>
                             <label class="block text-sm font-medium mb-1">Cor do Filamento</label>
                             <input type="text" id="filCor" placeholder="Ex: Azul Ciano" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">Tom do filamento <span class="text-xs text-inkmute font-normal">(clique na cor mais próxima do seu rolo)</span></label>
+                        <div class="flex gap-4 items-center rounded-2xl border border-line bg-surface2/50 p-3">
+                            <div id="filPreviewRolo" class="shrink-0"></div>
+                            <div class="flex-1 min-w-0">
+                                <div id="filPaleta" class="flex flex-wrap gap-1.5"></div>
+                                <div class="flex items-center gap-2 mt-3">
+                                    <label for="filCorHex" class="text-xs text-inkmute">Outro tom:</label>
+                                    <input type="color" id="filCorHex" value="#9ca3af" class="h-8 w-12 rounded border border-line bg-transparent p-0.5 cursor-pointer">
+                                    <span id="filCorHexTxt" class="text-[11px] font-mono2 text-inkmute"></span>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div class="grid grid-cols-2 gap-4">
@@ -1192,8 +1218,9 @@
                 </div>
             </div>
 
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
+            <div class="lg:col-span-3 bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-3 text-teal-600 border-b border-line pb-2">Histórico de Compras e Estoque</h2>
+                <div id="estoqueResumo" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4"></div>
                 <div class="bg-base/60 p-3 rounded-lg border border-line mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-inkmute mb-0.5">Tipo</label>
@@ -1223,7 +1250,7 @@
                         </select>
                     </div>
                 </div>
-                <div id="listaFilamentos" class="space-y-3 max-h-[420px] overflow-y-auto pr-2"></div>
+                <div id="listaFilamentos" class="grid xl:grid-cols-2 gap-3 max-h-[75vh] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
@@ -1760,7 +1787,7 @@
                     const cor = percentual <= 15 ? 'text-red-600' : percentual <= 40 ? 'text-gold2' : 'text-teal2';
                     return `<tr>
                         <td class="py-2 pr-2 text-ink font-medium">${item.nome} <span class="text-[10px] text-inkmute">[${item.tipo || '-'}]</span></td>
-                        <td class="py-2 pr-2 text-inkmute">${item.cor || '-'}</td>
+                        <td class="py-2 pr-2 text-inkmute"><span class="inline-block h-3 w-3 rounded-full align-middle mr-1.5 border border-black/20" style="background:${corDoFilamento(item)}"></span>${item.cor || '-'}</td>
                         <td class="py-2 pr-2 font-mono2 text-ink">${atual}g</td>
                         <td class="py-2 pr-2 font-mono2 text-inkmute">${total}g</td>
                         <td class="py-2 font-mono2 font-bold ${cor}">${percentual}%</td>
@@ -3659,6 +3686,82 @@
         }
 
         // --- ESTOQUE / FILAMENTOS ---
+        // --- PALETA E ROLO DE FILAMENTO ---
+        const PALETA_FILAMENTO = [
+            { n: 'Branco', h: '#F5F5F4' }, { n: 'Preto', h: '#171717' }, { n: 'Cinza', h: '#6B7280' }, { n: 'Prata', h: '#C0C4CC' },
+            { n: 'Vermelho', h: '#DC2626' }, { n: 'Vinho', h: '#7F1D1D' }, { n: 'Laranja', h: '#F97316' }, { n: 'Amarelo', h: '#FACC15' },
+            { n: 'Dourado', h: '#CA8A04' }, { n: 'Verde Limão', h: '#84CC16' }, { n: 'Verde', h: '#16A34A' }, { n: 'Verde Escuro', h: '#14532D' },
+            { n: 'Turquesa', h: '#14B8A6' }, { n: 'Azul Ciano', h: '#06B6D4' }, { n: 'Azul Claro', h: '#60A5FA' }, { n: 'Azul', h: '#2563EB' },
+            { n: 'Azul Marinho', h: '#1E3A8A' }, { n: 'Roxo', h: '#7C3AED' }, { n: 'Lilás', h: '#C4B5FD' }, { n: 'Rosa', h: '#EC4899' },
+            { n: 'Rosa Claro', h: '#F9A8D4' }, { n: 'Marrom', h: '#78350F' }, { n: 'Madeira', h: '#B45309' }, { n: 'Bege', h: '#D6C0A0' },
+            { n: 'Pele', h: '#F2C9A0' }, { n: 'Transparente', h: '#DDE7EE' }
+        ];
+        // Tenta descobrir o tom pelo nome da cor (para rolos já cadastrados sem tom escolhido)
+        function adivinharHexPeloNome(nome) {
+            const t = semAcento(String(nome || '').toLowerCase());
+            if (!t) return '';
+            const exato = PALETA_FILAMENTO.find(c => semAcento(c.n.toLowerCase()) === t); if (exato) return exato.h;
+            const chaves = [['transparente', '#DDE7EE'], ['natural', '#E7DCC6'], ['ciano', '#06B6D4'], ['turquesa', '#14B8A6'], ['marinho', '#1E3A8A'], ['vinho', '#7F1D1D'], ['bordo', '#7F1D1D'], ['dourad', '#CA8A04'], ['ouro', '#CA8A04'], ['prat', '#C0C4CC'], ['bege', '#D6C0A0'], ['marrom', '#78350F'], ['madeira', '#B45309'], ['laranja', '#F97316'], ['amarel', '#FACC15'], ['limao', '#84CC16'], ['verde', '#16A34A'], ['azul', '#2563EB'], ['roxo', '#7C3AED'], ['violeta', '#7C3AED'], ['lilas', '#C4B5FD'], ['rosa', '#EC4899'], ['pink', '#EC4899'], ['vermelh', '#DC2626'], ['cinza', '#6B7280'], ['grafite', '#374151'], ['preto', '#171717'], ['black', '#171717'], ['branco', '#F5F5F4'], ['white', '#F5F5F4'], ['incolor', '#DDE7EE']];
+            const achou = chaves.find(([k]) => t.includes(k)); return achou ? achou[1] : '';
+        }
+        function corDoFilamento(item) { return (item && item.cor_hex) || adivinharHexPeloNome(item && item.cor) || '#9CA3AF'; }
+        // Círculo colorido em texto (para listas suspensas, que não aceitam HTML)
+        function emojiCor(hex) {
+            const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return '⚪';
+            const r = parseInt(m[1].slice(0, 2), 16) / 255, g = parseInt(m[1].slice(2, 4), 16) / 255, b = parseInt(m[1].slice(4, 6), 16) / 255;
+            const mx = Math.max(r, g, b), mn = Math.min(r, g, b), l = (mx + mn) / 2, d = mx - mn;
+            if (l < 0.16) return '⚫'; if (l > 0.88 && d < 0.25) return '⚪'; if (d < 0.12) return l > 0.5 ? '⚪' : '⚫';
+            let h = mx === r ? ((g - b) / d) % 6 : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h = (h * 60 + 360) % 360;
+            if (h < 15 || h >= 345) return '🔴'; if (h < 45) return l < 0.35 ? '🟤' : '🟠'; if (h < 70) return '🟡'; if (h < 170) return '🟢'; if (h < 260) return '🔵'; if (h < 345) return '🟣'; return '🔴';
+        }
+        // Rolo de filamento em SVG: a espessura do filamento enrolado mostra quanto ainda resta
+        function svgRolo(hex, pct, tam) {
+            const p = Math.max(0.05, Math.min(1, (pct || 0) / 100)), R = 44, r0 = 15;
+            const rf = Math.sqrt(r0 * r0 + p * (R * R - r0 * r0));
+            const id = 'rg' + Math.random().toString(36).slice(2, 8);
+            let linhas = ''; for (let r = r0 + 2.5; r < rf - 0.5; r += 3) linhas += `<circle cx="50" cy="50" r="${r.toFixed(1)}" fill="none" stroke="rgba(0,0,0,.13)" stroke-width=".6"/>`;
+            return `<svg viewBox="0 0 100 100" width="${tam}" height="${tam}" class="rolo-svg" role="img" aria-label="Rolo de filamento">
+                <defs><radialGradient id="${id}" cx="32%" cy="28%" r="85%"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset=".45" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".28"/></radialGradient></defs>
+                <circle class="rl-fl" cx="50" cy="50" r="48.5" fill="#E2E8F0" stroke="#94A3B8" stroke-width="1.2"/>
+                <circle cx="50" cy="50" r="${rf.toFixed(1)}" fill="${hex}" stroke="rgba(0,0,0,.25)" stroke-width=".8"/>
+                ${linhas}
+                <circle cx="50" cy="50" r="${rf.toFixed(1)}" fill="url(#${id})"/>
+                <circle class="rl-hb" cx="50" cy="50" r="${r0}" fill="#F1F5F9" stroke="#94A3B8" stroke-width="1"/>
+                <circle cx="50" cy="50" r="5.5" fill="#fff" stroke="#94A3B8" stroke-width="1"/>
+                <path d="M50 50 L${(50 + R + 2).toFixed(0)} 50" stroke="rgba(148,163,184,.0)"/>
+            </svg>`;
+        }
+        let filHex = '', filHexManual = false, filNomeAuto = '';
+        function percentualFormularioFilamento() { const t = parseFloat(filPesoTotal.value) || 0, a = parseFloat(filPesoAtual.value) || 0; return t > 0 ? Math.min(100, a / t * 100) : 100; }
+        function hexAtualFormulario() { return filHex || adivinharHexPeloNome(filCor.value) || '#9CA3AF'; }
+        function atualizarPreviewRolo() {
+            document.getElementById('filPreviewRolo').innerHTML = svgRolo(hexAtualFormulario(), percentualFormularioFilamento(), 84);
+            const h = hexAtualFormulario(); document.getElementById('filCorHex').value = /^#[0-9a-f]{6}$/i.test(h) ? h : '#9ca3af'; document.getElementById('filCorHexTxt').innerText = filHex ? filHex.toUpperCase() : (adivinharHexPeloNome(filCor.value) ? 'sugerido pelo nome' : '');
+            document.querySelectorAll('#filPaleta .swatch').forEach(b => b.classList.toggle('ativo', b.dataset.h.toLowerCase() === (filHex || '').toLowerCase()));
+        }
+        function escolherTomFilamento(hex, nome) {
+            filHex = hex; filHexManual = true;
+            if (nome && (!filCor.value.trim() || filCor.value.trim() === filNomeAuto)) { filCor.value = nome; filNomeAuto = nome; }
+            atualizarPreviewRolo();
+        }
+        document.getElementById('filPaleta').innerHTML = PALETA_FILAMENTO.map(c => `<button type="button" class="swatch" data-h="${c.h}" data-n="${c.n}" title="${c.n}" style="background:${c.h}"></button>`).join('');
+        document.querySelectorAll('#filPaleta .swatch').forEach(b => b.addEventListener('click', () => escolherTomFilamento(b.dataset.h, b.dataset.n)));
+        document.getElementById('filCorHex').addEventListener('input', (e) => escolherTomFilamento(e.target.value, ''));
+        filCor.addEventListener('input', () => { if (!filHexManual) filHex = ''; atualizarPreviewRolo(); });
+        filPesoTotal.addEventListener('input', atualizarPreviewRolo); filPesoAtual.addEventListener('input', atualizarPreviewRolo);
+        atualizarPreviewRolo();
+
+        function renderizarResumoEstoque() {
+            const box = document.getElementById('estoqueResumo'); if (!box) return;
+            let rolos = 0, gramas = 0, valor = 0, baixos = 0;
+            filamentosCache.forEach(i => {
+                const a = parseFloat(i.peso_atual_g) || 0, t = parseFloat(i.peso_total_g) || 0, pr = parseFloat(i.preco_pago) || 0;
+                if (a > 0) rolos++; gramas += a; if (t > 0) valor += pr * Math.min(1, a / t); if (t > 0 && a / t <= 0.15) baixos++;
+            });
+            const card = (rot, val, cor) => `<div class="rounded-2xl border border-line p-3 bg-surface2/60"><p class="text-[10px] uppercase tracking-wide text-inkmute font-semibold">${rot}</p><p class="font-mono2 text-lg ${cor}">${val}</p></div>`;
+            box.innerHTML = card('Rolos em uso', rolos, 'text-ink') + card('Filamento restante', (gramas / 1000).toFixed(2).replace('.', ',') + ' kg', 'text-teal2') + card('Valor em estoque', brl(valor), 'text-emerald-700') + card('Acabando (≤15%)', baixos, baixos ? 'text-red-600' : 'text-ink');
+        }
+
         // --- ESTOQUE DE FILAMENTOS (SALVAR / EDITAR / EXCLUIR) ---
         let idFilamentoEmEdicao = null;
         const btnCancelarFilamento = document.getElementById('btnCancelarFilamento');
@@ -3685,7 +3788,8 @@
                 data_compra: dataCompra,
                 preco_pago: preco,
                 peso_total_g: pesoTotal,
-                peso_atual_g: pesoAtual
+                peso_atual_g: pesoAtual,
+                cor_hex: filHex || adivinharHexPeloNome(cor) || null
             };
 
             btnSalvarFilamento.disabled = true;
@@ -3712,10 +3816,11 @@
 
         function limparFormularioFilamento() {
             idFilamentoEmEdicao = null;
-            filNome.value = ''; filFabricante.value = ''; filCor.value = '';
+            filNome.value = ''; filFabricante.value = ''; filCor.value = ''; filHex = ''; filHexManual = false; filNomeAuto = '';
             filPreco.value = ''; filPesoTotal.value = 1000; filPesoAtual.value = 1000; filDataCompra.value = '';
             btnSalvarFilamento.innerText = 'Registrar Compra no Estoque';
             btnCancelarFilamento.classList.add('hidden');
+            atualizarPreviewRolo();
         }
         btnCancelarFilamento.addEventListener('click', limparFormularioFilamento);
 
@@ -3731,6 +3836,8 @@
             filPreco.value = item.preco_pago;
             filPesoTotal.value = item.peso_total_g;
             filPesoAtual.value = item.peso_atual_g;
+            filHex = item.cor_hex || ''; filHexManual = !!item.cor_hex; filNomeAuto = '';
+            atualizarPreviewRolo();
             btnSalvarFilamento.innerText = '💾 Salvar Alterações';
             btnCancelarFilamento.classList.remove('hidden');
             document.getElementById('view-filamentos').scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -3768,8 +3875,8 @@
                 if (!chavesRegistradas.has(chaveUnica)) {
                     chavesRegistradas.add(chaveUnica); const custoPorGramaItem = parseFloat(item.preco_pago) / parseFloat(item.peso_total_g);
                     mapaCustoPorChaveFilamento[chaveUnica] = custoPorGramaItem;
-                    const opt1 = document.createElement('option'); opt1.value = custoPorGramaItem; opt1.textContent = `${fab} - ${item.tipo} (${cor})`; selectFilamento.appendChild(opt1);
-                    const opt2 = document.createElement('option'); opt2.value = chaveUnica; opt2.textContent = `${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
+                    const opt1 = document.createElement('option'); opt1.value = custoPorGramaItem; opt1.textContent = `${emojiCor(corDoFilamento(item))} ${fab} - ${item.tipo} (${cor})`; selectFilamento.appendChild(opt1);
+                    const opt2 = document.createElement('option'); opt2.value = chaveUnica; opt2.textContent = `${emojiCor(corDoFilamento(item))} ${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
                 }
             });
             calcularAbaBase(); atualizarAcumuladoresMaster();
@@ -3789,6 +3896,7 @@
         }
 
         function filtrarERenderizarFilamentos() {
+            renderizarResumoEstoque();
             const tFiltro = filtroTipo.value; const fFiltro = filtroFornecedor.value; const cFiltro = filtroCor.value; const anoFiltro = filtroAno.value;
             const dadosFiltrados = filamentosCache.filter(item => {
                 const fabItem = (item.fabricante || 'Desconhecido').trim(); const corItem = (item.cor || 'Incolor').trim(); const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
@@ -3796,22 +3904,30 @@
             });
             const targetLista = document.getElementById('listaFilamentos');
             if (dadosFiltrados.length === 0) { targetLista.innerHTML = '<p class="text-inkmute/60 text-sm text-center p-4">Nenhum lote corresponde.</p>'; return; }
-            targetLista.innerHTML = dadosFiltrados.map(item => {
+            targetLista.innerHTML = dadosFiltrados.map((item, idx) => {
                 const pesoAtual = parseFloat(item.peso_atual_g || 0);
                 const pesoTotalItem = parseFloat(item.peso_total_g || 0);
-                const percentualRestante = pesoTotalItem > 0 ? Math.round((pesoAtual / pesoTotalItem) * 100) : 0;
-                const corBarra = percentualRestante <= 15 ? 'text-red-600' : percentualRestante <= 40 ? 'text-gold2' : 'text-teal2';
-                return `<div class="bg-surface2 p-3 rounded border border-line flex justify-between items-center shadow-sm">
-                    <div>
-                        <h3 class="font-bold text-ink">${item.nome} <span class="text-xs text-teal2">[${item.tipo}]</span></h3>
-                        <p class="text-xs text-inkmute">Cor: ${item.cor}</p>
-                        <p class="text-xs font-mono2 ${corBarra} mt-0.5">${pesoAtual}g / ${pesoTotalItem}g restante (${percentualRestante}%)</p>
-                    </div>
-                    <div class="text-right">
-                        <span class="text-emerald-600 font-semibold text-sm block font-mono2">R$ ${parseFloat(item.preco_pago).toFixed(2)}</span>
-                        <div class="flex gap-2 justify-end mt-1">
-                            <button onclick="editarFilamento('${item.id}')" class="text-xs text-teal2 hover:underline">✏️ Editar</button>
-                            <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-600 hover:underline">Excluir</button>
+                const pct = pesoTotalItem > 0 ? Math.round((pesoAtual / pesoTotalItem) * 100) : 0;
+                const baixo = pct <= 15, medio = pct <= 40;
+                const corBarra = baixo ? '#DC2626' : medio ? '#F59E0B' : '#10B981';
+                const hex = corDoFilamento(item);
+                const porKg = pesoTotalItem > 0 ? parseFloat(item.preco_pago || 0) / pesoTotalItem * 1000 : 0;
+                return `<div class="rolo-card flex gap-4 p-4 rounded-2xl border border-line bg-surface" style="animation-delay:${Math.min(idx, 12) * 35}ms">
+                    <div class="shrink-0 pt-1">${svgRolo(hex, pct, 86)}</div>
+                    <div class="flex-1 min-w-0 flex flex-col">
+                        <div class="flex items-start justify-between gap-2">
+                            <h3 class="font-bold text-ink leading-snug truncate" title="${escHtml(item.nome)}">${escHtml(item.nome)}</h3>
+                            <span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full shrink-0">${escHtml(item.tipo || '-')}</span>
+                        </div>
+                        <p class="text-xs text-inkmute flex items-center gap-1.5 mt-0.5 truncate"><span class="inline-block h-3 w-3 rounded-full border border-black/25 shrink-0" style="background:${hex}"></span><span class="truncate">${escHtml(item.cor || 'Sem cor')}${item.fabricante ? ' • ' + escHtml(item.fabricante) : ''}</span></p>
+                        <div class="mt-2 h-2 rounded-full bg-surface2 overflow-hidden"><div class="rolo-barra h-full rounded-full" style="width:${Math.min(100, pct)}%;background:${corBarra}"></div></div>
+                        <p class="text-[11px] font-mono2 mt-1 ${baixo ? 'text-red-600' : 'text-inkmute'}">${pesoAtual}g de ${pesoTotalItem}g • ${pct}%${baixo ? ' • acabando' : ''}</p>
+                        <div class="mt-auto pt-2 flex items-center justify-between gap-2">
+                            <span class="text-sm font-bold text-emerald-700 font-mono2">R$ ${parseFloat(item.preco_pago).toFixed(2)} <span class="text-[10px] text-inkmute font-normal">(R$ ${porKg.toFixed(0)}/kg)</span></span>
+                            <span class="flex gap-2 shrink-0">
+                                <button onclick="editarFilamento('${item.id}')" class="text-xs text-teal2 hover:underline">✏️ Editar</button>
+                                <button onclick="deletarFilamento('${item.id}')" class="text-xs text-red-600 hover:underline">Excluir</button>
+                            </span>
                         </div>
                     </div>
                 </div>`;
