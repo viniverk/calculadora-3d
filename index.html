@@ -1226,6 +1226,14 @@
             <div class="lg:col-span-3 bg-surface p-6 rounded-xl shadow-sm border border-line h-fit">
                 <h2 class="font-display text-xl font-semibold mb-3 text-teal-600 border-b border-line pb-2">Histórico de Compras e Estoque</h2>
                 <div id="estoqueResumo" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4"></div>
+                <div class="flex items-center justify-between gap-2 mb-3">
+                    <span id="estoqueContagem" class="text-xs text-inkmute font-semibold"></span>
+                    <div class="inline-flex rounded-lg border border-line overflow-hidden text-xs font-bold" id="estoqueVisoes">
+                        <button type="button" data-visao="cards" class="px-3 py-1.5">▦ Cards</button>
+                        <button type="button" data-visao="lista" class="px-3 py-1.5 border-l border-line">☰ Lista</button>
+                        <button type="button" data-visao="mini" class="px-3 py-1.5 border-l border-line">⊞ Miniaturas</button>
+                    </div>
+                </div>
                 <div class="bg-base/60 p-3 rounded-lg border border-line mb-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
                     <div>
                         <label class="block text-[10px] uppercase font-bold text-inkmute mb-0.5">Tipo</label>
@@ -1255,7 +1263,7 @@
                         </select>
                     </div>
                 </div>
-                <div id="listaFilamentos" class="grid xl:grid-cols-2 gap-3 max-h-[75vh] overflow-y-auto pr-1"></div>
+                <div id="listaFilamentos" class="max-h-[75vh] overflow-y-auto pr-1"></div>
             </div>
         </div>
 
@@ -3923,6 +3931,21 @@
             if (fornecedores.has(selFornecedor)) filtroFornecedor.value = selFornecedor; if (cores.has(selCor)) filtroCor.value = selCor; if (anos.has(selAno)) filtroAno.value = selAno;
         }
 
+        let visaoEstoque = 'cards';
+        try { visaoEstoque = localStorage.getItem('c3d_visao_estoque') || 'cards'; } catch (e) {}
+        [filtroTipo, filtroFornecedor, filtroCor, filtroAno].forEach(el => el.addEventListener('change', () => filtrarERenderizarFilamentos()));
+        document.querySelectorAll('#estoqueVisoes button').forEach(btn => btn.addEventListener('click', () => {
+            visaoEstoque = btn.dataset.visao;
+            try { localStorage.setItem('c3d_visao_estoque', visaoEstoque); } catch (e) {}
+            filtrarERenderizarFilamentos();
+        }));
+        function marcarVisaoEstoque() {
+            document.querySelectorAll('#estoqueVisoes button').forEach(btn => {
+                const on = btn.dataset.visao === visaoEstoque;
+                btn.className = 'px-3 py-1.5 ' + (btn.dataset.visao !== 'cards' ? 'border-l border-line ' : '') + (on ? 'bg-emerald-600 text-white' : 'bg-surface2 text-inkmute hover:bg-line');
+            });
+        }
+
         function filtrarERenderizarFilamentos() {
             renderizarResumoEstoque();
             const tFiltro = filtroTipo.value; const fFiltro = filtroFornecedor.value; const cFiltro = filtroCor.value; const anoFiltro = filtroAno.value;
@@ -3930,9 +3953,50 @@
                 const fabItem = (item.fabricante || 'Desconhecido').trim(); const corItem = (item.cor || 'Incolor').trim(); const anoItem = item.data_compra ? item.data_compra.split('-')[0] : '';
                 return (tFiltro === "Todos" || item.tipo === tFiltro) && (fFiltro === "Todos" || fabItem === fFiltro) && (cFiltro === "Todos" || corItem === cFiltro) && (anoFiltro === "Todos" || anoItem === anoFiltro);
             });
+            marcarVisaoEstoque();
+            const contEl = document.getElementById('estoqueContagem');
+            if (contEl) contEl.textContent = `${dadosFiltrados.length} de ${filamentosCache.length} ${filamentosCache.length === 1 ? 'lote' : 'lotes'}`;
             const targetLista = document.getElementById('listaFilamentos');
             if (dadosFiltrados.length === 0) { targetLista.innerHTML = '<p class="text-inkmute/60 text-sm text-center p-4">Nenhum lote corresponde.</p>'; return; }
-            targetLista.innerHTML = dadosFiltrados.map((item, idx) => {
+            const dadosVisao = (item) => {
+                const pesoAtual = parseFloat(item.peso_atual_g || 0), pesoTotalItem = parseFloat(item.peso_total_g || 0);
+                const pct = pesoTotalItem > 0 ? Math.round((pesoAtual / pesoTotalItem) * 100) : 0;
+                return { pesoAtual, pesoTotalItem, pct, baixo: pct <= 15, corBarra: pct <= 15 ? '#DC2626' : pct <= 40 ? '#F59E0B' : '#10B981', hex: corDoFilamento(item) };
+            };
+            if (visaoEstoque === 'mini') {
+                targetLista.innerHTML = '<div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-3">' + dadosFiltrados.map((item, idx) => {
+                    const d = dadosVisao(item);
+                    return `<div class="rolo-card group relative flex flex-col items-center text-center p-3 rounded-2xl border border-line bg-surface hover:shadow-lg hover:-translate-y-0.5 transition" style="animation-delay:${Math.min(idx, 16) * 25}ms" title="${escHtml(item.nome)} — ${d.pesoAtual}g de ${d.pesoTotalItem}g">
+                        ${svgRolo(d.hex, d.pct, 72)}
+                        <p class="mt-1 text-xs font-bold text-ink leading-tight w-full truncate">${escHtml(item.cor || item.nome)}</p>
+                        <p class="text-[10px] text-inkmute w-full truncate">${escHtml(item.tipo || '-')}${item.fabricante ? ' • ' + escHtml(item.fabricante) : ''}</p>
+                        <div class="mt-1.5 h-1.5 w-full rounded-full bg-surface2 overflow-hidden"><div class="h-full rounded-full" style="width:${Math.min(100, d.pct)}%;background:${d.corBarra}"></div></div>
+                        <p class="text-[10px] font-mono2 mt-1 ${d.baixo ? 'text-red-600 font-bold' : 'text-inkmute'}">${d.pesoAtual}g • ${d.pct}%</p>
+                        <div class="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition">
+                            <button onclick="editarFilamento('${item.id}')" class="text-xs bg-surface2 border border-line rounded px-1" title="Editar">✏️</button>
+                            <button onclick="deletarFilamento('${item.id}')" class="text-xs bg-surface2 border border-line rounded px-1" title="Excluir">🗑️</button>
+                        </div>
+                    </div>`;
+                }).join('') + '</div>';
+                return;
+            }
+            if (visaoEstoque === 'lista') {
+                targetLista.innerHTML = '<div class="rounded-xl border border-line divide-y divide-line overflow-hidden">' + dadosFiltrados.map(item => {
+                    const d = dadosVisao(item);
+                    return `<div class="flex items-center gap-3 px-3 py-2 bg-surface hover:bg-surface2 transition">
+                        <span class="inline-block h-6 w-6 rounded-full border border-black/25 shrink-0" style="background:${d.hex}"></span>
+                        <div class="flex-1 min-w-0">
+                            <p class="text-sm font-bold text-ink truncate">${escHtml(item.nome)}</p>
+                            <p class="text-[11px] text-inkmute truncate">${escHtml(item.tipo || '-')} • ${escHtml(item.cor || 'Sem cor')}${item.fabricante ? ' • ' + escHtml(item.fabricante) : ''}${item.data_compra ? ' • ' + item.data_compra.split('-').reverse().join('/') : ''}</p>
+                        </div>
+                        <div class="w-24 hidden sm:block"><div class="h-1.5 rounded-full bg-surface2 overflow-hidden"><div class="h-full rounded-full" style="width:${Math.min(100, d.pct)}%;background:${d.corBarra}"></div></div><p class="text-[10px] font-mono2 mt-0.5 ${d.baixo ? 'text-red-600 font-bold' : 'text-inkmute'}">${d.pesoAtual}g • ${d.pct}%</p></div>
+                        <span class="text-sm font-bold text-emerald-700 font-mono2 shrink-0">R$ ${parseFloat(item.preco_pago || 0).toFixed(2)}</span>
+                        <span class="flex gap-2 shrink-0 text-xs"><button onclick="editarFilamento('${item.id}')" class="text-teal2 hover:underline">✏️</button><button onclick="deletarFilamento('${item.id}')" class="text-red-600 hover:underline">🗑️</button></span>
+                    </div>`;
+                }).join('') + '</div>';
+                return;
+            }
+            targetLista.innerHTML = '<div class="grid xl:grid-cols-2 gap-3">' + dadosFiltrados.map((item, idx) => {
                 const pesoAtual = parseFloat(item.peso_atual_g || 0);
                 const pesoTotalItem = parseFloat(item.peso_total_g || 0);
                 const pct = pesoTotalItem > 0 ? Math.round((pesoAtual / pesoTotalItem) * 100) : 0;
@@ -3959,7 +4023,7 @@
                         </div>
                     </div>
                 </div>`;
-            }).join('');
+            }).join('') + '</div>';
         }
 
         // --- CALCULADORA ---
