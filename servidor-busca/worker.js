@@ -126,6 +126,23 @@ async function nexprint(q) {
   });
 }
 
+// ---------- MakerWorld (API interna do próprio site; NÃO oficial, pode mudar ou bloquear) ----------
+async function makerworld(q) {
+  const r = await fetch(`https://makerworld.com/api/v1/search-service/select/design2?orderBy=score&designType=0&limit=24&offset=0&keyword=${encodeURIComponent(q)}`, {
+    headers: { accept: 'application/json', 'accept-language': 'en-US,en;q=0.9', referer: 'https://makerworld.com/en/search/models?keyword=' + encodeURIComponent(q),
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' },
+    cf: { cacheTtl: 300, cacheEverything: true },
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 403 ? ' (MakerWorld bloqueou o servidor)' : ''));
+  const d = await r.json().catch(() => null);
+  if (!d || !Array.isArray(d.hits)) throw new Error('resposta inesperada do MakerWorld');
+  return d.hits.filter((it) => !it.nsfw).map((it) => ({
+    fonte: 'makerworld', titulo: it.title, autor: it.designCreator && it.designCreator.name,
+    imagem: it.cover || null, url: `https://makerworld.com/en/models/${it.id}${it.slug ? '-' + it.slug : ''}`,
+    curtidas: num(it.likeCount), downloads: num(it.downloadCount), gratuito: true,
+  }));
+}
+
 const HOSTS_PREVIEW = ['makerworld.com', 'printables.com', 'thingiverse.com', 'myminifactory.com', 'cults3d.com', 'thangs.com', 'crealitycloud.com', 'nexprint.com', 'cgtrader.com', 'yeggi.com'];
 const metaTag = (html, nomes) => {
   const metas = html.match(/<meta\b[^>]*>/gi) || [];
@@ -155,7 +172,7 @@ async function previewModelo(url, cors) {
   } catch (e) { return json({ ok: false, erro: String((e && e.message) || e).slice(0, 120) }, cors); }
 }
 
-const BUSCADORES = { printables, thingiverse, myminifactory, cults3d, nexprint };
+const BUSCADORES = { printables, thingiverse, myminifactory, cults3d, nexprint, makerworld };
 
 function json(corpo, cors, status = 200) {
   return new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors } });

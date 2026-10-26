@@ -2816,7 +2816,7 @@
             document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
         }
         const SERVIDOR_PRINTABLES = 'https://zippy-sundae-b38d9e.netlify.app';   // endereço da função Netlify do Printables (vazio = Printables só como link)
-        const FONTES_API = [...(SERVIDOR_PRINTABLES ? ['printables'] : []), 'thingiverse', 'myminifactory', 'cults3d', 'nexprint'];
+        const FONTES_API = [...(SERVIDOR_PRINTABLES ? ['printables'] : []), 'thingiverse', 'myminifactory', 'cults3d', 'nexprint', 'makerworld'];
         const SERVIDOR_BUSCA = 'https://busca-modelos.discipulos-pagamento.workers.dev';
         const buscServidor = () => SERVIDOR_BUSCA;
 
