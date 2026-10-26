@@ -1017,19 +1017,20 @@
                 <div><label class="ped-lbl">Nome</label><input type="text" id="maqNome" placeholder="Ex: Bambu A1 #1" class="ped-inp"></div>
                 <div><label class="ped-lbl">Modelo (opcional)</label><input type="text" id="maqModelo" placeholder="Ex: Bambu Lab A1 Mini" class="ped-inp"></div>
                 <div>
-                    <label class="ped-lbl">Imagem da impressora</label>
+                    <label class="ped-lbl">Modelo da impressora</label>
                     <div class="flex gap-3 items-center">
-                        <div id="maqImgPreview" class="h-20 w-20 shrink-0 rounded-xl border border-line bg-surface2 flex items-center justify-center overflow-hidden text-3xl">🖨️</div>
+                        <div id="maqImgPreview" class="h-20 w-24 shrink-0 rounded-xl border border-line bg-white flex items-center justify-center overflow-hidden text-3xl">🖨️</div>
                         <div class="flex-1 min-w-0 space-y-1.5">
-                            <input type="url" id="maqImagem" placeholder="Cole o link da imagem" class="ped-inp">
-                            <div class="flex flex-wrap gap-1.5 text-[11px] font-semibold">
-                                <button type="button" id="btnMaqBuscarImg" class="px-2 py-1 rounded-lg border border-line bg-surface2 hover:bg-line text-ink">🔎 Achar imagem</button>
-                                <label class="px-2 py-1 rounded-lg border border-line bg-surface2 hover:bg-line text-ink cursor-pointer">📷 Enviar foto<input type="file" id="maqImgArquivo" accept="image/*" class="hidden"></label>
-                                <button type="button" id="btnMaqLimparImg" class="px-2 py-1 rounded-lg text-red-600 hidden">Remover</button>
-                            </div>
+                            <select id="maqCatalogo" class="ped-inp"></select>
+                            <select id="maqTipo" class="ped-inp hidden">
+                                <option value="aberta">Aberta (mesa móvel, tipo Ender)</option>
+                                <option value="fechada">Fechada (câmara, tipo Bambu/K1)</option>
+                                <option value="resina">Resina (SLA/LCD)</option>
+                                <option value="delta">Delta</option>
+                            </select>
                         </div>
                     </div>
-                    <p class="text-[10px] text-inkmute mt-1">“Achar imagem” abre o Google Imagens com o modelo digitado: clique com o botão direito na foto, “Copiar endereço da imagem” e cole aqui.</p>
+                    <p class="text-[10px] text-inkmute mt-1">Escolha o modelo para ver a ilustração e preencher a potência. Se não estiver na lista, use “Outra impressora” e escolha o tipo.</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div><label class="ped-lbl">Valor pago (R$)</label><input type="number" id="maqValor" step="0.01" class="ped-inp"></div>
@@ -2477,31 +2478,63 @@
         };
 
         // --- MÁQUINAS ---
-        const maqNome = document.getElementById('maqNome'), maqModelo = document.getElementById('maqModelo'), maqValor = document.getElementById('maqValor'), maqVida = document.getElementById('maqVida'), maqPotencia = document.getElementById('maqPotencia'), maqHorasIni = document.getElementById('maqHorasIni'), maqPadrao = document.getElementById('maqPadrao'), maqImagem = document.getElementById('maqImagem');
+        const maqNome = document.getElementById('maqNome'), maqModelo = document.getElementById('maqModelo'), maqValor = document.getElementById('maqValor'), maqVida = document.getElementById('maqVida'), maqPotencia = document.getElementById('maqPotencia'), maqHorasIni = document.getElementById('maqHorasIni'), maqPadrao = document.getElementById('maqPadrao');
         let maquinaEditandoId = null;
-        function atualizarPreviewMaquina() {
-            const box = document.getElementById('maqImgPreview'), v = maqImagem.value.trim();
-            if (v) { box.innerHTML = ''; const img = document.createElement('img'); img.src = v; img.className = 'h-full w-full object-contain bg-white'; img.referrerPolicy = 'no-referrer'; img.onerror = () => { box.textContent = '⚠️'; box.title = 'Não foi possível carregar esta imagem'; }; box.appendChild(img); }
-            else { box.textContent = '🖨️'; box.title = ''; }
-            document.getElementById('btnMaqLimparImg').classList.toggle('hidden', !v);
+        // Catálogo de impressoras (ilustrações geradas no app, sem fotos externas)
+        const CAT_MARCAS = {
+            'Elegoo': { cor: '#2563EB', itens: [['neptune-3-pro','Neptune 3 Pro','aberta',350],['neptune-3-plus','Neptune 3 Plus','aberta',350],['neptune-4','Neptune 4','aberta',350],['neptune-4-pro','Neptune 4 Pro','aberta',350],['neptune-4-plus','Neptune 4 Plus','aberta',400],['neptune-4-max','Neptune 4 Max','aberta',400],['centauri-carbon','Centauri Carbon','fechada',350],['saturn-3-ultra','Saturn 3 Ultra','resina',100],['mars-5','Mars 5','resina',60]] },
+            'Creality': { cor: '#0EA5E9', itens: [['ender-3','Ender 3','aberta',270],['ender-3-v2','Ender 3 V2','aberta',270],['ender-3-v3-se','Ender 3 V3 SE','aberta',350],['ender-3-v3-ke','Ender 3 V3 KE','aberta',350],['ender-3-v3','Ender 3 V3','aberta',350],['ender-5-plus','Ender 5 Plus','aberta',350],['cr-10-smart-pro','CR-10 Smart Pro','aberta',350],['k1','K1','fechada',350],['k1c','K1C','fechada',350],['k1-max','K1 Max','fechada',400],['k2-plus','K2 Plus','fechada',1200],['halot-mage','Halot-Mage','resina',100]] },
+            'Bambu Lab': { cor: '#16A34A', itens: [['a1-mini','A1 Mini','aberta',150],['a1','A1','aberta',350],['p1p','P1P','aberta',350],['p1s','P1S','fechada',350],['x1-carbon','X1 Carbon','fechada',350],['h2d','H2D','fechada',700]] },
+            'Anycubic': { cor: '#F59E0B', itens: [['kobra-2','Kobra 2','aberta',300],['kobra-2-pro','Kobra 2 Pro','aberta',300],['kobra-3','Kobra 3','aberta',400],['kobra-s1','Kobra S1','fechada',400],['photon-mono-4','Photon Mono 4','resina',60],['photon-mono-m7','Photon Mono M7','resina',120]] },
+            'Prusa': { cor: '#F97316', itens: [['mini-plus','Mini+','aberta',150],['mk4s','MK4S','aberta',240],['core-one','Core One','fechada',240]] },
+            'Flashforge': { cor: '#EF4444', itens: [['adventurer-5m','Adventurer 5M','fechada',500],['adventurer-5m-pro','Adventurer 5M Pro','fechada',500]] },
+            'Sovol': { cor: '#8B5CF6', itens: [['sv06','SV06','aberta',350],['sv07','SV07','aberta',350]] },
+            'Artillery': { cor: '#14B8A6', itens: [['sidewinder-x2','Sidewinder X2','aberta',350],['genius-pro','Genius Pro','aberta',350]] },
+            'Two Trees': { cor: '#64748B', itens: [['sapphire-pro','Sapphire Pro','aberta',350],['sk1','SK1','fechada',350]] }
+        };
+        const CAT_PLANO = {};
+        Object.entries(CAT_MARCAS).forEach(([marca, d]) => d.itens.forEach(([id, nome, tipo, w]) => { CAT_PLANO[marca.toLowerCase().replace(/\s+/g, '-') + '-' + id] = { marca, nome, tipo, w, cor: d.cor }; }));
+        function svgImpressora(tipo, cor) {
+            cor = cor || '#10B981';
+            const f = '#E2E8F0', e = '#475569', d = '#1E293B';
+            const corpos = {
+                aberta: `<rect x="14" y="84" width="92" height="8" rx="2" fill="${d}"/><rect x="30" y="70" width="60" height="6" rx="1" fill="${e}"/><rect x="34" y="66" width="52" height="4" rx="1" fill="${cor}"/><rect x="22" y="14" width="6" height="70" fill="${e}"/><rect x="92" y="14" width="6" height="70" fill="${e}"/><rect x="18" y="10" width="84" height="7" rx="2" fill="${cor}"/><rect x="22" y="40" width="76" height="4" fill="${f}" stroke="${e}" stroke-width="1"/><rect x="52" y="34" width="16" height="14" rx="2" fill="${d}"/><path d="M57 48h6l-3 8z" fill="${cor}"/><circle cx="104" cy="22" r="9" fill="none" stroke="${cor}" stroke-width="4"/><circle cx="104" cy="22" r="2.5" fill="${e}"/>`,
+                fechada: `<rect x="16" y="10" width="88" height="82" rx="6" fill="${d}"/><rect x="21" y="15" width="78" height="72" rx="3" fill="${f}" opacity=".9"/><rect x="21" y="15" width="78" height="72" rx="3" fill="none" stroke="${cor}" stroke-width="2"/><path d="M24 20l24-3-24 22z" fill="#fff" opacity=".6"/><rect x="28" y="72" width="64" height="5" rx="1" fill="${e}"/><rect x="32" y="68" width="56" height="4" fill="${cor}"/><rect x="26" y="34" width="68" height="3" fill="${e}"/><rect x="54" y="30" width="12" height="11" rx="2" fill="${d}"/><path d="M57 41h6l-3 7z" fill="${cor}"/><rect x="16" y="90" width="88" height="5" rx="2" fill="${e}"/>`,
+                resina: `<rect x="20" y="62" width="80" height="30" rx="5" fill="${d}"/><rect x="26" y="68" width="68" height="4" rx="2" fill="${cor}"/><path d="M26 62 L34 24 H86 L94 62 Z" fill="${cor}" opacity=".35" stroke="${cor}" stroke-width="2"/><rect x="42" y="42" width="36" height="6" rx="1" fill="${e}"/><rect x="58" y="14" width="4" height="30" fill="${e}"/><rect x="48" y="10" width="24" height="6" rx="2" fill="${d}"/><circle cx="92" cy="80" r="4" fill="${f}"/>`,
+                delta: `<rect x="22" y="86" width="76" height="7" rx="2" fill="${d}"/><rect x="24" y="12" width="6" height="74" fill="${e}"/><rect x="90" y="12" width="6" height="74" fill="${e}"/><rect x="57" y="18" width="6" height="68" fill="${e}"/><rect x="20" y="8" width="80" height="7" rx="2" fill="${cor}"/><ellipse cx="60" cy="78" rx="26" ry="6" fill="${f}" stroke="${e}"/><path d="M60 30L34 14M60 30L86 14M60 30L60 14" stroke="${e}" stroke-width="1.5"/><rect x="52" y="30" width="16" height="12" rx="2" fill="${d}"/><path d="M57 42h6l-3 8z" fill="${cor}"/>`
+            };
+            return `<svg viewBox="0 0 120 100" xmlns="http://www.w3.org/2000/svg" class="w-full h-full" role="img" aria-label="Impressora 3D">${corpos[tipo] || corpos.aberta}</svg>`;
         }
-        maqImagem.addEventListener('input', atualizarPreviewMaquina);
-        document.getElementById('btnMaqLimparImg').addEventListener('click', () => { maqImagem.value = ''; atualizarPreviewMaquina(); });
-        document.getElementById('btnMaqBuscarImg').addEventListener('click', () => {
-            const termo = (maqModelo.value.trim() || maqNome.value.trim());
-            if (!termo) return alert('Digite o modelo (ex: Elegoo Neptune 4 Pro) para buscar a imagem.');
-            window.open('https://www.google.com/search?tbm=isch&q=' + encodeURIComponent(termo + ' impressora 3D'), '_blank', 'noopener');
-        });
-        document.getElementById('maqImgArquivo').addEventListener('change', (ev) => {
-            const f = ev.target.files && ev.target.files[0]; if (!f) return;
-            const rd = new FileReader();
-            rd.onload = () => { const im = new Image(); im.onload = () => {
-                const max = 480, k = Math.min(1, max / Math.max(im.width, im.height)), c = document.createElement('canvas');
-                c.width = Math.round(im.width * k); c.height = Math.round(im.height * k);
-                const cx = c.getContext('2d'); cx.fillStyle = '#fff'; cx.fillRect(0, 0, c.width, c.height); cx.drawImage(im, 0, 0, c.width, c.height);
-                maqImagem.value = c.toDataURL('image/jpeg', 0.8); atualizarPreviewMaquina();
-            }; im.src = rd.result; };
-            rd.readAsDataURL(f); ev.target.value = '';
+        function imagemMaquina(m) {
+            const c = m && CAT_PLANO[m.catalogo_id];
+            if (c) return svgImpressora(c.tipo, c.cor);
+            if (m && m.tipo) return svgImpressora(m.tipo, '#10B981');
+            return '<span class="text-5xl">🖨️</span>';
+        }
+        const maqCatalogo = document.getElementById('maqCatalogo'), maqTipo = document.getElementById('maqTipo');
+        (function montarCatalogo() {
+            let h = '<option value="">— Escolher da lista —</option>';
+            Object.entries(CAT_MARCAS).forEach(([marca, d]) => {
+                h += `<optgroup label="${marca}">` + d.itens.map(([id, nome]) => `<option value="${marca.toLowerCase().replace(/\s+/g, '-') + '-' + id}">${marca} ${nome}</option>`).join('') + '</optgroup>';
+            });
+            maqCatalogo.innerHTML = h + '<option value="outra">Outra impressora (escolher o tipo)</option>';
+        })();
+        function atualizarPreviewMaquina() {
+            const box = document.getElementById('maqImgPreview'), v = maqCatalogo.value;
+            maqTipo.classList.toggle('hidden', v !== 'outra');
+            if (CAT_PLANO[v]) box.innerHTML = svgImpressora(CAT_PLANO[v].tipo, CAT_PLANO[v].cor);
+            else if (v === 'outra') box.innerHTML = svgImpressora(maqTipo.value, '#10B981');
+            else box.textContent = '🖨️';
+        }
+        maqTipo.addEventListener('change', atualizarPreviewMaquina);
+        maqCatalogo.addEventListener('change', () => {
+            const c = CAT_PLANO[maqCatalogo.value];
+            if (c) {
+                maqModelo.value = c.marca + ' ' + c.nome;
+                if (!maqNome.value.trim()) maqNome.value = c.marca + ' ' + c.nome;
+                maqPotencia.value = c.w;
+            }
+            atualizarPreviewMaquina();
         });
         async function carregarMaquinas() {
             try {
@@ -2524,7 +2557,7 @@
                 const total = horas + num(m.horas_iniciais, 0), vida = num(m.vida_h, 0);
                 const pct = vida > 0 ? Math.min(100, total / vida * 100) : 0;
                 return `<div class="bg-surface rounded-2xl border border-line p-4 shadow-sm">
-                    <div class="h-36 -mx-4 -mt-4 mb-3 rounded-t-2xl bg-white border-b border-line flex items-center justify-center overflow-hidden">${m.imagem ? `<img src="${escHtml(m.imagem)}" alt="${escHtml(m.nome)}" loading="lazy" referrerpolicy="no-referrer" class="h-full w-full object-contain" onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'text-5xl',textContent:'🖨️'}))">` : '<span class="text-5xl">🖨️</span>'}</div>
+                    <div class="h-36 -mx-4 -mt-4 mb-3 rounded-t-2xl bg-white border-b border-line flex items-center justify-center overflow-hidden p-2">${imagemMaquina(m)}</div>
                     <div class="flex items-start justify-between gap-2"><div class="min-w-0"><p class="font-bold text-ink truncate">${escHtml(m.nome)}</p>${m.modelo ? `<p class="text-[11px] text-inkmute">${escHtml(m.modelo)}</p>` : ''}</div>${m.padrao ? '<span class="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-1 rounded-full">PADRÃO</span>' : ''}</div>
                     <div class="grid grid-cols-3 gap-2 mt-3 text-center">
                         <div class="bg-surface2 rounded-lg py-2"><p class="text-[10px] uppercase text-inkmute">Custo/hora</p><p class="font-mono2 font-bold text-sm text-amber-600">${brl(h.energia + h.desgaste)}</p></div>
@@ -2539,13 +2572,13 @@
         }
         async function abrirAbaMaquinas() { if (!projetosCacheLocal.length) { try { await carregarProjetos3d(); } catch (e) {} } await carregarMaquinas(); }
         function limparFormMaquina() {
-            maquinaEditandoId = null; [maqNome, maqModelo, maqValor].forEach(el => el.value = ''); maqVida.value = 5000; maqPotencia.value = 150; maqHorasIni.value = 0; maqPadrao.checked = false; maqImagem.value = ''; atualizarPreviewMaquina();
+            maquinaEditandoId = null; [maqNome, maqModelo, maqValor].forEach(el => el.value = ''); maqVida.value = 5000; maqPotencia.value = 150; maqHorasIni.value = 0; maqPadrao.checked = false; maqCatalogo.value = ''; atualizarPreviewMaquina();
             document.getElementById('maqTitulo').innerText = 'Nova máquina'; document.getElementById('btnCancelarMaquina').classList.add('hidden');
         }
         document.getElementById('btnCancelarMaquina').addEventListener('click', limparFormMaquina);
         document.getElementById('btnSalvarMaquina').addEventListener('click', async () => {
             const nome = maqNome.value.trim(); if (!nome) return alert('Dê um nome para a máquina.');
-            const dados = { nome, modelo: maqModelo.value.trim(), valor: parseFloat(maqValor.value) || 0, vida_h: parseFloat(maqVida.value) || 0, potencia_w: parseFloat(maqPotencia.value) || 0, horas_iniciais: parseFloat(maqHorasIni.value) || 0, padrao: maqPadrao.checked, imagem: maqImagem.value.trim() };
+            const dados = { nome, modelo: maqModelo.value.trim(), valor: parseFloat(maqValor.value) || 0, vida_h: parseFloat(maqVida.value) || 0, potencia_w: parseFloat(maqPotencia.value) || 0, horas_iniciais: parseFloat(maqHorasIni.value) || 0, padrao: maqPadrao.checked, catalogo_id: CAT_PLANO[maqCatalogo.value] ? maqCatalogo.value : '', tipo: maqCatalogo.value === 'outra' ? maqTipo.value : (CAT_PLANO[maqCatalogo.value] || {}).tipo || '', marca: (CAT_PLANO[maqCatalogo.value] || {}).marca || '' };
             try {
                 let id = maquinaEditandoId;
                 if (id) await colecao('maquinas_3d').doc(id).update(dados);
@@ -2556,7 +2589,7 @@
         });
         window.editarMaquina = function(id) {
             const m = maquinasCache.find(x => x.id === id); if (!m) return; maquinaEditandoId = id;
-            maqNome.value = m.nome || ''; maqModelo.value = m.modelo || ''; maqValor.value = m.valor || ''; maqVida.value = m.vida_h || ''; maqPotencia.value = m.potencia_w || ''; maqHorasIni.value = m.horas_iniciais || 0; maqPadrao.checked = !!m.padrao; maqImagem.value = m.imagem || ''; atualizarPreviewMaquina();
+            maqNome.value = m.nome || ''; maqModelo.value = m.modelo || ''; maqValor.value = m.valor || ''; maqVida.value = m.vida_h || ''; maqPotencia.value = m.potencia_w || ''; maqHorasIni.value = m.horas_iniciais || 0; maqPadrao.checked = !!m.padrao; maqCatalogo.value = CAT_PLANO[m.catalogo_id] ? m.catalogo_id : (m.tipo ? 'outra' : ''); if (m.tipo) maqTipo.value = m.tipo; atualizarPreviewMaquina();
             document.getElementById('maqTitulo').innerText = 'Editar máquina'; document.getElementById('btnCancelarMaquina').classList.remove('hidden'); window.scrollTo({ top: 0, behavior: 'smooth' });
         };
         window.tornarMaquinaPadrao = async function(id) {
