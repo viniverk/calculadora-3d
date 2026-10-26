@@ -2792,7 +2792,7 @@
             { id: 'makerworld', nome: 'MakerWorld', cor: '#16A34A', url: q => `https://makerworld.com/en/search/models?keyword=${q}` },
             { id: 'thangs', nome: 'Thangs', cor: '#7C3AED', url: q => `https://thangs.com/search/${q}?scope=all` },
             { id: 'creality', nome: 'Creality Cloud', cor: '#0D9488', url: q => `https://www.google.com/search?q=${encodeURIComponent('site:crealitycloud.com ')}${q}`, via: 'via Google' },
-            { id: 'nexprint', nome: 'Nexprint', cor: '#4F46E5', url: q => `https://www.google.com/search?q=${encodeURIComponent('site:nexprint.com ')}${q}`, via: 'via Google' },
+            { id: 'nexprint', nome: 'Nexprint', cor: '#4F46E5', url: q => `https://www.nexprint.com/en/search/works?keyword=${q}` },
             { id: 'google', nome: 'Google (STL/3MF)', cor: '#6B7280', url: q => `https://www.google.com/search?q=${q}+${encodeURIComponent('(stl OR 3mf) download')}`, via: 'busca geral' }
         ];
         const buscQuery = document.getElementById('buscQuery');
@@ -2816,7 +2816,7 @@
             document.querySelectorAll('#buscRecentes button').forEach(b => b.addEventListener('click', () => { buscQuery.value = b.dataset.q; pesquisarModelos(); }));
         }
         const SERVIDOR_PRINTABLES = 'https://zippy-sundae-b38d9e.netlify.app';   // endereço da função Netlify do Printables (vazio = Printables só como link)
-        const FONTES_API = [...(SERVIDOR_PRINTABLES ? ['printables'] : []), 'thingiverse', 'myminifactory', 'cults3d'];
+        const FONTES_API = [...(SERVIDOR_PRINTABLES ? ['printables'] : []), 'thingiverse', 'myminifactory', 'cults3d', 'nexprint'];
         const SERVIDOR_BUSCA = 'https://busca-modelos.discipulos-pagamento.workers.dev';
         const buscServidor = () => SERVIDOR_BUSCA;
 

@@ -105,6 +105,27 @@ async function cults3d(q, env) {
   throw new Error(ultimoErro);
 }
 
+// ---------- Nexprint (API interna do próprio site; NÃO oficial, pode mudar ou bloquear) ----------
+async function nexprint(q) {
+  const r = await fetch(`https://www.nexprint.com/gateway/api/v1/model-library-server/model-base-info/search?pageSize=24&pageNo=1&sortType=6&loadGeneratorInfo=true&keyword=${encodeURIComponent(q)}`, {
+    headers: { accept: 'application/json', 'accept-language': 'en-US,en;q=0.9', referer: 'https://www.nexprint.com/en/search/works?keyword=' + encodeURIComponent(q),
+      'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36' },
+    cf: { cacheTtl: 300, cacheEverything: true },
+  });
+  if (!r.ok) throw new Error('HTTP ' + r.status + (r.status === 403 ? ' (Nexprint bloqueou o servidor)' : ''));
+  const d = await r.json().catch(() => null);
+  const lista = d && d.data && d.data.pageResult && d.data.pageResult.list;
+  if (!Array.isArray(lista)) throw new Error('resposta inesperada do Nexprint');
+  return lista.map((it) => {
+    const st = it.statistics || {};
+    return {
+      fonte: 'nexprint', titulo: (it.modelNameTranslateMap && it.modelNameTranslateMap.en) || it.modelName, autor: it.authorName || null,
+      imagem: it.coverImgUrl || null, url: `https://www.nexprint.com/models/${it.modelId}`,
+      curtidas: num(st.staticsModelFavoriteCount), downloads: num(st.staticsModelDownloadCount), gratuito: true,
+    };
+  });
+}
+
 const HOSTS_PREVIEW = ['makerworld.com', 'printables.com', 'thingiverse.com', 'myminifactory.com', 'cults3d.com', 'thangs.com', 'crealitycloud.com', 'nexprint.com', 'cgtrader.com', 'yeggi.com'];
 const metaTag = (html, nomes) => {
   const metas = html.match(/<meta\b[^>]*>/gi) || [];
@@ -134,7 +155,7 @@ async function previewModelo(url, cors) {
   } catch (e) { return json({ ok: false, erro: String((e && e.message) || e).slice(0, 120) }, cors); }
 }
 
-const BUSCADORES = { printables, thingiverse, myminifactory, cults3d };
+const BUSCADORES = { printables, thingiverse, myminifactory, cults3d, nexprint };
 
 function json(corpo, cors, status = 200) {
   return new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors } });
