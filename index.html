@@ -3833,7 +3833,13 @@
                 custo_fixo_aplicado: finProj.fixo
             };
 
-            const eraProjetoNovo = !idProjetoEmEdicao;
+            // O estoque só é descontado quando o projeto fica pronto (Finalizado/Vendido), uma única vez.
+            // Projetos criados antes desta regra (sem o campo) já tiveram o desconto na criação.
+            const statusPronto = (st) => st === 'Projeto Finalizado' || st === 'Vendido';
+            const jaDescontado = (pr) => !!pr && (pr.estoque_descontado === true || (pr.estoque_descontado === undefined && String(pr.created_at || '') < CORTE_DESCONTO_ESTOQUE));
+            const projAntigo = idProjetoEmEdicao ? projetosCacheLocal.find(x => x.id === idProjetoEmEdicao) : null;
+            const descontarAgora = statusPronto(statusAtual) && !jaDescontado(projAntigo);
+            if (descontarAgora || !projAntigo) payload.estoque_descontado = !!(descontarAgora || jaDescontado(projAntigo));
             try {
                 if (idProjetoEmEdicao) {
                     await colecao('projetos_3d').doc(idProjetoEmEdicao).update(payload);
@@ -3849,13 +3855,14 @@
             }
 
             btnSalvarProjetoCompleto.disabled = false;
-            if (eraProjetoNovo) await descontarEstoquePelasPecas(pecasProjetoAtual);
-            alert('Projeto registrado com sucesso!'); 
+            if (descontarAgora) await descontarEstoquePelasPecas(pecasProjetoAtual);
+            alert(descontarAgora ? 'Projeto salvo! O material foi descontado do estoque.' : 'Projeto registrado com sucesso!' + (statusPronto(statusAtual) ? '' : ' O estoque será descontado quando o status for "Projeto Finalizado".'));
             limparFormularioProjeto(); carregarProjetos3d(); 
         });
 
         // --- DESCONTO AUTOMÁTICO DE ESTOQUE ---
-        // Só roda ao criar um projeto novo (não em edições, pra não descontar 2x o mesmo material).
+        const CORTE_DESCONTO_ESTOQUE = '2026-10-27T18:00:00.000Z';
+        // Roda uma única vez por projeto, quando ele passa a Finalizado/Vendido (flag estoque_descontado).
         async function descontarEstoquePelasPecas(pecas) {
             const consumoPorChave = {};
             (pecas || []).forEach(p => {
@@ -3925,7 +3932,7 @@
 
         window.duplicarProjeto3d = async function(id) {
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return;
-            if (!confirm(`Duplicar "${proj.nome_projeto}" para uma nova impressão? O material será descontado do estoque, como em qualquer impressão nova.`)) return;
+            if (!confirm(`Duplicar "${proj.nome_projeto}" para uma nova impressão? O estoque só será descontado quando a cópia for marcada como Projeto Finalizado.`)) return;
             const corNova = prompt('Cor desta nova impressão (ex: Azul). Deixe em branco se for igual à original:', '');
             if (corNova === null) return;
             const grupo = proj.grupo_modelo || proj.id;
@@ -3936,11 +3943,10 @@
                     pecas: proj.pecas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total,
                     preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g,
                     canal_venda: proj.canal_venda || 'direta', taxa_percentual: proj.taxa_percentual || 0, taxas_canal_valor: proj.taxas_canal_valor || 0, custo_fixo_aplicado: proj.custo_fixo_aplicado || 0,
-                    status: 'Aguardando Impressão', quantidade_estoque: 0, visibilidade_portfolio: proj.visibilidade_portfolio || 'auto', user_id: usuarioAtual.uid, created_at: new Date().toISOString()
+                    status: 'Aguardando Impressão', estoque_descontado: false, quantidade_estoque: 0, visibilidade_portfolio: proj.visibilidade_portfolio || 'auto', user_id: usuarioAtual.uid, created_at: new Date().toISOString()
                 });
                 if (!proj.grupo_modelo) await colecao('projetos_3d').doc(proj.id).update({ grupo_modelo: grupo });
             } catch (error) { alert(error.message); return; }
-            await descontarEstoquePelasPecas(proj.pecas);
             carregarProjetos3d();
         };
 
