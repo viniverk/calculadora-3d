@@ -781,7 +781,12 @@
                 </div>
                 <p class="text-xs text-inkmute">Escolha um projeto que você já cadastrou abaixo e registre quantas unidades imprimiu: soma ao estoque pronto e desconta o filamento. Para cadastrar um projeto novo (sem imprimir), use o formulário mais abaixo.</p>
                 <div id="impLista" class="grid grid-cols-1 lg:grid-cols-2 gap-2 max-h-80 overflow-y-auto"></div>
-                <div id="impHistorico" class="hidden max-h-80 overflow-y-auto"></div>
+                <div id="impFiltros" class="hidden flex flex-wrap items-end gap-3 text-xs">
+                    <label class="text-inkmute font-semibold">Impresso de <input type="date" id="impDe" class="block mt-1 bg-surface2 p-1.5 rounded border border-line text-ink text-sm"></label>
+                    <label class="text-inkmute font-semibold">até <input type="date" id="impAte" class="block mt-1 bg-surface2 p-1.5 rounded border border-line text-ink text-sm"></label>
+                    <button type="button" id="impLimparFiltro" class="text-sky-600 font-semibold pb-2">Limpar datas</button>
+                </div>
+                <div id="impHistorico" class="hidden max-h-96 overflow-y-auto"></div>
             </div>
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit xl:col-span-1 space-y-4">
                 <h2 class="font-display text-xl font-semibold text-sky-600 border-b border-line pb-2">1. Capa do Projeto</h2>
@@ -803,16 +808,7 @@
                     <select id="projMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"><option value="">Padrão das Configurações</option></select>
                 </div>
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Status do Projeto</label>
-                        <select id="projStatus" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm text-ink">
-                            <option value="Aguardando Impressão">Aguardando Impressão</option>
-                            <option value="Imprimindo">Imprimindo</option>
-                            <option value="Montagem">Montagem</option> 
-                            <option value="Projeto Finalizado">Projeto Finalizado</option>
-                            <option value="Vendido">Vendido</option>
-                        </select>
-                    </div>
+                    <select id="projStatus" class="hidden" aria-hidden="true"><option value="Aguardando Impressão">Aguardando Impressão</option><option value="Imprimindo">Imprimindo</option><option value="Montagem">Montagem</option><option value="Projeto Finalizado">Projeto Finalizado</option><option value="Vendido">Vendido</option></select>
                     <div>
                         <label class="block text-xs font-medium mb-1 text-inkmute">Data de Conclusão</label>
                         <input type="date" id="projDataConclusao" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm text-ink">
@@ -3857,13 +3853,7 @@
                 custo_fixo_aplicado: finProj.fixo
             };
 
-            // O estoque só é descontado quando o projeto fica pronto (Finalizado/Vendido), uma única vez.
-            // Projetos criados antes desta regra (sem o campo) já tiveram o desconto na criação.
-            const statusPronto = (st) => st === 'Projeto Finalizado' || st === 'Vendido';
-            const jaDescontado = (pr) => !!pr && (pr.estoque_descontado === true || (pr.estoque_descontado === undefined && String(pr.created_at || '') < CORTE_DESCONTO_ESTOQUE));
-            const projAntigo = idProjetoEmEdicao ? projetosCacheLocal.find(x => x.id === idProjetoEmEdicao) : null;
-            const descontarAgora = statusPronto(statusAtual) && !jaDescontado(projAntigo);
-            if (descontarAgora || !projAntigo) payload.estoque_descontado = !!(descontarAgora || jaDescontado(projAntigo));
+            // O estoque (peças e filamento) agora só muda ao registrar impressões em "Imprimir projeto cadastrado".
             try {
                 if (idProjetoEmEdicao) {
                     await colecao('projetos_3d').doc(idProjetoEmEdicao).update(payload);
@@ -3879,8 +3869,7 @@
             }
 
             btnSalvarProjetoCompleto.disabled = false;
-            if (descontarAgora) await descontarEstoquePelasPecas(pecasProjetoAtual);
-            alert(descontarAgora ? 'Projeto salvo! O material foi descontado do estoque.' : 'Projeto registrado com sucesso!' + (statusPronto(statusAtual) ? '' : ' O estoque será descontado quando o status for "Projeto Finalizado".'));
+            alert(idProjetoEmEdicao ? 'Projeto atualizado! O histórico de impressões já usa os novos valores.' : 'Projeto cadastrado! Ele já aparece no portfólio. Para registrar impressões (somar estoque e abater filamento), use "Imprimir projeto cadastrado".');
             limparFormularioProjeto(); carregarProjetos3d(); 
         });
 
@@ -4178,20 +4167,85 @@
         // Carga que traz a lista do banco inteira de uma só vez (Garantindo que o Mascote Urubu apareça)
         // --- IMPRIMIR PROJETO CADASTRADO ---
         let impAba = 'imprimir';
+        // Valores do histórico são calculados na hora a partir do projeto: se você mudar o material/peças do projeto, o histórico acompanha.
+        function consumoProjeto(p) {
+            const g = (p.pecas || []).reduce((a, x) => a + (parseFloat(x.peso_g) || 0), 0) || parseFloat(p.peso_total_g) || 0;
+            const r = (p.pecas || []).reduce((a, x) => a + (x.custo_detalhe && x.custo_detalhe.filamento != null ? parseFloat(x.custo_detalhe.filamento) || 0 : (parseFloat(x.peso_g) || 0) * precoPadraoG()), 0);
+            return { g, r };
+        }
         function renderizarImpHistorico() {
             const el = document.getElementById('impHistorico');
             const termo = semAcento((document.getElementById('impBusca').value || '').trim());
+            const de = document.getElementById('impDe').value, ate = document.getElementById('impAte').value;
             const linhas = [];
-            projetosCacheLocal.forEach(p => (p.historico_impressoes || []).forEach(h => { if (!termo || semAcento(p.nome_projeto || '').includes(termo)) linhas.push({ p, h }); }));
-            linhas.sort((a, b) => String(b.h.em || b.h.data).localeCompare(String(a.h.em || a.h.data)));
-            if (!linhas.length) { el.innerHTML = '<p class="text-sm text-inkmute italic py-4 text-center">Nenhuma impressão registrada ainda. Impressões feitas pelo botão "Imprimir" aparecem aqui.</p>'; return; }
-            const tq = linhas.reduce((a, x) => a + (x.h.qtd || 0), 0), tc = linhas.reduce((a, x) => a + (x.h.custo || 0), 0), tg = linhas.reduce((a, x) => a + (x.h.filamento_g || 0), 0);
-            el.innerHTML = `<p class="text-xs text-inkmute mb-2">${tq} unidades • ${tg.toFixed(0)} g de filamento • custo R$ ${tc.toFixed(2)}</p>` + linhas.map(({ p, h }) => `<div class="flex items-center gap-3 p-2 border-b border-line/60">${miniaturaProjeto(p, 'h-10 w-10')}<div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute">${String(h.data || '').split('-').reverse().join('/')} • ${h.qtd} un • ${(h.filamento_g || 0).toFixed(0)} g</p></div><span class="text-sm font-bold text-ink shrink-0">R$ ${(h.custo || 0).toFixed(2)}</span></div>`).join('');
+            projetosCacheLocal.forEach(p => (p.historico_impressoes || []).forEach((h, idx) => {
+                if (termo && !semAcento(p.nome_projeto || '').includes(termo)) return;
+                if (de && String(h.data) < de) return; if (ate && String(h.data) > ate) return;
+                const c = consumoProjeto(p); linhas.push({ p, h, idx, g: c.g * h.qtd, r: c.r * h.qtd });
+            }));
+            linhas.sort((a, b) => String(b.h.data).localeCompare(String(a.h.data)) || String(b.h.em || '').localeCompare(String(a.h.em || '')));
+            if (!linhas.length) { el.innerHTML = '<p class="text-sm text-inkmute italic py-4 text-center">Nenhuma impressão encontrada. Impressões feitas pelo botão "Imprimir" aparecem aqui.</p>'; return; }
+            const tq = linhas.reduce((a, x) => a + x.h.qtd, 0), tr = linhas.reduce((a, x) => a + x.r, 0), tg = linhas.reduce((a, x) => a + x.g, 0);
+            el.innerHTML = `<table class="w-full text-sm"><thead class="sticky top-0 bg-surface text-[11px] uppercase text-inkmute"><tr class="border-b border-line"><th class="text-left py-2">Data</th><th class="text-left">Projeto</th><th class="text-right">Qtde</th><th class="text-right">Material</th><th class="text-right">Valor filamento</th><th></th></tr></thead><tbody>` +
+                linhas.map(({ p, h, idx, g, r }) => `<tr class="border-b border-line/60"><td class="py-2 whitespace-nowrap">${String(h.data || '').split('-').reverse().join('/')}</td><td class="max-w-[220px]"><div class="flex items-center gap-2">${miniaturaProjeto(p, 'h-8 w-8')}<span class="truncate font-semibold text-ink">${escHtml(p.nome_projeto)}</span></div></td><td class="text-right font-bold">${h.qtd}</td><td class="text-right">${g.toFixed(0)} g</td><td class="text-right font-bold">R$ ${r.toFixed(2)}</td><td class="text-right whitespace-nowrap pl-2"><button type="button" onclick="editarImpressao('${p.id}',${idx})" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button> <button type="button" onclick="excluirImpressao('${p.id}',${idx})" class="text-[11px] text-red-600 ml-1">Excluir</button></td></tr>`).join('') +
+                `</tbody><tfoot><tr class="font-bold"><td class="py-2" colspan="2">Total</td><td class="text-right">${tq}</td><td class="text-right">${tg.toFixed(0)} g</td><td class="text-right">R$ ${tr.toFixed(2)}</td><td></td></tr></tfoot></table>`;
+        }
+        async function devolverEstoquePelasPecas(pecas, mult) {
+            const consumo = {};
+            (pecas || []).forEach(p => { const c = p.filamento_chave; if (!c || c === 'padrao' || c === 'media') return; consumo[c] = (consumo[c] || 0) + (parseFloat(p.peso_g) || 0) * mult; });
+            for (const chave of Object.keys(consumo)) {
+                let resta = consumo[chave];
+                const lotes = filamentosCache.filter(i => `${(i.fabricante || 'Desconhecido').trim()} | ${i.tipo} | ${(i.cor || 'Incolor').trim()}`.toLowerCase() === chave)
+                    .sort((a, b) => new Date(b.data_compra || b.created_at) - new Date(a.data_compra || a.created_at));
+                for (const l of lotes) {
+                    if (resta <= 0) break;
+                    const atual = parseFloat(l.peso_atual_g || 0), cap = parseFloat(l.peso_total_g) || (atual + resta);
+                    const add = Math.min(resta, Math.max(0, cap - atual)); if (add <= 0) continue;
+                    await colecao('estoque_materiais').doc(l.id).update({ peso_atual_g: atual + add }); l.peso_atual_g = atual + add; resta -= add;
+                }
+            }
+            await carregarFilamentos();
+        }
+        async function aplicarMudancaImpressao(pid, idx, novaQtd, novaData) {
+            const p = projetosCacheLocal.find(x => x.id === pid); if (!p) return;
+            const hist = [...(p.historico_impressoes || [])]; const h = hist[idx]; if (!h) return;
+            const delta = novaQtd - h.qtd;
+            if (novaQtd <= 0) hist.splice(idx, 1); else hist[idx] = { ...h, qtd: novaQtd, data: novaData || h.data };
+            await colecao('projetos_3d').doc(pid).update({
+                historico_impressoes: hist,
+                quantidade_estoque: Math.max(0, (parseInt(p.quantidade_estoque) || 0) + delta),
+                total_impresso: Math.max(0, (parseInt(p.total_impresso) || 0) + delta)
+            });
+            if (delta > 0) await descontarEstoquePelasPecas(p.pecas, delta); else if (delta < 0) await devolverEstoquePelasPecas(p.pecas, -delta);
+            await carregarProjetos3d();
+        }
+        function editarImpressao(pid, idx) {
+            const p = projetosCacheLocal.find(x => x.id === pid); const h = p && (p.historico_impressoes || [])[idx]; if (!h) return;
+            const m = document.getElementById('impModal');
+            m.innerHTML = `<div class="bg-surface rounded-2xl p-6 w-full max-w-md space-y-4 shadow-xl border border-line">
+                <h3 class="font-display text-lg font-bold text-ink truncate">Editar impressão: ${escHtml(p.nome_projeto)}</h3>
+                <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1 text-ink">Quantidade impressa</label><input type="number" id="impQtd" min="1" step="1" value="${h.qtd}" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-lg font-bold text-center"></div>
+                <div><label class="block text-xs font-semibold mb-1 text-ink">Data</label><input type="date" id="impData" value="${h.data}" class="w-full bg-surface2 p-2 rounded border border-line text-ink"></div></div>
+                <p class="text-xs text-inkmute">Ao mudar a quantidade, o estoque pronto do projeto e o filamento do estoque são ajustados pela diferença.</p>
+                <div class="flex justify-end gap-2"><button type="button" onclick="fecharImprimirProjeto()" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="impConfirmar" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold">Salvar</button></div></div>`;
+            m.classList.remove('hidden'); m.classList.add('flex');
+            document.getElementById('impConfirmar').addEventListener('click', async () => {
+                const q = parseInt(document.getElementById('impQtd').value) || 0; if (q < 1) { alert('Informe pelo menos 1 unidade (ou use Excluir).'); return; }
+                const b = document.getElementById('impConfirmar'); b.disabled = true;
+                try { await aplicarMudancaImpressao(pid, idx, q, document.getElementById('impData').value); } catch (e) { alert('Falha ao salvar: ' + e.message); b.disabled = false; return; }
+                fecharImprimirProjeto();
+            });
+        }
+        async function excluirImpressao(pid, idx) {
+            const p = projetosCacheLocal.find(x => x.id === pid); const h = p && (p.historico_impressoes || [])[idx]; if (!h) return;
+            if (!confirm(`Excluir esta impressão (${h.qtd} un de "${p.nome_projeto}")? O estoque pronto será reduzido e o filamento devolvido ao estoque.`)) return;
+            try { await aplicarMudancaImpressao(pid, idx, 0); } catch (e) { alert('Falha ao excluir: ' + e.message); }
         }
         function mostrarImpAba(a) {
             impAba = a;
             document.getElementById('impLista').classList.toggle('hidden', a !== 'imprimir');
             document.getElementById('impHistorico').classList.toggle('hidden', a !== 'historico');
+            document.getElementById('impFiltros').classList.toggle('hidden', a !== 'historico'); document.getElementById('impFiltros').classList.toggle('flex', a === 'historico');
             document.getElementById('impTabImprimir').className = 'px-3 py-1.5 rounded-lg text-sm font-semibold ' + (a === 'imprimir' ? 'bg-emerald-600 text-white' : 'border border-line text-ink');
             document.getElementById('impTabHistorico').className = 'px-3 py-1.5 rounded-lg text-sm font-semibold ' + (a === 'historico' ? 'bg-emerald-600 text-white' : 'border border-line text-ink');
             renderizarImpLista();
@@ -4209,6 +4263,8 @@
             }).join('') : '<p class="text-sm text-inkmute italic col-span-full py-4 text-center">Nenhum projeto cadastrado ainda.</p>';
         }
         document.getElementById('impBusca').addEventListener('input', renderizarImpLista);
+        ['impDe', 'impAte'].forEach(i => document.getElementById(i).addEventListener('change', renderizarImpLista));
+        document.getElementById('impLimparFiltro').addEventListener('click', () => { document.getElementById('impDe').value = ''; document.getElementById('impAte').value = ''; renderizarImpLista(); });
         function atualizarResumoImp(id) {
             const p = projetosCacheLocal.find(x => x.id === id); if (!p) return;
             const q = Math.max(1, parseInt(document.getElementById('impQtd').value) || 1);
@@ -4244,7 +4300,7 @@
                     status: p.status === 'Vendido' ? 'Vendido' : 'Projeto Finalizado',
                     data_conclusao: data,
                     estoque_descontado: true,
-                    historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, filamento_g: (parseFloat(p.peso_total_g) || 0) * q, custo: (parseFloat(p.custo_total) || 0) * q, em: new Date().toISOString() }]
+                    historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, em: new Date().toISOString() }]
                 });
                 await descontarEstoquePelasPecas(p.pecas, q);
             } catch (e) { alert('Falha ao registrar a impressão: ' + e.message); btn.disabled = false; return; }
