@@ -4204,24 +4204,33 @@
         }
         function somarConsumo(base, mapa, sinal) { const o = { ...(base || {}) }; Object.keys(mapa).forEach(k => { o[k] = Math.max(0, (o[k] || 0) + sinal * mapa[k]); }); return o; }
         const qtdImpressaDe = (p) => (p.historico_impressoes || []).reduce((a, h) => a + (parseInt(h.qtd) || 0), 0);
+        function difsFilamentoProjeto(p) {
+            const q = qtdImpressaDe(p), desejado = consumoPorChaveDe(p.pecas, q), abatido = p.consumo_abatido || {};
+            return { q, desejado, difs: [...new Set([...Object.keys(desejado), ...Object.keys(abatido)])].map(c => ({ c, d: (desejado[c] || 0) - (abatido[c] || 0) })).filter(x => Math.abs(x.d) >= 0.5) };
+        }
+        const reajustando = new Set();
         async function reajustarFilamentoProjeto(pid) {
+            if (reajustando.has(pid)) return;
             const p = projetosCacheLocal.find(x => x.id === pid); if (!p) return;
             const q = qtdImpressaDe(p); if (q < 1) { alert('Este projeto ainda não tem impressões registradas.'); return; }
-            const desejado = consumoPorChaveDe(p.pecas, q), abatido = p.consumo_abatido || {};
-            const chaves = [...new Set([...Object.keys(desejado), ...Object.keys(abatido)])];
-            const difs = chaves.map(c => ({ c, d: (desejado[c] || 0) - (abatido[c] || 0) })).filter(x => Math.abs(x.d) >= 0.5);
+            const { desejado, difs } = difsFilamentoProjeto(p);
             if (!difs.length) { alert('O filamento deste projeto já está em dia com o estoque (nada a ajustar).\nSe as peças usam "Preço padrão" ou "Preço médio", escolha um filamento do estoque na peça e salve o projeto.'); return; }
             const txt = difs.map(x => `${x.d > 0 ? 'Abater' : 'Devolver'} ${Math.abs(x.d).toFixed(0)} g de ${x.c}`).join('\n');
             if (!confirm(`Reajustar o filamento das ${q} unidades impressas de "${p.nome_projeto}":\n\n${txt}\n\nUse só se esse consumo ainda não foi abatido/devolvido no Estoque. Continuar?`)) return;
+            reajustando.add(pid);
+            document.querySelectorAll(`[data-reajustar="${pid}"]`).forEach(b => { b.disabled = true; b.textContent = 'Reajustando...'; });
             try {
+                // Marca como feito ANTES de mexer no estoque, para nunca repetir o abate (mesmo se clicar de novo ou der falha no meio)
+                await colecao('projetos_3d').doc(pid).update({ consumo_abatido: desejado });
+                p.consumo_abatido = desejado;
                 for (const x of difs) {
                     const fake = [{ filamento_chave: x.c, peso_g: Math.abs(x.d) }];
                     if (x.d > 0) await descontarEstoquePelasPecas(fake, 1); else await devolverEstoquePelasPecas(fake, 1);
                 }
-                await colecao('projetos_3d').doc(pid).update({ consumo_abatido: desejado });
-            } catch (e) { alert('Falha ao reajustar: ' + e.message); return; }
+            } catch (e) { alert('Falha ao reajustar: ' + e.message + '\nConfira o saldo no Estoque antes de tentar de novo.'); }
+            finally { reajustando.delete(pid); }
             await carregarProjetos3d();
-            alert('Filamento reajustado no estoque.');
+            alert('Filamento reajustado no estoque (feito uma única vez).');
         }
         async function devolverEstoquePelasPecas(pecas, mult) {
             const consumo = {};
@@ -4293,7 +4302,7 @@
             const lista = projetosCacheLocal.filter(p => !termo || semAcento(p.nome_projeto || '').includes(termo));
             el.innerHTML = lista.length ? lista.map(p => {
                 const est = parseInt(p.quantidade_estoque) || 0, tot = parseInt(p.total_impresso) || 0;
-                return `<div class="flex items-center gap-3 p-2 rounded-lg border border-line bg-surface2">${miniaturaProjeto(p, 'h-12 w-12')}<div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute truncate">${p.cor ? escHtml(p.cor) + ' • ' : ''}${parseFloat(p.peso_total_g) || 0} g • ${tot ? tot + ' impressos' : 'nunca impresso'} • estoque pronto: ${est}</p></div><div class="shrink-0 flex flex-col items-end gap-1"><button type="button" onclick="abrirImprimirProjeto('${p.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg">Imprimir</button>${tot ? `<button type="button" onclick="reajustarFilamentoProjeto('${p.id}')" class="text-[10px] text-sky-600 font-semibold">Reajustar filamento</button>` : ''}</div></div>`;
+                return `<div class="flex items-center gap-3 p-2 rounded-lg border border-line bg-surface2">${miniaturaProjeto(p, 'h-12 w-12')}<div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute truncate">${p.cor ? escHtml(p.cor) + ' • ' : ''}${parseFloat(p.peso_total_g) || 0} g • ${tot ? tot + ' impressos' : 'nunca impresso'} • estoque pronto: ${est}</p></div><div class="shrink-0 flex flex-col items-end gap-1"><button type="button" onclick="abrirImprimirProjeto('${p.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg">Imprimir</button>${tot && difsFilamentoProjeto(p).difs.length ? `<button type="button" data-reajustar="${p.id}" onclick="reajustarFilamentoProjeto('${p.id}')" class="text-[10px] text-sky-600 font-semibold">Reajustar filamento</button>` : ''}</div></div>`;
             }).join('') : '<p class="text-sm text-inkmute italic col-span-full py-4 text-center">Nenhum projeto cadastrado ainda.</p>';
         }
         document.getElementById('impBusca').addEventListener('input', renderizarImpLista);
