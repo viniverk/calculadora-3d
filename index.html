@@ -800,8 +800,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Categoria <span class="text-inkmute font-normal">(opcional — vira menu no portfólio)</span></label>
-                    <input type="text" id="projCategoria" list="listaCategorias" maxlength="40" placeholder="Ex: Decoração, Organizadores, Natal" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
-                    <datalist id="listaCategorias"></datalist>
+                    <select id="projCategoriaSel" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></select>
+                    <input type="text" id="projCategoria" maxlength="40" placeholder="Nome da nova categoria (ex: Decoração, Natal)" class="hidden mt-2 w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Descrição do produto final <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
@@ -1584,7 +1584,21 @@
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
         const projNome = document.getElementById('projNome');
-        const projCor = document.getElementById('projCor'); const projCategoria = document.getElementById('projCategoria');
+        const projCor = document.getElementById('projCor'); const projCategoria = document.getElementById('projCategoria'); const projCategoriaSel = document.getElementById('projCategoriaSel');
+        // Seletor de categoria: lista as já cadastradas e permite criar uma nova no próprio campo
+        function sincronizarSeletorCategoria() {
+            const cats = [...new Set(projetosCacheLocal.map(x => (x.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const atual = projCategoria.value.trim();
+            const ehNova = atual && !cats.includes(atual);
+            projCategoriaSel.innerHTML = '<option value="">Sem categoria</option>' + cats.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('') + '<option value="__nova">➕ Nova categoria…</option>';
+            projCategoriaSel.value = ehNova ? '__nova' : atual;
+            projCategoria.classList.toggle('hidden', !ehNova);
+        }
+        try { sincronizarSeletorCategoria(); } catch (e) {}
+        projCategoriaSel.addEventListener('change', () => {
+            if (projCategoriaSel.value === '__nova') { projCategoria.value = ''; projCategoria.classList.remove('hidden'); projCategoria.focus(); }
+            else { projCategoria.value = projCategoriaSel.value; projCategoria.classList.add('hidden'); }
+        });
         const projDescricao = document.getElementById('projDescricao');
         const projMaquina = document.getElementById('projMaquina');
         const projPrecoVenda = document.getElementById('projPrecoVenda');
@@ -3941,7 +3955,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projCategoria.value = ''; projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projCategoria.value = ''; sincronizarSeletorCategoria(); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -3952,7 +3966,7 @@
         window.editarProjeto3d = function(id) {
             abrirCartaoFormMobile(document.getElementById('projNome'), document.getElementById('btnRecalcularCustos'));
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; sincronizarSeletorCategoria(); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
@@ -4476,7 +4490,7 @@
                 projetosCacheLocal = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
             } catch (error) { console.error(error); return; }
             
-            document.getElementById('listaCategorias').innerHTML = [...new Set(projetosCacheLocal.map(x => (x.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c => `<option value="${escHtml(c)}">`).join('');
+            sincronizarSeletorCategoria();
             renderizarProjetosOrdenados();
             renderizarImpLista();
             carregarDropdownProjetosVenda();
