@@ -111,6 +111,18 @@ service cloud.firestore {
       allow update, delete: if ehDono(resource.data) && temAcesso();
     }
 
+    // Contador de visitas dos produtos do catálogo público (qualquer visitante só pode somar +1)
+    match /visitas_produtos/{id} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasOnly(['user_id', 'nome', 'count'])
+        && request.resource.data.count == 1
+        && request.resource.data.user_id is string
+        && request.resource.data.nome is string && request.resource.data.nome.size() <= 120;
+      allow update: if request.resource.data.keys().hasOnly(['user_id', 'nome', 'count'])
+        && request.resource.data.count == resource.data.count + 1
+        && request.resource.data.user_id == resource.data.user_id;
+    }
+
     // Configuração de custos do negócio (energia, impressora, taxas): só o próprio usuário
     match /config_custos/{uid} {
       allow read, write: if logado() && request.auth.uid == uid && temAcesso();

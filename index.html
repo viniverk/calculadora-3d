@@ -799,6 +799,11 @@
                     <p class="text-[11px] text-inkmute mt-1">Use "Duplicar" para imprimir o mesmo modelo em outra cor. No Portfólio aparece um só card, com as cores disponíveis.</p>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium mb-1">Categoria <span class="text-inkmute font-normal">(opcional — vira menu no portfólio)</span></label>
+                    <input type="text" id="projCategoria" list="listaCategorias" maxlength="40" placeholder="Ex: Decoração, Organizadores, Natal" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
+                    <datalist id="listaCategorias"></datalist>
+                </div>
+                <div>
                     <label class="block text-sm font-medium mb-1">Descrição do produto final <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
                     <textarea id="projDescricao" rows="3" maxlength="500" placeholder="Ex: Anjo decorativo vazado, ótimo para enfeitar a árvore de Natal. Altura de 12 cm." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></textarea>
                 </div>
@@ -997,6 +1002,8 @@
                 <div class="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
                     <div id="portfolioMarca" class="bg-gradient-to-r from-emerald-700 to-teal-600 px-5 py-6 sm:px-8 text-white"></div>
                     <div class="p-4 sm:p-6">
+                        <div id="portDestaques" class="hidden mb-5"></div>
+                        <div id="portCategorias" class="hidden flex gap-1.5 text-xs font-bold overflow-x-auto pb-2 mb-3"></div>
                         <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
                             <div class="relative flex-1">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-inkmute text-sm">🔎</span>
@@ -1011,6 +1018,12 @@
                                 <select id="portOrdem" class="bg-surface2 border border-line rounded-full px-3 py-2 text-xs font-semibold text-ink">
                                     <option value="relevantes">Mais relevantes</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="nome">Nome (A–Z)</option>
                                 </select>
+                                <div id="portVisoes" class="flex rounded-full border border-line overflow-hidden text-xs font-bold" role="group" aria-label="Visualização">
+                                    <button type="button" data-v="grade" class="px-3 py-2" title="Grade">▦ Grade</button>
+                                    <button type="button" data-v="lista" class="px-3 py-2 border-l border-line" title="Lista">☰ Lista</button>
+                                    <button type="button" data-v="mini" class="px-3 py-2 border-l border-line" title="Compacta">▪ Compacta</button>
+                                </div>
+                                <button type="button" id="btnCarrinho" class="relative bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-2 px-4 rounded-full shadow flex items-center gap-2">🛒 <span>Carrinho</span><span id="carrinhoBadge" class="hidden bg-white text-emerald-800 rounded-full px-1.5 text-[11px] leading-5 min-w-[20px] text-center">0</span></button>
                                 <button id="btnCompartilharCatalogo" onclick="copiarLinkPublico()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-full shadow transition flex items-center gap-2">
                                     <span>🔗</span> <span id="txtCompartilhar">Compartilhar Catálogo</span>
                                 </button>
@@ -1023,6 +1036,7 @@
             </div>
         </div>
         <div id="impModal" class="hidden fixed inset-0 z-[70] bg-black/60 items-center justify-center p-4" role="dialog" aria-modal="true"></div>
+        <div id="carrinhoModal" class="hidden fixed inset-0 z-[75] bg-black/60 items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true"></div>
         <div id="portModal" class="hidden fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true"></div>
 
         <div id="view-pedidos" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
@@ -1570,7 +1584,7 @@
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
         const projNome = document.getElementById('projNome');
-        const projCor = document.getElementById('projCor');
+        const projCor = document.getElementById('projCor'); const projCategoria = document.getElementById('projCategoria');
         const projDescricao = document.getElementById('projDescricao');
         const projMaquina = document.getElementById('projMaquina');
         const projPrecoVenda = document.getElementById('projPrecoVenda');
@@ -3830,6 +3844,7 @@
             let payload = { 
                 nome_projeto: nomeProjeto, 
                 cor: projCor.value.trim(),
+                categoria: projCategoria.value.trim().slice(0, 40),
                 descricao: projDescricao.value.trim().slice(0, 500),
                 maquina_id: projMaquina.value || null,
                 maquina_nome: (maquinaDoFormulario() || {}).nome || '',
@@ -3926,7 +3941,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projCategoria.value = ''; projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -3937,7 +3952,7 @@
         window.editarProjeto3d = function(id) {
             abrirCartaoFormMobile(document.getElementById('projNome'), document.getElementById('btnRecalcularCustos'));
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
@@ -4077,7 +4092,8 @@
             return proj.status === 'Projeto Finalizado' || proj.status === 'Vendido';
         }
 
-        let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [];
+        let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [], portCat = '', portVisao = 'grade';
+        try { portVisao = localStorage.getItem('portVisao') || 'grade'; } catch (e) {}
         function agruparModelosPortfolio() {
             const visiveis = projetosCacheLocal.filter(deveAparecerNoPortfolio);
             const chaveGrupo = (p) => p.grupo_modelo || ('n:' + String(p.nome_projeto || '').trim().toLowerCase().replace(/\s*\(c[óo]pia\)\s*$/i, ''));
@@ -4087,9 +4103,10 @@
                 const proj = itens.find(x => x.imagem_base64) || itens[0];
                 const precos = itens.map(x => parseFloat(x.preco_venda_total) || 0);
                 const cores = new Map();
-                itens.forEach(x => { const c = (x.cor || '').trim(); if (!c) return; const k = c.toLowerCase(); const o = cores.get(k) || { cor: c, est: 0 }; o.est += parseInt(x.quantidade_estoque) || 0; cores.set(k, o); });
+                itens.forEach(x => { const c = (x.cor || '').trim(); if (!c) return; const k = c.toLowerCase(); const o = cores.get(k) || { cor: c, est: 0, preco: parseFloat(x.preco_venda_total) || 0 }; o.est += parseInt(x.quantidade_estoque) || 0; cores.set(k, o); });
                 return {
-                    nome: proj.nome_projeto || '', imagem: proj.imagem_base64 || '', pMin: Math.min(...precos), pMax: Math.max(...precos),
+                    id: proj.id, nome: proj.nome_projeto || '', imagem: proj.imagem_base64 || '', pMin: Math.min(...precos), pMax: Math.max(...precos),
+                    categoria: ((itens.find(x => (x.categoria || '').trim()) || {}).categoria || '').trim(),
                     descricao: ((itens.find(x => (x.descricao || '').trim()) || {}).descricao || '').trim(),
                     estoque: itens.reduce((a, x) => a + (parseInt(x.quantidade_estoque) || 0), 0), cores: [...cores.values()],
                     pecas: (proj.pecas || []).map(pc => pc.nome_peca).filter(Boolean)
@@ -4098,12 +4115,99 @@
         }
         const brlPort = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
         function textoPrecoModelo(m) { return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
+
+        // --- MAIS VISITADOS (contador de visitas por produto) ---
+        let visitasMapa = {}, visitasCarregadas = false;
+        const uidDonoCatalogo = () => modoPublicoAtivo ? uidCatalogoPublico : (usuarioAtual && usuarioAtual.uid) || null;
+        async function carregarVisitas() {
+            try { const uid = uidDonoCatalogo(); if (!uid) return; const snap = await colecao('visitas_produtos').where('user_id', '==', uid).get(); visitasMapa = {}; snapshotParaArray(snap).forEach(v => { visitasMapa[v.id] = parseInt(v.count) || 0; }); } catch (e) { /* regras ainda não publicadas: sem destaque */ }
+        }
+        function registrarVisita(m) {
+            if (!modoPublicoAtivo || !m || !m.id) return;
+            try { if (sessionStorage.getItem('vis_' + m.id)) return; sessionStorage.setItem('vis_' + m.id, '1'); } catch (e) {}
+            colecao('visitas_produtos').doc(m.id).set({ user_id: uidCatalogoPublico, nome: m.nome, count: firebase.firestore.FieldValue.increment(1) }, { merge: true }).catch(() => {});
+        }
+
+        // --- CARRINHO (guardado no navegador de quem visita) ---
+        let carrinho = [], carrinhoCarregado = false;
+        const chaveCarrinho = () => 'carrinho_' + (uidDonoCatalogo() || 'x');
+        function carregarCarrinho() { try { carrinho = JSON.parse(localStorage.getItem(chaveCarrinho()) || '[]') || []; } catch (e) { carrinho = []; } atualizarBadgeCarrinho(); }
+        function salvarCarrinho() { try { localStorage.setItem(chaveCarrinho(), JSON.stringify(carrinho)); } catch (e) {} atualizarBadgeCarrinho(); }
+        function atualizarBadgeCarrinho() { const n = carrinho.reduce((a, x) => a + x.qtd, 0), b = document.getElementById('carrinhoBadge'); if (!b) return; b.textContent = n; b.classList.toggle('hidden', n === 0); }
+        function adicionarAoCarrinho(i, cor) {
+            const m = portModelos[i]; if (!m) return;
+            if (m.cores.length > 1 && !cor) { abrirModalPortfolio(i); toastCarrinho('Escolha a cor para adicionar ao carrinho'); return; }
+            const c = cor || (m.cores[0] ? m.cores[0].cor : ''); const info = m.cores.find(x => x.cor === c);
+            const chave = m.id + '|' + c; const it = carrinho.find(x => x.chave === chave);
+            if (it) it.qtd += 1; else carrinho.push({ chave, nome: m.nome, cor: c, preco: info ? info.preco : m.pMin, imagem: m.imagem, qtd: 1 });
+            salvarCarrinho(); toastCarrinho('✓ Adicionado ao carrinho');
+        }
+        function toastCarrinho(t) {
+            let el = document.getElementById('toastCarrinho');
+            if (!el) { el = document.createElement('div'); el.id = 'toastCarrinho'; el.className = 'fixed bottom-20 left-1/2 -translate-x-1/2 z-[90] bg-slate-900 text-white text-sm font-semibold px-4 py-2 rounded-full shadow-lg'; document.body.appendChild(el); }
+            el.textContent = t; el.style.display = 'block'; clearTimeout(el._t); el._t = setTimeout(() => { el.style.display = 'none'; }, 1800);
+        }
+        function fecharCarrinho() { const md = document.getElementById('carrinhoModal'); md.classList.add('hidden'); md.classList.remove('flex'); md.innerHTML = ''; }
+        function abrirCarrinho() {
+            const md = document.getElementById('carrinhoModal'); const wa = marcaAtual && digitosWhats(marcaAtual.whatsapp);
+            const total = carrinho.reduce((a, x) => a + x.preco * x.qtd, 0);
+            const linhas = carrinho.length ? carrinho.map((x, k) => `<div class="flex items-center gap-3 py-2 border-b border-line/60">
+                ${x.imagem ? `<img src="${escHtml(x.imagem)}" alt="" referrerpolicy="no-referrer" class="h-14 w-14 rounded-lg object-cover bg-surface2 shrink-0">` : '<div class="h-14 w-14 rounded-lg bg-surface2 flex items-center justify-center shrink-0">🧊</div>'}
+                <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(x.nome)}</p><p class="text-[11px] text-inkmute">${x.cor ? escHtml(x.cor) + ' • ' : ''}${brlPort(x.preco)}</p></div>
+                <div class="flex items-center gap-1"><button type="button" data-cq="${k}" data-d="-1" class="h-7 w-7 rounded-full border border-line text-ink">−</button><span class="w-6 text-center text-sm font-bold">${x.qtd}</span><button type="button" data-cq="${k}" data-d="1" class="h-7 w-7 rounded-full border border-line text-ink">+</button></div>
+                <button type="button" data-cr="${k}" class="text-red-600 text-xs ml-1" aria-label="Remover">✕</button></div>`).join('') : '<p class="text-sm text-inkmute py-8 text-center">Seu carrinho está vazio.</p>';
+            const msg = 'Olá! Gostaria de fazer este pedido:\n' + carrinho.map(x => `• ${x.qtd}x ${x.nome}${x.cor ? ' (' + x.cor + ')' : ''} – ${brlPort(x.preco * x.qtd)}`).join('\n') + `\nTotal: ${brlPort(total)}`;
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 space-y-3">
+                <div class="flex items-center justify-between"><h3 class="font-display text-lg font-bold text-ink">🛒 Seu carrinho</h3><button type="button" id="carrinhoFechar" class="h-8 w-8 rounded-full bg-surface2 text-ink" aria-label="Fechar">✕</button></div>
+                <div>${linhas}</div>
+                ${carrinho.length ? `<div class="flex justify-between items-center text-ink"><span class="font-semibold">Total</span><span class="text-xl font-black text-emerald-700">${brlPort(total)}</span></div>
+                ${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Finalizar pedido pelo WhatsApp</a>` : '<p class="text-xs text-inkmute">O vendedor ainda não cadastrou o WhatsApp. Entre em contato com ele informando estes itens.</p>'}
+                <button type="button" id="carrinhoLimpar" class="w-full text-xs text-inkmute underline">Esvaziar carrinho</button>` : ''}</div>`;
+            md.classList.remove('hidden'); md.classList.add('flex');
+            document.getElementById('carrinhoFechar').addEventListener('click', fecharCarrinho);
+            const lim = document.getElementById('carrinhoLimpar'); if (lim) lim.addEventListener('click', () => { carrinho = []; salvarCarrinho(); abrirCarrinho(); });
+            md.querySelectorAll('[data-cq]').forEach(b => b.addEventListener('click', () => { const it = carrinho[+b.dataset.cq]; it.qtd += +b.dataset.d; if (it.qtd < 1) carrinho.splice(+b.dataset.cq, 1); salvarCarrinho(); abrirCarrinho(); }));
+            md.querySelectorAll('[data-cr]').forEach(b => b.addEventListener('click', () => { carrinho.splice(+b.dataset.cr, 1); salvarCarrinho(); abrirCarrinho(); }));
+        }
+        document.getElementById('carrinhoModal').addEventListener('click', (e) => { if (e.target.id === 'carrinhoModal') fecharCarrinho(); });
+        document.getElementById('btnCarrinho').addEventListener('click', abrirCarrinho);
+
+        function imgModelo(m, cls) {
+            return m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="${cls}" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'w-full h-full flex items-center justify-center text-4xl text-inkmute',textContent:'🧊'}))">` : '<div class="w-full h-full flex items-center justify-center text-4xl text-inkmute">🧊</div>';
+        }
+        function botoesCompra(m, i) {
+            const waNum = marcaAtual && digitosWhats(marcaAtual.whatsapp);
+            const msg = 'Olá! Tenho interesse em: ' + m.nome + (m.cores.length === 1 ? ' (cor: ' + m.cores[0].cor + ')' : '');
+            const comprar = waNum
+                ? `<a href="https://wa.me/${waNum}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</a>`
+                : `<button type="button" data-modelo="${i}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</button>`;
+            return `<div class="flex gap-1.5">${comprar}<button type="button" data-addcarrinho="${i}" class="shrink-0 border border-emerald-600 text-emerald-700 hover:bg-emerald-50 text-xs font-bold px-2.5 py-1.5 rounded-lg" title="Adicionar ao carrinho" aria-label="Adicionar ao carrinho">＋🛍️</button></div>`;
+        }
         function renderizerPortfolioCliente() {
             const box = document.getElementById('listaPortfolioClientesGrid'); if (!box) return;
             renderizarMarcaPortfolio();
+            if (!carrinhoCarregado) { carrinhoCarregado = true; carregarCarrinho(); }
+            if (!visitasCarregadas) { visitasCarregadas = true; carregarVisitas().then(renderizerPortfolioCliente); }
             portModelos = agruparModelosPortfolio();
+            // Categorias
+            const cats = [...new Set(portModelos.map(m => m.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            if (portCat && !cats.includes(portCat)) portCat = '';
+            const barCat = document.getElementById('portCategorias');
+            barCat.classList.toggle('hidden', !cats.length); barCat.classList.toggle('flex', !!cats.length);
+            barCat.innerHTML = cats.length ? ['', ...cats].map(c => `<button type="button" data-cat="${escHtml(c)}" class="port-chip${c === portCat ? ' ativo' : ''}">${c ? escHtml(c) : 'Todas as categorias'}</button>`).join('') : '';
+            // Mais visitados
+            const dest = document.getElementById('portDestaques');
+            const top = portModelos.map((m, i) => ({ m, i, v: visitasMapa[m.id] || 0 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
+            if (top.length && !portBusca && !portCat) {
+                dest.classList.remove('hidden');
+                dest.innerHTML = `<h3 class="font-display font-bold text-ink text-lg mb-2">🔥 Mais visitados</h3><div class="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2">${top.map(({ m, i, v }) => `<button type="button" data-modelo="${i}" class="snap-start shrink-0 w-40 sm:w-44 text-left bg-surface rounded-xl border border-line hover:border-emerald-500 overflow-hidden"><span class="block aspect-square bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</span><span class="block p-2"><span class="block text-xs font-semibold text-ink line-clamp-2">${escHtml(m.nome)}</span><span class="block text-sm font-black text-emerald-700">${textoPrecoModelo(m)}</span><span class="block text-[10px] text-inkmute">👁 ${v} visita${v === 1 ? '' : 's'}</span></span></button>`).join('')}</div>`;
+            } else { dest.classList.add('hidden'); dest.innerHTML = ''; }
+            // Visualização
+            document.querySelectorAll('#portVisoes [data-v]').forEach(b => { const on = b.dataset.v === portVisao; b.classList.toggle('bg-emerald-700', on); b.classList.toggle('text-white', on); });
+            box.className = portVisao === 'lista' ? 'grid grid-cols-1 gap-3' : portVisao === 'mini' ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3' : 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5';
             let lista = portModelos.map((m, i) => ({ m, i }));
-            if (portBusca) lista = lista.filter(({ m }) => (m.nome + ' ' + m.descricao + ' ' + m.cores.map(c => c.cor).join(' ')).toLowerCase().includes(portBusca));
+            if (portCat) lista = lista.filter(({ m }) => m.categoria === portCat);
+            if (portBusca) lista = lista.filter(({ m }) => (m.nome + ' ' + m.descricao + ' ' + m.categoria + ' ' + m.cores.map(c => c.cor).join(' ')).toLowerCase().includes(portBusca));
             if (portFiltro === 'estoque') lista = lista.filter(({ m }) => m.estoque > 0);
             if (portFiltro === 'encomenda') lista = lista.filter(({ m }) => m.estoque <= 0);
             if (portOrdem === 'menor') lista.sort((a, b) => a.m.pMin - b.m.pMin);
@@ -4115,17 +4219,17 @@
             if (!portModelos.length) { box.innerHTML = '<p class="text-inkmute/60 text-sm italic py-8 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
             if (!lista.length) { box.innerHTML = '<p class="text-inkmute text-sm py-8 text-center col-span-full">Nenhum produto encontrado com esses filtros.</p>'; return; }
             box.innerHTML = lista.map(({ m, i }) => {
-                const img = m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'w-full h-full flex items-center justify-center text-4xl text-inkmute',textContent:'🧊'}))">` : '<div class="w-full h-full flex items-center justify-center text-4xl text-inkmute">🧊</div>';
-                const badge = m.estoque > 0 ? '<span class="absolute top-2 left-2 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow">Em estoque</span>' : '<span class="absolute top-2 left-2 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow">Sob encomenda</span>';
+                const emEst = m.estoque > 0;
+                const badge = emEst ? '<span class="absolute top-2 left-2 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow">Em estoque</span>' : '<span class="absolute top-2 left-2 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow">Sob encomenda</span>';
                 const cores = m.cores.length ? `<span class="text-[11px] text-inkmute truncate block">${m.cores.length === 1 ? escHtml(m.cores[0].cor) : m.cores.length + ' cores'}</span>` : '';
-                const waNum = marcaAtual && digitosWhats(marcaAtual.whatsapp);
-                const msg = 'Olá! Tenho interesse em: ' + m.nome + (m.cores.length === 1 ? ' (cor: ' + m.cores[0].cor + ')' : '');
-                const btnComprar = waNum
-                    ? `<a href="https://wa.me/${waNum}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</a>`
-                    : `<button type="button" data-modelo="${i}" class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</button>`;
+                if (portVisao === 'mini') return `<button type="button" data-modelo="${i}" class="group text-left bg-surface rounded-lg border border-line hover:border-emerald-500 overflow-hidden"><span class="block aspect-square bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</span><span class="block p-1.5"><span class="block text-[11px] font-semibold text-ink leading-tight line-clamp-2">${escHtml(m.nome)}</span><span class="block text-xs font-black text-emerald-700">${brlPort(m.pMin)}</span></span></button>`;
+                if (portVisao === 'lista') return `<div class="flex gap-3 items-center bg-surface rounded-xl border border-line hover:border-emerald-500 p-2.5">
+                    <button type="button" data-modelo="${i}" class="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-lg bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}${badge}</button>
+                    <button type="button" data-modelo="${i}" class="text-left min-w-0 flex-1"><span class="block text-sm sm:text-base font-semibold text-ink leading-snug">${escHtml(m.nome)}</span>${m.categoria ? `<span class="block text-[10px] font-bold uppercase text-emerald-700">${escHtml(m.categoria)}</span>` : ''}${m.descricao ? `<span class="block text-xs text-inkmute leading-snug line-clamp-2 mt-0.5">${escHtml(m.descricao)}</span>` : ''}${cores}<span class="block text-lg font-black text-emerald-700 mt-1">${textoPrecoModelo(m)}</span></button>
+                    <div class="w-32 sm:w-40 shrink-0">${botoesCompra(m, i)}</div></div>`;
                 return `<div class="group bg-surface rounded-xl border border-line hover:border-emerald-500 hover:shadow-lg transition overflow-hidden flex flex-col">
                     <button type="button" data-modelo="${i}" class="text-left flex flex-col flex-1">
-                        <span class="relative block aspect-square w-full bg-surface2 overflow-hidden">${img}${badge}</span>
+                        <span class="relative block aspect-square w-full bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover group-hover:scale-105 transition duration-300')}${badge}</span>
                         <span class="p-3 pb-2 flex flex-col gap-1 flex-1 w-full">
                             <span class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</span>
                             ${m.descricao ? `<span class="text-[11px] text-inkmute leading-snug line-clamp-2">${escHtml(m.descricao)}</span>` : ''}
@@ -4133,13 +4237,14 @@
                             <span class="mt-auto pt-1 text-lg font-black text-emerald-700 leading-tight">${textoPrecoModelo(m)}</span>
                         </span>
                     </button>
-                    <div class="px-3 pb-3">${btnComprar}</div>
+                    <div class="px-3 pb-3">${botoesCompra(m, i)}</div>
                 </div>`;
             }).join('');
         }
         function fecharModalPortfolio() { const md = document.getElementById('portModal'); md.classList.add('hidden'); md.innerHTML = ''; document.body.style.overflow = ''; }
         function abrirModalPortfolio(i) {
             const m = portModelos[i]; if (!m) return;
+            registrarVisita(m);
             const md = document.getElementById('portModal');
             const wa = marcaAtual && digitosWhats(marcaAtual.whatsapp);
             const img = m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" referrerpolicy="no-referrer" class="w-full h-full object-contain">` : '<div class="w-full h-full flex items-center justify-center text-6xl text-inkmute">🧊</div>';
@@ -4155,7 +4260,8 @@
                         <p class="text-2xl font-black text-emerald-700">${textoPrecoModelo(m)}</p>
                         ${m.descricao ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1">Sobre o produto</p><p class="text-sm text-ink whitespace-pre-line leading-relaxed">${escHtml(m.descricao)}</p></div>` : ''}
                         ${cores}${pecas}
-                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="mt-auto text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute mt-auto">Entre em contato com o vendedor para pedir este produto.</p>'}
+                        <div class="mt-auto flex flex-col gap-2"><button type="button" id="portAddCarrinho" class="text-center border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold py-2.5 rounded-xl">🛍️ Adicionar ao carrinho</button>
+                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute">Entre em contato com o vendedor para pedir este produto.</p>'}</div>
                     </div>
                 </div></div>`;
             md.classList.remove('hidden'); document.body.style.overflow = 'hidden';
@@ -4164,10 +4270,20 @@
             atualizarLink();
             md.querySelectorAll('#portCores [data-cor]').forEach(b => b.addEventListener('click', () => { corSel = corSel === b.dataset.cor ? '' : b.dataset.cor; md.querySelectorAll('#portCores [data-cor]').forEach(x => x.classList.toggle('ativo', x.dataset.cor === corSel)); atualizarLink(); }));
             document.getElementById('portFechar').addEventListener('click', fecharModalPortfolio);
+            document.getElementById('portAddCarrinho').addEventListener('click', () => {
+                if (m.cores.length > 1 && !corSel) { toastCarrinho('Escolha uma cor acima'); return; }
+                adicionarAoCarrinho(i, corSel); 
+            });
         }
         document.getElementById('portModal').addEventListener('click', (e) => { if (e.target.id === 'portModal') fecharModalPortfolio(); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModalPortfolio(); });
-        document.getElementById('listaPortfolioClientesGrid').addEventListener('click', (e) => { const b = e.target.closest('[data-modelo]'); if (b) abrirModalPortfolio(+b.dataset.modelo); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { fecharModalPortfolio(); fecharCarrinho(); } });
+        document.getElementById('portDestaques').addEventListener('click', (e) => { const b = e.target.closest('[data-modelo]'); if (b) abrirModalPortfolio(+b.dataset.modelo); });
+        document.getElementById('listaPortfolioClientesGrid').addEventListener('click', (e) => {
+            const add = e.target.closest('[data-addcarrinho]'); if (add) { adicionarAoCarrinho(+add.dataset.addcarrinho); return; }
+            const b = e.target.closest('[data-modelo]'); if (b) abrirModalPortfolio(+b.dataset.modelo);
+        });
+        document.getElementById('portCategorias').addEventListener('click', (e) => { const b = e.target.closest('[data-cat]'); if (b) { portCat = b.dataset.cat; renderizerPortfolioCliente(); } });
+        document.getElementById('portVisoes').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) { portVisao = b.dataset.v; try { localStorage.setItem('portVisao', portVisao); } catch (x) {} renderizerPortfolioCliente(); } });
         document.getElementById('portBusca').addEventListener('input', (e) => { portBusca = e.target.value.trim().toLowerCase(); renderizerPortfolioCliente(); });
         document.getElementById('portOrdem').addEventListener('change', (e) => { portOrdem = e.target.value; renderizerPortfolioCliente(); });
         document.getElementById('portFiltros').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { portFiltro = b.dataset.f; renderizerPortfolioCliente(); } });
@@ -4360,6 +4476,7 @@
                 projetosCacheLocal = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
             } catch (error) { console.error(error); return; }
             
+            document.getElementById('listaCategorias').innerHTML = [...new Set(projetosCacheLocal.map(x => (x.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')).map(c => `<option value="${escHtml(c)}">`).join('');
             renderizarProjetosOrdenados();
             renderizarImpLista();
             carregarDropdownProjetosVenda();
