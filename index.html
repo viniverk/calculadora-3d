@@ -58,6 +58,9 @@
         body.tema-escuro input, body.tema-escuro select, body.tema-escuro textarea { color: rgb(var(--c-ink)); }
         body.tema-escuro ::placeholder { color: rgb(var(--c-inkmute) / .7); }
         body.tema-escuro option { background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); }
+        .port-chip { padding: .45rem .8rem; border-radius: 9999px; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-surface2)); color: rgb(var(--c-ink)); white-space: nowrap; }
+        .port-chip.ativo { background: #047857; border-color: #047857; color: #fff; }
+        .port-chip.ativo span { color: #fff !important; }
         body.tema-escuro .bg-white { background-color: rgb(var(--c-surface)); }
         body.tema-escuro img[src*="venda3d"] { filter: brightness(2.4) saturate(1.3); }
         body.tema-escuro [style*="color:#111827"] { color: rgb(var(--c-ink)) !important; }
@@ -776,7 +779,7 @@
                     <p class="text-[11px] text-inkmute mt-1">Use "Duplicar" para imprimir o mesmo modelo em outra cor. No Portfólio aparece um só card, com as cores disponíveis.</p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Descrição do modelo <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
+                    <label class="block text-sm font-medium mb-1">Descrição do produto final <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
                     <textarea id="projDescricao" rows="3" maxlength="500" placeholder="Ex: Anjo decorativo vazado, ótimo para enfeitar a árvore de Natal. Altura de 12 cm." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></textarea>
                 </div>
                 <div>
@@ -841,10 +844,6 @@
                                 <option value="padrao">Preço Padrão (R$ 0,12 /g)</option>
                             </select>
                         </div>
-                    </div>
-                    <div class="mt-3">
-                        <label class="block text-xs font-medium mb-1 text-inkmute">Descrição da peça <span class="font-normal">(opcional — aparece no portfólio)</span></label>
-                        <textarea id="pecaDescricao" rows="2" maxlength="300" placeholder="Ex: Acabamento fosco, encaixe sem cola, 12 cm de altura" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm"></textarea>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-3 items-end">
                         <div>
@@ -978,20 +977,36 @@
         </div>
 
         <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line">
-                <div id="portfolioMarca" class="hidden mb-5"></div>
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 border-b border-line pb-3 gap-2">
-                    <div>
-                        <h2 class="font-display text-2xl font-bold text-teal-600">Catálogo de Modelos 3D</h2>
-                        <p class="text-xs text-inkmute mt-1">Apresentação limpa de valores e designs para encomendas.</p>
+            <div class="max-w-7xl mx-auto w-full">
+                <div class="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
+                    <div id="portfolioMarca" class="bg-gradient-to-r from-emerald-700 to-teal-600 px-5 py-6 sm:px-8 text-white"></div>
+                    <div class="p-4 sm:p-6">
+                        <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
+                            <div class="relative flex-1">
+                                <span class="absolute left-3 top-1/2 -translate-y-1/2 text-inkmute text-sm">🔎</span>
+                                <input id="portBusca" type="search" placeholder="Buscar produtos…" class="w-full bg-surface2 border border-line rounded-full pl-9 pr-4 py-2.5 text-sm text-ink focus:outline-none focus:border-emerald-600">
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <div id="portFiltros" class="flex gap-1.5 text-xs font-bold">
+                                    <button type="button" data-f="todos" class="port-chip">Todos</button>
+                                    <button type="button" data-f="estoque" class="port-chip">Em estoque</button>
+                                    <button type="button" data-f="encomenda" class="port-chip">Sob encomenda</button>
+                                </div>
+                                <select id="portOrdem" class="bg-surface2 border border-line rounded-full px-3 py-2 text-xs font-semibold text-ink">
+                                    <option value="relevantes">Mais relevantes</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="nome">Nome (A–Z)</option>
+                                </select>
+                                <button id="btnCompartilharCatalogo" onclick="copiarLinkPublico()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-full shadow transition flex items-center gap-2">
+                                    <span>🔗</span> <span id="txtCompartilhar">Compartilhar Catálogo</span>
+                                </button>
+                            </div>
+                        </div>
+                        <p id="portContagem" class="text-xs text-inkmute mb-3"></p>
+                        <div id="listaPortfolioClientesGrid" class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5"></div>
                     </div>
-                    <button id="btnCompartilharCatalogo" onclick="copiarLinkPublico()" class="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold py-2 px-4 rounded-lg shadow transition flex items-center gap-2">
-                        <span>🔗</span> <span id="txtCompartilhar">Compartilhar Catálogo</span>
-                    </button>
                 </div>
-                <div id="listaPortfolioClientesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
             </div>
         </div>
+        <div id="portModal" class="hidden fixed inset-0 z-[70] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4" role="dialog" aria-modal="true"></div>
 
         <div id="view-pedidos" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="flex flex-wrap items-end justify-between gap-3">
@@ -1553,7 +1568,6 @@
         const projCanalVenda = document.getElementById('projCanalVenda');
 
         const pecaNome = document.getElementById('pecaNome');
-        const pecaDescricao = document.getElementById('pecaDescricao');
         const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
         const pecaPeso = document.getElementById('pecaPeso');
         const pecaTempoHoras = document.getElementById('pecaTempoHoras');
@@ -2981,9 +2995,13 @@
         }
         function renderizarMarcaPortfolio() {
             const el = document.getElementById('portfolioMarca'); if (!el) return;
-            const h = htmlMarca(marcaAtual, true);
-            el.innerHTML = h ? h + '<div class="border-b border-line mt-4"></div>' : '';
-            el.classList.toggle('hidden', !h);
+            const m = marcaAtual || {};
+            const wa = digitosWhats(m.whatsapp); const ig = String(m.instagram || '').replace(/^@/, '').trim();
+            el.innerHTML = `<div class="flex flex-wrap items-center gap-4">
+                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-contain bg-white p-1 shadow">` : ''}
+                <div class="min-w-0 flex-1"><h2 class="font-display font-bold text-2xl sm:text-3xl leading-tight">${escHtml(m.nome || 'Catálogo de produtos')}</h2><p class="text-sm text-emerald-50 mt-1">${escHtml(m.mensagem || 'Peças impressas em 3D sob medida. Escolha o seu e peça pelo WhatsApp.')}</p></div>
+                <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-white text-emerald-800 text-xs font-bold px-4 py-2 rounded-full shadow">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="bg-white/20 border border-white/40 text-white text-xs font-bold px-4 py-2 rounded-full">@${escHtml(ig)}</a>` : ''}</div>
+            </div>`;
         }
         function renderizarPreviewMarca() { document.getElementById('marcaPreview').innerHTML = htmlMarca({ nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim() }, true) || '<p class="text-sm text-inkmute">Preencha o nome ou a logo para ver a prévia.</p>'; }
         const marcaNome = document.getElementById('marcaNome'), marcaLogo = document.getElementById('marcaLogo'), marcaWhats = document.getElementById('marcaWhats'), marcaInsta = document.getElementById('marcaInsta'), marcaMsg = document.getElementById('marcaMsg');
@@ -3666,8 +3684,7 @@
             
             const dadosPeca = { 
                 nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado,
-                preco_venda: parseFloat(pecaPrecoVenda.value) || 0,
-                descricao: pecaDescricao.value.trim().slice(0, 300)
+                preco_venda: parseFloat(pecaPrecoVenda.value) || 0
             };
 
             if (idPecaEmEdicaoIndex !== null) {
@@ -3677,7 +3694,7 @@
             } else {
                 pecasProjetoAtual.push(dadosPeca);
             }
-            pecaNome.value = ''; pecaDescricao.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0; pecaPrecoVenda.value = '';
+            pecaNome.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0; pecaPrecoVenda.value = '';
             renderizarPecasDoEscopo();
         });
 
@@ -3692,7 +3709,7 @@
                     <div class="bg-surface p-2 rounded border border-line flex justify-between items-center">
                         <div>
                             <span class="font-bold text-sky-600 block">${p.nome_peca}</span>
-                            ${p.descricao ? `<span class="text-[11px] text-ink block italic">${escHtml(p.descricao)}</span>` : ''}<span class="text-[10px] text-inkmute">${p.peso_g}g | ${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m | ${p.filamento_label.split('-')[0]}</span>
+                            <span class="text-[10px] text-inkmute">${p.peso_g}g | ${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m | ${p.filamento_label.split('-')[0]}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-amber-500 font-medium" title="Custo">R$ ${p.custo_calculado.toFixed(2)}</span>${p.preco_venda > 0 ? `<span class="text-emerald-700 font-bold" title="Valor de venda (portfólio)">💲 ${p.preco_venda.toFixed(2)}</span>` : ''}
@@ -3707,13 +3724,13 @@
         }
 
         window.removerPecaDoEscopo = function(index) { 
-            if(idPecaEmEdicaoIndex === index) { idPecaEmEdicaoIndex = null; btnIncluirPeca.innerText = '+ Incluir'; pecaNome.value = ''; pecaDescricao.value = ''; }
+            if(idPecaEmEdicaoIndex === index) { idPecaEmEdicaoIndex = null; btnIncluirPeca.innerText = '+ Incluir'; pecaNome.value = ''; }
             pecasProjetoAtual.splice(index, 1); renderizarPecasDoEscopo(); 
         };
 
         window.editarComponenteDoEscopo = function(index) {
             const p = pecasProjetoAtual[index]; idPecaEmEdicaoIndex = index;
-            pecaNome.value = p.nome_peca; pecaDescricao.value = p.descricao || ''; pecaPeso.value = p.peso_g; pecaPrecoVenda.value = p.preco_venda || '';
+            pecaNome.value = p.nome_peca; pecaPeso.value = p.peso_g; pecaPrecoVenda.value = p.preco_venda || '';
             if (p.filamento_chave && mapaCustoPorChaveFilamento.hasOwnProperty(p.filamento_chave)) {
                 pecaSelectFilamento.value = p.filamento_chave;
             }
@@ -3987,51 +4004,91 @@
             return proj.status === 'Projeto Finalizado' || proj.status === 'Vendido';
         }
 
-        function renderizerPortfolioCliente() {
-            const containerClientes = document.getElementById('listaPortfolioClientesGrid');
-            if (!containerClientes) return;
-            const projetosVisiveis = projetosCacheLocal.filter(deveAparecerNoPortfolio);
-            if (projetosVisiveis.length === 0) { containerClientes.innerHTML = '<p class="text-inkmute/60 text-sm italic py-4 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
-
-            // Um card por modelo: cópias do mesmo projeto (outras cores) são agrupadas
+        let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [];
+        function agruparModelosPortfolio() {
+            const visiveis = projetosCacheLocal.filter(deveAparecerNoPortfolio);
             const chaveGrupo = (p) => p.grupo_modelo || ('n:' + String(p.nome_projeto || '').trim().toLowerCase().replace(/\s*\(c[óo]pia\)\s*$/i, ''));
             const grupos = new Map();
-            projetosVisiveis.forEach(p => { const k = chaveGrupo(p); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(p); });
-
-            containerClientes.innerHTML = [...grupos.values()].map(itens => {
+            visiveis.forEach(p => { const k = chaveGrupo(p); if (!grupos.has(k)) grupos.set(k, []); grupos.get(k).push(p); });
+            return [...grupos.values()].map(itens => {
                 const proj = itens.find(x => x.imagem_base64) || itens[0];
-                const imgTag = proj.imagem_base64 ? `<div class="bg-base/40 p-2 w-full h-52 flex items-center justify-center border-b border-line/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` : `<div class="w-full h-52 bg-base flex items-center justify-center text-inkmute/50 text-xs border-b border-line/50">Sem imagem</div>`;
-                const descModelo = ((itens.find(x => (x.descricao || '').trim()) || {}).descricao || '').trim();
-                const qtdEst = itens.reduce((a, x) => a + (parseInt(x.quantidade_estoque) || 0), 0);
-                const badgeEstoque = qtdEst > 0
-                    ? `<span class="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">${qtdEst} ${qtdEst === 1 ? 'peça' : 'peças'} em estoque</span>`
-                    : `<span class="text-[11px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-bold">Sob encomenda</span>`;
+                const precos = itens.map(x => parseFloat(x.preco_venda_total) || 0);
                 const cores = new Map();
                 itens.forEach(x => { const c = (x.cor || '').trim(); if (!c) return; const k = c.toLowerCase(); const o = cores.get(k) || { cor: c, est: 0 }; o.est += parseInt(x.quantidade_estoque) || 0; cores.set(k, o); });
-                const chipsCores = cores.size ? `<div><p class="text-[10px] uppercase font-semibold text-inkmute mb-1">Cores disponíveis</p><div class="flex flex-wrap gap-1.5">${[...cores.values()].map(o => `<span class="text-[11px] bg-surface2 border border-line text-ink px-2 py-0.5 rounded-full">🎨 ${escHtml(o.cor)}${o.est > 0 ? ` <span class="text-green-700 font-semibold">(${o.est})</span>` : ''}</span>`).join('')}</div></div>` : '';
-                const pecasPortfolio = (proj.pecas || []).filter(pc => (pc.preco_venda || 0) > 0 || (pc.descricao || '').trim());
-                const listaPecas = pecasPortfolio.length ? `<div><p class="text-[10px] uppercase font-semibold text-inkmute mb-1">Peças</p><ul class="space-y-1.5">${pecasPortfolio.map(pc => `<li class="text-xs text-ink"><div class="flex justify-between"><span class="truncate pr-2 font-medium">${escHtml(pc.nome_peca)}</span>${(pc.preco_venda || 0) > 0 ? `<span class="font-semibold text-emerald-700 whitespace-nowrap">R$ ${pc.preco_venda.toFixed(2)}</span>` : ''}</div>${(pc.descricao || '').trim() ? `<p class="text-[11px] text-inkmute leading-snug mt-0.5">${escHtml(pc.descricao)}</p>` : ''}</li>`).join('')}</ul></div>` : '';
-                const precos = itens.map(x => parseFloat(x.preco_venda_total) || 0);
-                const pMin = Math.min(...precos), pMax = Math.max(...precos);
-                const textoPreco = pMin === pMax ? `R$ ${pMin.toFixed(2)}` : `a partir de R$ ${pMin.toFixed(2)}`;
-                return `
-                    <div class="bg-surface rounded-xl border border-line shadow-lg flex flex-col justify-between overflow-hidden hover:border-teal-500/50 transition duration-200">
-                        ${imgTag}
-                        <div class="p-4 flex flex-col justify-between flex-1 gap-3">
-                            <h3 class="font-bold text-ink text-[1rem] truncate" style="color:#111827 !important;" title="${escHtml(proj.nome_projeto)}">${escHtml(proj.nome_projeto)}</h3>
-                            ${descModelo ? `<p class="text-xs text-inkmute leading-snug whitespace-pre-line">${escHtml(descModelo)}</p>` : ''}
-                            <div>${badgeEstoque}</div>
-                            ${chipsCores}
-                            ${listaPecas}
-                            ${marcaAtual && digitosWhats(marcaAtual.whatsapp) ? `<a href="https://wa.me/${digitosWhats(marcaAtual.whatsapp)}?text=${encodeURIComponent('Olá! Tenho interesse em: ' + proj.nome_projeto)}" target="_blank" rel="noopener" class="text-center text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white py-2 rounded-lg">💬 Pedir pelo WhatsApp</a>` : ''}
-                            <div class="flex items-center justify-between mt-1 pt-2 border-t border-line/50">
-                                <span class="text-xs text-inkmute font-medium uppercase">Preço Final</span>
-                                <span class="text-lg font-black text-green-600">${textoPreco}</span>
-                            </div>
-                        </div>
-                    </div>`;
+                return {
+                    nome: proj.nome_projeto || '', imagem: proj.imagem_base64 || '', pMin: Math.min(...precos), pMax: Math.max(...precos),
+                    descricao: ((itens.find(x => (x.descricao || '').trim()) || {}).descricao || '').trim(),
+                    estoque: itens.reduce((a, x) => a + (parseInt(x.quantidade_estoque) || 0), 0), cores: [...cores.values()],
+                    pecas: (proj.pecas || []).map(pc => pc.nome_peca).filter(Boolean)
+                };
+            });
+        }
+        const brlPort = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
+        function textoPrecoModelo(m) { return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
+        function renderizerPortfolioCliente() {
+            const box = document.getElementById('listaPortfolioClientesGrid'); if (!box) return;
+            renderizarMarcaPortfolio();
+            portModelos = agruparModelosPortfolio();
+            let lista = portModelos.map((m, i) => ({ m, i }));
+            if (portBusca) lista = lista.filter(({ m }) => (m.nome + ' ' + m.descricao + ' ' + m.cores.map(c => c.cor).join(' ')).toLowerCase().includes(portBusca));
+            if (portFiltro === 'estoque') lista = lista.filter(({ m }) => m.estoque > 0);
+            if (portFiltro === 'encomenda') lista = lista.filter(({ m }) => m.estoque <= 0);
+            if (portOrdem === 'menor') lista.sort((a, b) => a.m.pMin - b.m.pMin);
+            else if (portOrdem === 'maior') lista.sort((a, b) => b.m.pMin - a.m.pMin);
+            else if (portOrdem === 'nome') lista.sort((a, b) => a.m.nome.localeCompare(b.m.nome, 'pt-BR'));
+            else lista.sort((a, b) => (b.m.estoque > 0) - (a.m.estoque > 0));
+            document.querySelectorAll('#portFiltros .port-chip').forEach(b => b.classList.toggle('ativo', b.dataset.f === portFiltro));
+            const cont = document.getElementById('portContagem'); if (cont) cont.textContent = portModelos.length ? `${lista.length} produto${lista.length === 1 ? '' : 's'}` : '';
+            if (!portModelos.length) { box.innerHTML = '<p class="text-inkmute/60 text-sm italic py-8 text-center col-span-full">Nenhum modelo disponível.</p>'; return; }
+            if (!lista.length) { box.innerHTML = '<p class="text-inkmute text-sm py-8 text-center col-span-full">Nenhum produto encontrado com esses filtros.</p>'; return; }
+            box.innerHTML = lista.map(({ m, i }) => {
+                const img = m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'w-full h-full flex items-center justify-center text-4xl text-inkmute',textContent:'🧊'}))">` : '<div class="w-full h-full flex items-center justify-center text-4xl text-inkmute">🧊</div>';
+                const badge = m.estoque > 0 ? '<span class="absolute top-2 left-2 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow">Em estoque</span>' : '<span class="absolute top-2 left-2 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow">Sob encomenda</span>';
+                const cores = m.cores.length ? `<p class="text-[11px] text-inkmute truncate">${m.cores.length === 1 ? escHtml(m.cores[0].cor) : m.cores.length + ' cores'}</p>` : '';
+                return `<button type="button" data-modelo="${i}" class="group text-left bg-surface rounded-xl border border-line hover:border-emerald-500 hover:shadow-lg transition overflow-hidden flex flex-col">
+                    <div class="relative aspect-square bg-surface2 overflow-hidden">${img}${badge}</div>
+                    <div class="p-3 flex flex-col gap-1 flex-1">
+                        <h3 class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</h3>
+                        ${m.descricao ? `<p class="text-[11px] text-inkmute leading-snug line-clamp-2">${escHtml(m.descricao)}</p>` : ''}
+                        ${cores}
+                        <p class="mt-auto pt-1 text-lg font-black text-emerald-700 leading-tight">${textoPrecoModelo(m)}</p>
+                    </div></button>`;
             }).join('');
         }
+        function fecharModalPortfolio() { const md = document.getElementById('portModal'); md.classList.add('hidden'); md.innerHTML = ''; document.body.style.overflow = ''; }
+        function abrirModalPortfolio(i) {
+            const m = portModelos[i]; if (!m) return;
+            const md = document.getElementById('portModal');
+            const wa = marcaAtual && digitosWhats(marcaAtual.whatsapp);
+            const img = m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" referrerpolicy="no-referrer" class="w-full h-full object-contain">` : '<div class="w-full h-full flex items-center justify-center text-6xl text-inkmute">🧊</div>';
+            const cores = m.cores.length ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1.5">Cores disponíveis</p><div id="portCores" class="flex flex-wrap gap-1.5">${m.cores.map(c => `<button type="button" data-cor="${escHtml(c.cor)}" class="port-chip text-xs">${escHtml(c.cor)}${c.est > 0 ? ` <span class="text-emerald-600 font-bold">(${c.est})</span>` : ''}</button>`).join('')}</div></div>` : '';
+            const pecas = m.pecas.length > 1 ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1">O que acompanha</p><ul class="text-sm text-ink list-disc pl-5">${m.pecas.map(n => `<li>${escHtml(n)}</li>`).join('')}</ul></div>` : '';
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-3xl max-h-[92vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl relative">
+                <button type="button" id="portFechar" class="absolute top-3 right-3 z-10 h-9 w-9 rounded-full bg-black/50 text-white text-lg leading-none" aria-label="Fechar">✕</button>
+                <div class="grid sm:grid-cols-2">
+                    <div class="aspect-square bg-surface2">${img}</div>
+                    <div class="p-5 flex flex-col gap-3">
+                        <div><span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${m.estoque > 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}">${m.estoque > 0 ? m.estoque + (m.estoque === 1 ? ' unidade em estoque' : ' unidades em estoque') : 'Sob encomenda'}</span></div>
+                        <h3 class="font-display text-xl font-bold text-ink leading-snug">${escHtml(m.nome)}</h3>
+                        <p class="text-2xl font-black text-emerald-700">${textoPrecoModelo(m)}</p>
+                        ${m.descricao ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1">Sobre o produto</p><p class="text-sm text-ink whitespace-pre-line leading-relaxed">${escHtml(m.descricao)}</p></div>` : ''}
+                        ${cores}${pecas}
+                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="mt-auto text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute mt-auto">Entre em contato com o vendedor para pedir este produto.</p>'}
+                    </div>
+                </div></div>`;
+            md.classList.remove('hidden'); document.body.style.overflow = 'hidden';
+            let corSel = '';
+            const atualizarLink = () => { const a = document.getElementById('portWhats'); if (a) a.href = `https://wa.me/${wa}?text=${encodeURIComponent('Olá! Tenho interesse em: ' + m.nome + (corSel ? ' (cor: ' + corSel + ')' : ''))}`; };
+            atualizarLink();
+            md.querySelectorAll('#portCores [data-cor]').forEach(b => b.addEventListener('click', () => { corSel = corSel === b.dataset.cor ? '' : b.dataset.cor; md.querySelectorAll('#portCores [data-cor]').forEach(x => x.classList.toggle('ativo', x.dataset.cor === corSel)); atualizarLink(); }));
+            document.getElementById('portFechar').addEventListener('click', fecharModalPortfolio);
+        }
+        document.getElementById('portModal').addEventListener('click', (e) => { if (e.target.id === 'portModal') fecharModalPortfolio(); });
+        document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fecharModalPortfolio(); });
+        document.getElementById('listaPortfolioClientesGrid').addEventListener('click', (e) => { const b = e.target.closest('[data-modelo]'); if (b) abrirModalPortfolio(+b.dataset.modelo); });
+        document.getElementById('portBusca').addEventListener('input', (e) => { portBusca = e.target.value.trim().toLowerCase(); renderizerPortfolioCliente(); });
+        document.getElementById('portOrdem').addEventListener('change', (e) => { portOrdem = e.target.value; renderizerPortfolioCliente(); });
+        document.getElementById('portFiltros').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { portFiltro = b.dataset.f; renderizerPortfolioCliente(); } });
 
         // Carga que traz a lista do banco inteira de uma só vez (Garantindo que o Mascote Urubu apareça)
         async function carregarProjetos3d() {
