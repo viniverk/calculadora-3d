@@ -4090,15 +4090,24 @@
             box.innerHTML = lista.map(({ m, i }) => {
                 const img = m.imagem ? `<img src="${escHtml(m.imagem)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="w-full h-full object-cover group-hover:scale-105 transition duration-300" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'w-full h-full flex items-center justify-center text-4xl text-inkmute',textContent:'🧊'}))">` : '<div class="w-full h-full flex items-center justify-center text-4xl text-inkmute">🧊</div>';
                 const badge = m.estoque > 0 ? '<span class="absolute top-2 left-2 text-[10px] font-bold bg-emerald-600 text-white px-2 py-0.5 rounded-full shadow">Em estoque</span>' : '<span class="absolute top-2 left-2 text-[10px] font-bold bg-amber-500 text-white px-2 py-0.5 rounded-full shadow">Sob encomenda</span>';
-                const cores = m.cores.length ? `<p class="text-[11px] text-inkmute truncate">${m.cores.length === 1 ? escHtml(m.cores[0].cor) : m.cores.length + ' cores'}</p>` : '';
-                return `<button type="button" data-modelo="${i}" class="group text-left bg-surface rounded-xl border border-line hover:border-emerald-500 hover:shadow-lg transition overflow-hidden flex flex-col">
-                    <div class="relative aspect-square bg-surface2 overflow-hidden">${img}${badge}</div>
-                    <div class="p-3 flex flex-col gap-1 flex-1">
-                        <h3 class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</h3>
-                        ${m.descricao ? `<p class="text-[11px] text-inkmute leading-snug line-clamp-2">${escHtml(m.descricao)}</p>` : ''}
-                        ${cores}
-                        <p class="mt-auto pt-1 text-lg font-black text-emerald-700 leading-tight">${textoPrecoModelo(m)}</p>
-                    </div></button>`;
+                const cores = m.cores.length ? `<span class="text-[11px] text-inkmute truncate block">${m.cores.length === 1 ? escHtml(m.cores[0].cor) : m.cores.length + ' cores'}</span>` : '';
+                const waNum = marcaAtual && digitosWhats(marcaAtual.whatsapp);
+                const msg = 'Olá! Tenho interesse em: ' + m.nome + (m.cores.length === 1 ? ' (cor: ' + m.cores[0].cor + ')' : '');
+                const btnComprar = waNum
+                    ? `<a href="https://wa.me/${waNum}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="block text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</a>`
+                    : `<button type="button" data-modelo="${i}" class="block w-full text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</button>`;
+                return `<div class="group bg-surface rounded-xl border border-line hover:border-emerald-500 hover:shadow-lg transition overflow-hidden flex flex-col">
+                    <button type="button" data-modelo="${i}" class="text-left flex flex-col flex-1">
+                        <span class="relative block aspect-square w-full bg-surface2 overflow-hidden">${img}${badge}</span>
+                        <span class="p-3 pb-2 flex flex-col gap-1 flex-1 w-full">
+                            <span class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</span>
+                            ${m.descricao ? `<span class="text-[11px] text-inkmute leading-snug line-clamp-2">${escHtml(m.descricao)}</span>` : ''}
+                            ${cores}
+                            <span class="mt-auto pt-1 text-lg font-black text-emerald-700 leading-tight">${textoPrecoModelo(m)}</span>
+                        </span>
+                    </button>
+                    <div class="px-3 pb-3">${btnComprar}</div>
+                </div>`;
             }).join('');
         }
         function fecharModalPortfolio() { const md = document.getElementById('portModal'); md.classList.add('hidden'); md.innerHTML = ''; document.body.style.overflow = ''; }
