@@ -3860,7 +3860,7 @@
             const consumoPorChave = {};
             (pecas || []).forEach(p => {
                 const chave = p.filamento_chave;
-                if (!chave || chave === 'padrao') return; // "Preço Padrão" não está ligado a um lote físico do estoque
+                if (!chave || chave === 'padrao' || chave === 'media') return; // "Preço Padrão" e "Preço médio" não estão ligados a um lote físico do estoque
                 consumoPorChave[chave] = (consumoPorChave[chave] || 0) + (parseFloat(p.peso_g) || 0);
             });
 
