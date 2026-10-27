@@ -776,6 +776,10 @@
                     <p class="text-[11px] text-inkmute mt-1">Use "Duplicar" para imprimir o mesmo modelo em outra cor. No Portfólio aparece um só card, com as cores disponíveis.</p>
                 </div>
                 <div>
+                    <label class="block text-sm font-medium mb-1">Descrição do modelo <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
+                    <textarea id="projDescricao" rows="3" maxlength="500" placeholder="Ex: Anjo decorativo vazado, ótimo para enfeitar a árvore de Natal. Altura de 12 cm." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></textarea>
+                </div>
+                <div>
                     <label class="block text-sm font-medium mb-1">Máquina usada <span class="text-inkmute font-normal">(define o custo por hora)</span></label>
                     <select id="projMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-sm text-ink"><option value="">Padrão das Configurações</option></select>
                 </div>
@@ -1535,6 +1539,7 @@
 
         const projNome = document.getElementById('projNome');
         const projCor = document.getElementById('projCor');
+        const projDescricao = document.getElementById('projDescricao');
         const projMaquina = document.getElementById('projMaquina');
         const projPrecoVenda = document.getElementById('projPrecoVenda');
         const projStatus = document.getElementById('projStatus'); 
@@ -3784,6 +3789,7 @@
             let payload = { 
                 nome_projeto: nomeProjeto, 
                 cor: projCor.value.trim(),
+                descricao: projDescricao.value.trim().slice(0, 500),
                 maquina_id: projMaquina.value || null,
                 maquina_nome: (maquinaDoFormulario() || {}).nome || '',
                 imagem_base64: imagemUrlFinal, // Mantém o nome do campo por compatibilidade; hoje guarda o link colado
@@ -3870,7 +3876,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -3881,7 +3887,7 @@
         window.editarProjeto3d = function(id) {
             abrirCartaoFormMobile(document.getElementById('projNome'), document.getElementById('btnRecalcularCustos'));
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
@@ -3903,7 +3909,7 @@
             const grupo = proj.grupo_modelo || proj.id;
             try {
                 await colecao('projetos_3d').add({
-                    nome_projeto: proj.nome_projeto.replace(/\s*\(c[óo]pia\)\s*$/i, ''), cor: corNova.trim(), grupo_modelo: grupo, maquina_id: proj.maquina_id || null, maquina_nome: proj.maquina_nome || '',
+                    nome_projeto: proj.nome_projeto.replace(/\s*\(c[óo]pia\)\s*$/i, ''), cor: corNova.trim(), descricao: proj.descricao || '', grupo_modelo: grupo, maquina_id: proj.maquina_id || null, maquina_nome: proj.maquina_nome || '',
                     imagem_base64: proj.imagem_base64 || null, nome_arquivo_3mf: proj.nome_arquivo_3mf || '',
                     pecas: proj.pecas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total,
                     preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g,
@@ -3995,6 +4001,7 @@
             containerClientes.innerHTML = [...grupos.values()].map(itens => {
                 const proj = itens.find(x => x.imagem_base64) || itens[0];
                 const imgTag = proj.imagem_base64 ? `<div class="bg-base/40 p-2 w-full h-52 flex items-center justify-center border-b border-line/50"><img src="${proj.imagem_base64}" loading="lazy" class="max-w-full max-h-full object-contain rounded-t-lg"></div>` : `<div class="w-full h-52 bg-base flex items-center justify-center text-inkmute/50 text-xs border-b border-line/50">Sem imagem</div>`;
+                const descModelo = ((itens.find(x => (x.descricao || '').trim()) || {}).descricao || '').trim();
                 const qtdEst = itens.reduce((a, x) => a + (parseInt(x.quantidade_estoque) || 0), 0);
                 const badgeEstoque = qtdEst > 0
                     ? `<span class="text-[11px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-bold">${qtdEst} ${qtdEst === 1 ? 'peça' : 'peças'} em estoque</span>`
@@ -4012,6 +4019,7 @@
                         ${imgTag}
                         <div class="p-4 flex flex-col justify-between flex-1 gap-3">
                             <h3 class="font-bold text-ink text-[1rem] truncate" style="color:#111827 !important;" title="${escHtml(proj.nome_projeto)}">${escHtml(proj.nome_projeto)}</h3>
+                            ${descModelo ? `<p class="text-xs text-inkmute leading-snug whitespace-pre-line">${escHtml(descModelo)}</p>` : ''}
                             <div>${badgeEstoque}</div>
                             ${chipsCores}
                             ${listaPecas}
