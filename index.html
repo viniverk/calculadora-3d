@@ -770,10 +770,15 @@
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line xl:col-span-3 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
                     <h2 class="font-display text-xl font-semibold text-emerald-700">🖨️ Imprimir projeto cadastrado</h2>
-                    <input type="text" id="impBusca" placeholder="Buscar projeto pelo nome" class="bg-surface2 px-3 py-2 rounded-full border border-line text-sm text-ink w-full sm:w-64">
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <button type="button" id="impTabImprimir" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-600 text-white">Imprimir</button>
+                        <button type="button" id="impTabHistorico" class="px-3 py-1.5 rounded-lg text-sm font-semibold border border-line text-ink">Histórico</button>
+                        <input type="text" id="impBusca" placeholder="Buscar projeto pelo nome" class="bg-surface2 px-3 py-2 rounded-full border border-line text-sm text-ink flex-1 sm:w-56">
+                    </div>
                 </div>
                 <p class="text-xs text-inkmute">Escolha um projeto que você já cadastrou abaixo e registre quantas unidades imprimiu: soma ao estoque pronto e desconta o filamento. Para cadastrar um projeto novo (sem imprimir), use o formulário mais abaixo.</p>
                 <div id="impLista" class="grid grid-cols-1 lg:grid-cols-2 gap-2 max-h-80 overflow-y-auto"></div>
+                <div id="impHistorico" class="hidden max-h-80 overflow-y-auto"></div>
             </div>
             <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit xl:col-span-1 space-y-4">
                 <h2 class="font-display text-xl font-semibold text-sky-600 border-b border-line pb-2">1. Capa do Projeto</h2>
@@ -4162,7 +4167,29 @@
 
         // Carga que traz a lista do banco inteira de uma só vez (Garantindo que o Mascote Urubu apareça)
         // --- IMPRIMIR PROJETO CADASTRADO ---
+        let impAba = 'imprimir';
+        function renderizarImpHistorico() {
+            const el = document.getElementById('impHistorico');
+            const termo = semAcento((document.getElementById('impBusca').value || '').trim());
+            const linhas = [];
+            projetosCacheLocal.forEach(p => (p.historico_impressoes || []).forEach(h => { if (!termo || semAcento(p.nome_projeto || '').includes(termo)) linhas.push({ p, h }); }));
+            linhas.sort((a, b) => String(b.h.em || b.h.data).localeCompare(String(a.h.em || a.h.data)));
+            if (!linhas.length) { el.innerHTML = '<p class="text-sm text-inkmute italic py-4 text-center">Nenhuma impressão registrada ainda. Impressões feitas pelo botão "Imprimir" aparecem aqui.</p>'; return; }
+            const tq = linhas.reduce((a, x) => a + (x.h.qtd || 0), 0), tc = linhas.reduce((a, x) => a + (x.h.custo || 0), 0), tg = linhas.reduce((a, x) => a + (x.h.filamento_g || 0), 0);
+            el.innerHTML = `<p class="text-xs text-inkmute mb-2">${tq} unidades • ${tg.toFixed(0)} g de filamento • custo R$ ${tc.toFixed(2)}</p>` + linhas.map(({ p, h }) => `<div class="flex items-center gap-3 p-2 border-b border-line/60">${miniaturaProjeto(p, 'h-10 w-10')}<div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute">${String(h.data || '').split('-').reverse().join('/')} • ${h.qtd} un • ${(h.filamento_g || 0).toFixed(0)} g</p></div><span class="text-sm font-bold text-ink shrink-0">R$ ${(h.custo || 0).toFixed(2)}</span></div>`).join('');
+        }
+        function mostrarImpAba(a) {
+            impAba = a;
+            document.getElementById('impLista').classList.toggle('hidden', a !== 'imprimir');
+            document.getElementById('impHistorico').classList.toggle('hidden', a !== 'historico');
+            document.getElementById('impTabImprimir').className = 'px-3 py-1.5 rounded-lg text-sm font-semibold ' + (a === 'imprimir' ? 'bg-emerald-600 text-white' : 'border border-line text-ink');
+            document.getElementById('impTabHistorico').className = 'px-3 py-1.5 rounded-lg text-sm font-semibold ' + (a === 'historico' ? 'bg-emerald-600 text-white' : 'border border-line text-ink');
+            renderizarImpLista();
+        }
+        document.getElementById('impTabImprimir').addEventListener('click', () => mostrarImpAba('imprimir'));
+        document.getElementById('impTabHistorico').addEventListener('click', () => mostrarImpAba('historico'));
         function renderizarImpLista() {
+            if (impAba === 'historico') { renderizarImpHistorico(); return; }
             const el = document.getElementById('impLista'); if (!el) return;
             const termo = semAcento((document.getElementById('impBusca').value || '').trim());
             const lista = projetosCacheLocal.filter(p => !termo || semAcento(p.nome_projeto || '').includes(termo));
@@ -4206,7 +4233,8 @@
                     ultima_impressao: data,
                     status: p.status === 'Vendido' ? 'Vendido' : 'Projeto Finalizado',
                     data_conclusao: data,
-                    estoque_descontado: true
+                    estoque_descontado: true,
+                    historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, filamento_g: (parseFloat(p.peso_total_g) || 0) * q, custo: (parseFloat(p.custo_total) || 0) * q, em: new Date().toISOString() }]
                 });
                 await descontarEstoquePelasPecas(p.pecas, q);
             } catch (e) { alert('Falha ao registrar a impressão: ' + e.message); btn.disabled = false; return; }
