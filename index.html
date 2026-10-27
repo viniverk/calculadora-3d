@@ -1648,7 +1648,14 @@
         document.getElementById('vendaData').valueAsDate = new Date();
 
         // --- ENGINE DE CONTROLE PÚBLICO E EXECUÇÃO ---
-        const urlParams = new URLSearchParams(window.location.search);
+        // Link curto do catálogo: cliente3d.com.br/loja abre o catálogo público desta loja (página loja/index.html carrega este app)
+        const UID_LOJA = 'M6ftG5GlyYQXnbaD3DYQtvjEo2N2';
+        function parametrosUrl() {
+            const ps = new URLSearchParams(window.location.search);
+            if (/\/loja\/?$/.test(window.location.pathname)) { ps.set('modo', 'publico'); ps.set('uid', UID_LOJA); }
+            return ps;
+        }
+        const urlParams = parametrosUrl();
         const modoPublicoAtivo = urlParams.get('modo') === 'publico';
         const uidCatalogoPublico = urlParams.get('uid') || null;
 
@@ -1814,7 +1821,7 @@
         if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !modoPublicoAtivoPWA()) {
             window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
         }
-        function modoPublicoAtivoPWA() { return new URLSearchParams(location.search).get('modo') === 'publico'; }
+        function modoPublicoAtivoPWA() { return parametrosUrl().get('modo') === 'publico'; }
         let eventoInstalar = null;
         const jaInstalado = () => window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
         window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); eventoInstalar = e; if (!jaInstalado()) document.getElementById('btnInstalar').classList.remove('hidden'); });
@@ -2415,7 +2422,7 @@
 
         // --- SESSION TRACKING ---
         auth.onAuthStateChanged(async (user) => {
-            const urlParams = new URLSearchParams(window.location.search);
+            const urlParams = parametrosUrl();
             const modoPublicoAtivo = urlParams.get('modo') === 'publico';
 
             if (modoPublicoAtivo) {

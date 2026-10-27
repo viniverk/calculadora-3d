@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo</title>
+<style>body{margin:0;background:#0e1316}</style>
+</head>
+<body>
+<script>
+// Atalho /loja: carrega o app (index.html da raiz) que, neste endereço, abre o catálogo público.
+fetch('../index.html').then(function (r) { return r.text(); }).then(function (h) {
+  h = h.replace('<head>', '<head><base href="../">');
+  document.open(); document.write(h); document.close();
+}).catch(function () { location.replace('../?modo=publico&uid=M6ftG5GlyYQXnbaD3DYQtvjEo2N2'); });
+</script>
+</body>
+</html>
