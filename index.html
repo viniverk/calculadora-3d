@@ -962,6 +962,11 @@
                             <option value="__todas">Todas</option>
                             <option value="__sem">⚠️ Sem impressora</option>
                         </select>
+                        <div class="inline-flex rounded-lg border border-line overflow-hidden text-xs font-bold" id="projVisoes">
+                            <button type="button" data-visao="cards">▦ Cards</button>
+                            <button type="button" data-visao="lista">☰ Lista</button>
+                            <button type="button" data-visao="mini">⊞ Miniaturas</button>
+                        </div>
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Ordenar por:</label>
                         <select id="selectOrdenacaoPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
                             <option value="created_at">Data de Cadastro</option>
@@ -3969,6 +3974,20 @@
             sel.value = [...sel.options].some(o => o.value === atual) ? atual : '__todas';
         }
 
+        let visaoProj = 'cards';
+        try { visaoProj = localStorage.getItem('c3d_visao_proj') || 'cards'; } catch (e) {}
+        function marcarVisaoProj() {
+            document.querySelectorAll('#projVisoes button').forEach(btn => {
+                const on = btn.dataset.visao === visaoProj;
+                btn.className = 'px-3 py-1.5 ' + (btn.dataset.visao !== 'cards' ? 'border-l border-line ' : '') + (on ? 'bg-emerald-600 text-white' : 'bg-surface2 text-inkmute hover:bg-line');
+            });
+        }
+        document.querySelectorAll('#projVisoes button').forEach(btn => btn.addEventListener('click', () => {
+            visaoProj = btn.dataset.visao;
+            try { localStorage.setItem('c3d_visao_proj', visaoProj); } catch (e) {}
+            renderizarProjetosOrdenados();
+        }));
+        marcarVisaoProj();
         function renderizarProjetosOrdenados() {
             const criterio = selectOrdenacaoPortfolio.value;
             const filtroStatus = selectFiltroStatusPortfolio.value;
@@ -3985,14 +4004,41 @@
             const container = document.getElementById('listaProjetosSalvos');
             if (projetosOrdenados.length === 0) { container.innerHTML = '<p class="text-sm italic">Nenhum projeto encontrado com esse filtro.</p>'; return; }
 
+            marcarVisaoProj();
+            const statusClasse = (st) => st === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-600' : st === 'Vendido' ? 'bg-blue-500/20 text-teal2' : st === 'Imprimindo' ? 'bg-amber-500/20 text-amber-600' : st === 'Montagem' ? 'bg-purple-500/20 text-purple-600' : 'bg-surface2 text-inkmute';
+            const thumbProj = (proj, cls) => proj.imagem_base64 ? `<img src="${escHtml(proj.imagem_base64)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="${cls} object-cover">` : `<div class="${cls} bg-base flex items-center justify-center text-inkmute/50 text-lg">🧊</div>`;
+            if (visaoProj === 'lista') {
+                container.className = 'flex flex-col gap-2';
+                container.innerHTML = projetosOrdenados.map(proj => {
+                    const qtd = parseInt(proj.quantidade_estoque) || 0; const t = proj.tempo_total_min || 0;
+                    return `<div class="bg-surface2 rounded-lg border border-line p-2 flex items-center gap-3 flex-wrap sm:flex-nowrap">
+                        <div class="shrink-0 h-12 w-12 rounded-md overflow-hidden border border-line">${thumbProj(proj, 'h-12 w-12')}</div>
+                        <div class="min-w-0 flex-1"><p class="font-bold text-sm text-ink truncate" style="color:#111827 !important;">${escHtml(proj.nome_projeto)}${proj.cor ? ` <span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold align-middle">🎨 ${escHtml(proj.cor)}</span>` : ''}</p>
+                            <p class="text-[11px] text-inkmute truncate">${proj.peso_total_g || 0}g • ${Math.floor(t / 60)}h ${t % 60}m${proj.maquina_id ? ' • 🖨️ ' + escHtml(proj.maquina_nome || 'Máquina') : ' • ⚠️ Sem impressora'}${qtd > 0 ? ' • 📦 ' + qtd + ' em estoque' : ''}</p></div>
+                        <span class="text-[9px] ${statusClasse(proj.status)} px-1.5 py-0.5 rounded font-bold uppercase whitespace-nowrap">${escHtml(proj.status || 'Aguardando')}</span>
+                        <span class="text-xs text-amber-600 font-bold whitespace-nowrap">R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</span>
+                        <div class="flex gap-3 text-[11px] font-semibold whitespace-nowrap"><button onclick="editarProjeto3d('${proj.id}')" class="text-sky-600">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-amber-600">👯</button><button onclick="deletarProjeto3d('${proj.id}')" class="text-red-600">Excluir</button></div>
+                    </div>`;
+                }).join('');
+                return;
+            }
+            if (visaoProj === 'mini') {
+                container.className = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-7 gap-2.5';
+                container.innerHTML = projetosOrdenados.map(proj => `<div class="bg-surface2 rounded-lg border border-line overflow-hidden flex flex-col">
+                        <button type="button" onclick="editarProjeto3d('${proj.id}')" class="relative block aspect-square w-full" title="Editar ${escHtml(proj.nome_projeto)}">${thumbProj(proj, 'w-full h-full')}<span class="absolute bottom-1 left-1 text-[8px] ${statusClasse(proj.status)} bg-surface px-1 py-0.5 rounded font-bold uppercase">${escHtml(proj.status || 'Aguardando')}</span></button>
+                        <div class="p-1.5"><p class="text-[11px] font-semibold text-ink leading-tight line-clamp-2" style="color:#111827 !important;">${escHtml(proj.nome_projeto)}</p><p class="text-[10px] text-inkmute truncate">${proj.cor ? escHtml(proj.cor) + ' • ' : ''}R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p></div>
+                    </div>`).join('');
+                return;
+            }
+            container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3';
             container.innerHTML = projetosOrdenados.map(proj => {
-                const imgTag = proj.imagem_base64 ? `<div class="bg-base/60 p-1 w-full border-b border-line"><img src="${proj.imagem_base64}" loading="lazy" class="w-full h-44 object-contain rounded-t-lg"></div>` : `<div class="w-full h-44 bg-base flex items-center justify-center text-inkmute/50 text-xs border-b border-line">Sem Imagem</div>`;
+                const imgTag = proj.imagem_base64 ? `<div class="bg-base/60 p-1 w-full border-b border-line"><img src="${proj.imagem_base64}" loading="lazy" class="w-full h-32 object-contain rounded-t-lg"></div>` : `<div class="w-full h-32 bg-base flex items-center justify-center text-inkmute/50 text-xs border-b border-line">Sem Imagem</div>`;
                 const tag3mf = proj.nome_arquivo_3mf ? `<a href="${proj.nome_arquivo_3mf}" target="_blank" class="text-[10px] text-sky-600 mt-1 truncate hover:underline block font-semibold">🔗 Acessar download .3mf ⬇️</a>` : `<span class="text-[10px] text-inkmute/60 mt-1 block">Nenhum link fornecido</span>`;
                 const statusColor = proj.status === 'Projeto Finalizado' ? 'bg-green-500/20 text-green-600' : proj.status === 'Vendido' ? 'bg-blue-500/20 text-teal2' : proj.status === 'Imprimindo' ? 'bg-amber-500/20 text-amber-600' : proj.status === 'Montagem' ? 'bg-purple-500/20 text-purple-600 border border-purple-500/30' : 'bg-surface2 text-inkmute';                
                 const subPecasHtml = proj.pecas ? proj.pecas.map(p => `<div class="flex justify-between text-[11px] text-inkmute bg-base/40 px-1.5 py-0.5 rounded"><span>${p.nome_peca}</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`).join('') : '';
                 const badgePortfolio = deveAparecerNoPortfolio(proj) ? `<span class="text-[9px] bg-teal2/15 text-teal2 px-1.5 py-0.5 rounded font-bold" title="Aparece no Portfólio de Clientes">👁️ No Portfólio</span>` : `<span class="text-[9px] bg-surface2 text-inkmute/70 px-1.5 py-0.5 rounded font-bold" title="Não aparece no Portfólio de Clientes">🙈 Oculto</span>`;
 
-                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${proj.maquina_id ? `<span class="text-[9px] bg-surface text-inkmute border border-line px-1.5 py-0.5 rounded font-bold">🖨️ ${escHtml(proj.maquina_nome || 'Máquina')}</span>` : `<span class="text-[9px] bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded font-bold" title="Cadastre a impressora deste projeto">⚠️ Sem impressora</span>`}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
+                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${proj.maquina_id ? `<span class="text-[9px] bg-surface text-inkmute border border-line px-1.5 py-0.5 rounded font-bold">🖨️ ${escHtml(proj.maquina_nome || 'Máquina')}</span>` : `<span class="text-[9px] bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded font-bold" title="Cadastre a impressora deste projeto">⚠️ Sem impressora</span>`}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2 max-h-20 overflow-y-auto">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
             }).join('');
         }
 
