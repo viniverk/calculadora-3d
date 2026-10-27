@@ -3853,6 +3853,10 @@
             };
 
             // O estoque (peças e filamento) agora só muda ao registrar impressões em "Imprimir projeto cadastrado".
+            const projAntigo = idProjetoEmEdicao ? projetosCacheLocal.find(x => x.id === idProjetoEmEdicao) : null;
+            const qtdImpressa = projAntigo ? (projAntigo.historico_impressoes || []).reduce((a, h) => a + (parseInt(h.qtd) || 0), 0) : 0;
+            const assinatura = (pcs) => JSON.stringify((pcs || []).filter(x => x.filamento_chave && x.filamento_chave !== 'padrao' && x.filamento_chave !== 'media').map(x => [x.filamento_chave, parseFloat(x.peso_g) || 0]).sort());
+            const materialMudou = qtdImpressa > 0 && assinatura(projAntigo.pecas) !== assinatura(pecasProjetoAtual);
             try {
                 if (idProjetoEmEdicao) {
                     await colecao('projetos_3d').doc(idProjetoEmEdicao).update(payload);
@@ -3868,7 +3872,12 @@
             }
 
             btnSalvarProjetoCompleto.disabled = false;
-            alert(idProjetoEmEdicao ? 'Projeto atualizado! O histórico de impressões já usa os novos valores.' : 'Projeto cadastrado! Ele já aparece no portfólio. Para registrar impressões (somar estoque e abater filamento), use "Imprimir projeto cadastrado".');
+            // Material trocado em projeto que já foi impresso: devolve o consumo antigo e abate o novo, para as unidades já registradas.
+            if (materialMudou) {
+                try { await devolverEstoquePelasPecas(projAntigo.pecas, qtdImpressa); await descontarEstoquePelasPecas(pecasProjetoAtual, qtdImpressa); }
+                catch (e) { alert('Projeto salvo, mas falhou o reajuste do filamento no estoque: ' + e.message); }
+            }
+            alert(idProjetoEmEdicao ? (materialMudou ? `Projeto atualizado! O filamento do estoque foi reajustado para as ${qtdImpressa} unidades já impressas e o histórico usa os novos valores.` : 'Projeto atualizado! O histórico de impressões já usa os novos valores.') : 'Projeto cadastrado! Ele já aparece no portfólio. Para registrar impressões (somar estoque e abater filamento), use "Imprimir projeto cadastrado".');
             limparFormularioProjeto(); carregarProjetos3d(); 
         });
 
