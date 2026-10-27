@@ -3874,7 +3874,7 @@
             btnSalvarProjetoCompleto.disabled = false;
             // Material trocado em projeto que já foi impresso: devolve o consumo antigo e abate o novo, para as unidades já registradas.
             if (materialMudou) {
-                try { await devolverEstoquePelasPecas(projAntigo.pecas, qtdImpressa); await descontarEstoquePelasPecas(pecasProjetoAtual, qtdImpressa); }
+                try { await devolverEstoquePelasPecas(projAntigo.pecas, qtdImpressa); await descontarEstoquePelasPecas(pecasProjetoAtual, qtdImpressa); await colecao('projetos_3d').doc(idProjetoEmEdicao).update({ consumo_abatido: consumoPorChaveDe(pecasProjetoAtual, qtdImpressa) }); }
                 catch (e) { alert('Projeto salvo, mas falhou o reajuste do filamento no estoque: ' + e.message); }
             }
             alert(idProjetoEmEdicao ? (materialMudou ? `Projeto atualizado! O filamento do estoque foi reajustado para as ${qtdImpressa} unidades já impressas e o histórico usa os novos valores.` : 'Projeto atualizado! O histórico de impressões já usa os novos valores.') : 'Projeto cadastrado! Ele já aparece no portfólio. Para registrar impressões (somar estoque e abater filamento), use "Imprimir projeto cadastrado".');
@@ -4198,6 +4198,31 @@
                 linhas.map(({ p, h, idx, g, r }) => `<tr class="border-b border-line/60"><td class="py-2 whitespace-nowrap">${String(h.data || '').split('-').reverse().join('/')}</td><td class="max-w-[220px]"><div class="flex items-center gap-2">${miniaturaProjeto(p, 'h-8 w-8')}<span class="truncate font-semibold text-ink">${escHtml(p.nome_projeto)}</span></div></td><td class="text-right font-bold">${h.qtd}</td><td class="text-right">${g.toFixed(0)} g</td><td class="text-right font-bold">R$ ${r.toFixed(2)}</td><td class="text-right whitespace-nowrap pl-2"><button type="button" onclick="editarImpressao('${p.id}',${idx})" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button> <button type="button" onclick="excluirImpressao('${p.id}',${idx})" class="text-[11px] text-red-600 ml-1">Excluir</button></td></tr>`).join('') +
                 `</tbody><tfoot><tr class="font-bold"><td class="py-2" colspan="2">Total</td><td class="text-right">${tq}</td><td class="text-right">${tg.toFixed(0)} g</td><td class="text-right">R$ ${tr.toFixed(2)}</td><td></td></tr></tfoot></table>`;
         }
+        // Controle do filamento já abatido do estoque por projeto (consumo_abatido: {chave: gramas}), para poder reconciliar.
+        function consumoPorChaveDe(pecas, mult) {
+            const o = {}; (pecas || []).forEach(x => { const c = x.filamento_chave; if (!c || c === 'padrao' || c === 'media') return; o[c] = (o[c] || 0) + (parseFloat(x.peso_g) || 0) * mult; }); return o;
+        }
+        function somarConsumo(base, mapa, sinal) { const o = { ...(base || {}) }; Object.keys(mapa).forEach(k => { o[k] = Math.max(0, (o[k] || 0) + sinal * mapa[k]); }); return o; }
+        const qtdImpressaDe = (p) => (p.historico_impressoes || []).reduce((a, h) => a + (parseInt(h.qtd) || 0), 0);
+        async function reajustarFilamentoProjeto(pid) {
+            const p = projetosCacheLocal.find(x => x.id === pid); if (!p) return;
+            const q = qtdImpressaDe(p); if (q < 1) { alert('Este projeto ainda não tem impressões registradas.'); return; }
+            const desejado = consumoPorChaveDe(p.pecas, q), abatido = p.consumo_abatido || {};
+            const chaves = [...new Set([...Object.keys(desejado), ...Object.keys(abatido)])];
+            const difs = chaves.map(c => ({ c, d: (desejado[c] || 0) - (abatido[c] || 0) })).filter(x => Math.abs(x.d) >= 0.5);
+            if (!difs.length) { alert('O filamento deste projeto já está em dia com o estoque (nada a ajustar).\nSe as peças usam "Preço padrão" ou "Preço médio", escolha um filamento do estoque na peça e salve o projeto.'); return; }
+            const txt = difs.map(x => `${x.d > 0 ? 'Abater' : 'Devolver'} ${Math.abs(x.d).toFixed(0)} g de ${x.c}`).join('\n');
+            if (!confirm(`Reajustar o filamento das ${q} unidades impressas de "${p.nome_projeto}":\n\n${txt}\n\nUse só se esse consumo ainda não foi abatido/devolvido no Estoque. Continuar?`)) return;
+            try {
+                for (const x of difs) {
+                    const fake = [{ filamento_chave: x.c, peso_g: Math.abs(x.d) }];
+                    if (x.d > 0) await descontarEstoquePelasPecas(fake, 1); else await devolverEstoquePelasPecas(fake, 1);
+                }
+                await colecao('projetos_3d').doc(pid).update({ consumo_abatido: desejado });
+            } catch (e) { alert('Falha ao reajustar: ' + e.message); return; }
+            await carregarProjetos3d();
+            alert('Filamento reajustado no estoque.');
+        }
         async function devolverEstoquePelasPecas(pecas, mult) {
             const consumo = {};
             (pecas || []).forEach(p => { const c = p.filamento_chave; if (!c || c === 'padrao' || c === 'media') return; consumo[c] = (consumo[c] || 0) + (parseFloat(p.peso_g) || 0) * mult; });
@@ -4221,6 +4246,7 @@
             if (novaQtd <= 0) hist.splice(idx, 1); else hist[idx] = { ...h, qtd: novaQtd, data: novaData || h.data };
             await colecao('projetos_3d').doc(pid).update({
                 historico_impressoes: hist,
+                ...(p.consumo_abatido ? { consumo_abatido: somarConsumo(p.consumo_abatido, consumoPorChaveDe(p.pecas, Math.abs(delta)), delta >= 0 ? 1 : -1) } : {}),
                 quantidade_estoque: Math.max(0, (parseInt(p.quantidade_estoque) || 0) + delta),
                 total_impresso: Math.max(0, (parseInt(p.total_impresso) || 0) + delta)
             });
@@ -4267,7 +4293,7 @@
             const lista = projetosCacheLocal.filter(p => !termo || semAcento(p.nome_projeto || '').includes(termo));
             el.innerHTML = lista.length ? lista.map(p => {
                 const est = parseInt(p.quantidade_estoque) || 0, tot = parseInt(p.total_impresso) || 0;
-                return `<div class="flex items-center gap-3 p-2 rounded-lg border border-line bg-surface2">${miniaturaProjeto(p, 'h-12 w-12')}<div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute truncate">${p.cor ? escHtml(p.cor) + ' • ' : ''}${parseFloat(p.peso_total_g) || 0} g • ${tot ? tot + ' impressos' : 'nunca impresso'} • estoque pronto: ${est}</p></div><button type="button" onclick="abrirImprimirProjeto('${p.id}')" class="shrink-0 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg">Imprimir</button></div>`;
+                return `<div class="flex items-center gap-3 p-2 rounded-lg border border-line bg-surface2">${miniaturaProjeto(p, 'h-12 w-12')}<div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(p.nome_projeto)}</p><p class="text-[11px] text-inkmute truncate">${p.cor ? escHtml(p.cor) + ' • ' : ''}${parseFloat(p.peso_total_g) || 0} g • ${tot ? tot + ' impressos' : 'nunca impresso'} • estoque pronto: ${est}</p></div><div class="shrink-0 flex flex-col items-end gap-1"><button type="button" onclick="abrirImprimirProjeto('${p.id}')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold px-4 py-2 rounded-lg">Imprimir</button>${tot ? `<button type="button" onclick="reajustarFilamentoProjeto('${p.id}')" class="text-[10px] text-sky-600 font-semibold">Reajustar filamento</button>` : ''}</div></div>`;
             }).join('') : '<p class="text-sm text-inkmute italic col-span-full py-4 text-center">Nenhum projeto cadastrado ainda.</p>';
         }
         document.getElementById('impBusca').addEventListener('input', renderizarImpLista);
@@ -4308,6 +4334,7 @@
                     status: p.status === 'Vendido' ? 'Vendido' : 'Projeto Finalizado',
                     data_conclusao: data,
                     estoque_descontado: true,
+                    ...(p.consumo_abatido || !(p.historico_impressoes || []).length ? { consumo_abatido: somarConsumo(p.consumo_abatido, consumoPorChaveDe(p.pecas, q), 1) } : {}),
                     historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, em: new Date().toISOString() }]
                 });
                 await descontarEstoquePelasPecas(p.pecas, q);
