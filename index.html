@@ -4213,6 +4213,7 @@
 
         let mapaCustoPorChaveFilamento = { 'padrao': 0.12 };
 
+        let mediaPadraoAplicada = false;
         function atualizarDropdownsDeUso() {
             const pp = precoPadraoG();
             const valAnt1 = selectFilamento.value, valAnt2 = pecaSelectFilamento.value;
@@ -4237,8 +4238,11 @@
                     const opt2 = document.createElement('option'); opt2.value = chaveUnica; opt2.textContent = `${emojiCor(corDoFilamento(item))} ${cor} (${fab} ${item.tipo})`; pecaSelectFilamento.appendChild(opt2);
                 }
             });
-            if (valAnt1 && [...selectFilamento.options].some(o => o.value === valAnt1)) selectFilamento.value = valAnt1;
-            if (valAnt2 && [...pecaSelectFilamento.options].some(o => o.value === valAnt2)) pecaSelectFilamento.value = valAnt2;
+            if (mapaCustoPorChaveFilamento['media'] && !mediaPadraoAplicada) { mediaPadraoAplicada = true; selectFilamento.value = String(mapaCustoPorChaveFilamento['media']); pecaSelectFilamento.value = 'media'; }
+            else {
+                if (valAnt1 && [...selectFilamento.options].some(o => o.value === valAnt1)) selectFilamento.value = valAnt1;
+                if (valAnt2 && [...pecaSelectFilamento.options].some(o => o.value === valAnt2)) pecaSelectFilamento.value = valAnt2;
+            }
             calcularAbaBase(); atualizarAcumuladoresMaster();
         }
 
