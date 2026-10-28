@@ -4252,11 +4252,20 @@
                 return;
             }
             if (visaoProj === 'mini') {
-                container.className = 'grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 xl:grid-cols-7 gap-2.5';
-                container.innerHTML = projetosOrdenados.map(proj => `<div class="bg-surface2 rounded-lg border border-line overflow-hidden flex flex-col">
-                        <button type="button" onclick="editarProjeto3d('${proj.id}')" class="relative block aspect-square w-full" title="Editar ${escHtml(proj.nome_projeto)}">${thumbProj(proj, 'w-full h-full')}<span class="absolute bottom-1 left-1 text-[8px] ${statusClasse(proj.status)} bg-surface px-1 py-0.5 rounded font-bold uppercase">${escHtml(proj.status || 'Aguardando')}</span></button>
-                        <div class="p-1.5"><p class="text-[11px] font-semibold text-ink leading-tight line-clamp-2" style="color:#111827 !important;">${escHtml(proj.nome_projeto)}</p><p class="text-[10px] text-inkmute truncate">${proj.cor ? escHtml(proj.cor) + ' • ' : ''}R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p></div>
-                    </div>`).join('');
+                container.className = 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-6 gap-3 items-stretch';
+                container.innerHTML = projetosOrdenados.map(proj => {
+                    const qtd = parseInt(proj.quantidade_estoque) || 0;
+                    const img = proj.imagem_base64 ? `<img src="${escHtml(proj.imagem_base64)}" alt="" loading="lazy" referrerpolicy="no-referrer" class="absolute inset-0 w-full h-full object-cover">` : `<div class="absolute inset-0 bg-base flex items-center justify-center text-inkmute/50 text-3xl">🧊</div>`;
+                    return `<div class="bg-surface2 rounded-xl border border-line overflow-hidden flex flex-col h-full shadow-sm">
+                        <button type="button" onclick="editarProjeto3d('${proj.id}')" class="relative block w-full overflow-hidden bg-base" style="aspect-ratio:1/1" title="Editar ${escHtml(proj.nome_projeto)}">${img}<span class="absolute top-1.5 left-1.5 text-[9px] ${statusClasse(proj.status)} bg-surface px-1.5 py-0.5 rounded font-bold uppercase shadow">${escHtml(proj.status || 'Aguardando')}</span></button>
+                        <div class="p-2.5 flex flex-col gap-1 flex-1">
+                            <p class="text-xs font-bold text-ink leading-snug line-clamp-2 min-h-[2.5em]" style="color:#111827 !important;" title="${escHtml(proj.nome_projeto)}">${escHtml(proj.nome_projeto)}</p>
+                            <p class="text-[11px] text-inkmute truncate">${proj.cor ? escHtml(proj.cor) : '&nbsp;'}</p>
+                            <div class="flex items-center justify-between gap-1 mt-auto pt-1"><span class="text-xs font-bold text-amber-600">R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</span><span class="text-[10px] font-bold px-1.5 py-0.5 rounded ${qtd > 0 ? 'bg-green-100 text-green-700' : 'bg-amber-100 text-amber-700'}">${qtd > 0 ? '📦 ' + qtd : 'Sob encomenda'}</span></div>
+                            <div class="flex flex-col gap-1 pt-1.5 border-t border-line/60">${botoesImprimirProj(proj, 'w-full text-xs py-1.5')}</div>
+                        </div>
+                    </div>`;
+                }).join('');
                 return;
             }
             container.className = 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3';
