@@ -80,6 +80,27 @@
         body.tema-escuro .\!bg-emerald-50 { background-color: rgba(34,197,94,.14) !important; }
         body.tema-escuro .\!text-emerald-800 { color: #4ade80 !important; }
         body.tema-escuro .bg-emerald-50 { background-color: rgba(34,197,94,.14); }
+
+        /* ===== Tema "Neon 3D": paleta do vídeo/logo (azul-marinho, ciano, azul e violeta) ===== */
+        body.tema-neon { --c-base: 6 11 20; --c-surface: 12 20 35; --c-surface2: 18 30 50; --c-line: 33 52 84; --c-ink: 230 240 252; --c-inkmute: 139 163 192; color-scheme: dark; }
+        body.tema-neon { background: radial-gradient(900px 520px at 6% -6%, rgba(34,211,238,.20), transparent 60%), radial-gradient(800px 500px at 100% 0%, rgba(139,92,246,.20), transparent 55%), radial-gradient(700px 420px at 55% 112%, rgba(59,130,246,.16), transparent 55%), linear-gradient(rgba(34,211,238,.035) 1px, transparent 1px) 0 0/44px 44px, linear-gradient(90deg, rgba(34,211,238,.035) 1px, transparent 1px) 0 0/44px 44px, rgb(var(--c-base)); background-attachment: fixed; }
+        body.tema-neon .bg-surface.border.border-line { border-color: rgba(34,211,238,.20); box-shadow: 0 0 0 1px rgba(34,211,238,.05), 0 16px 34px -18px rgba(0,0,0,.75), 0 0 28px -18px rgba(34,211,238,.5); }
+        body.tema-neon .btn-cta, body.tema-neon .bg-emerald-500, body.tema-neon .bg-emerald-600, body.tema-neon .bg-emerald-700, body.tema-neon .bg-emerald-800, body.tema-neon .hist-tab.ativo, body.tema-neon .port-chip.ativo, body.tema-neon #pedFiltros .hist-tab.ativo { background: linear-gradient(135deg, #0891b2, #2563eb 58%, #7c3aed); border-color: transparent; color: #fff; box-shadow: 0 10px 22px -12px rgba(59,130,246,.8); }
+        body.tema-neon .bg-emerald-500:hover, body.tema-neon .bg-emerald-600:hover, body.tema-neon .bg-emerald-700:hover, body.tema-neon .bg-emerald-800:hover, body.tema-neon .btn-cta:hover { filter: brightness(1.15); }
+        body.tema-neon .text-emerald-300, body.tema-neon .text-emerald-600, body.tema-neon .text-emerald-700, body.tema-neon .text-emerald-800, body.tema-neon .text-emerald-900, body.tema-neon .text-emerald-950, body.tema-neon .\!text-emerald-800, body.tema-neon .text-teal-600 { color: #67e8f9 !important; }
+        body.tema-neon .bg-emerald-50, body.tema-neon .bg-emerald-100, body.tema-neon .\!bg-emerald-50, body.tema-neon .bg-green-100 { background-color: rgba(34,211,238,.13) !important; }
+        body.tema-neon .hover\:bg-emerald-50:hover, body.tema-neon .hover\:bg-emerald-100:hover { background-color: rgba(34,211,238,.22) !important; }
+        body.tema-neon .border-emerald-200, body.tema-neon .border-emerald-300, body.tema-neon .border-emerald-500, body.tema-neon .border-emerald-600, body.tema-neon .border-emerald-700 { border-color: rgba(34,211,238,.55) !important; }
+        body.tema-neon .item-menu-btn.ativo-nav { background: linear-gradient(90deg, rgba(34,211,238,.20), rgba(139,92,246,.06)); border-left: 3px solid #22d3ee; }
+        body.tema-neon #navInferior button.nav-ativo { color: #67e8f9; }
+        body.tema-neon input:focus, body.tema-neon select:focus, body.tema-neon textarea:focus { box-shadow: 0 0 0 3px rgba(34,211,238,.28) !important; border-color: #22d3ee !important; }
+        body.tema-neon .ped-inp:focus { border-color: #22d3ee; box-shadow: 0 0 0 3px rgba(34,211,238,.25) !important; }
+        body.tema-neon .swatch.ativo { box-shadow: 0 0 0 2px rgb(var(--c-surface)), 0 0 0 4px #22d3ee; }
+        body.tema-neon .rolo-card:hover { border-color: rgba(34,211,238,.7); }
+        body.tema-neon ::-webkit-scrollbar-thumb { background: #1e3a5f; }
+        body.tema-neon ::-webkit-scrollbar-thumb:hover { background: #22d3ee; }
+        body.tema-neon img[src*="venda3d"] { filter: none; }
+        body.tema-neon .font-display { text-shadow: 0 0 22px rgba(34,211,238,.18); }
         .layer-lines {
             background-image: repeating-linear-gradient(180deg, rgba(17,24,39,0.02) 0px, rgba(17,24,39,0.02) 1px, transparent 1px, transparent 7px);
         }
@@ -1883,7 +1904,7 @@
             if (adm && !adm.classList.contains('hidden')) h += `<button type="button" class="sm-item" onclick="mudarAba('admin')"><span class="ico">🛡️</span>Usuários</button>`;
             g.innerHTML = h;
             const inst = document.getElementById('btnInstalar');
-            ac.innerHTML = `<button type="button" onclick="document.getElementById('btnTema').click();fecharSheetMais()">🌙 Alternar tema claro/escuro</button>` +
+            ac.innerHTML = `<button type="button" onclick="document.getElementById('btnTema').click();fecharSheetMais()">🌙 Alternar tema (claro, escuro, neon)</button>` +
                 (inst && !inst.classList.contains('hidden') ? `<button type="button" onclick="fecharSheetMais();document.getElementById('btnInstalar').click()">📲 Instalar app no celular</button>` : '') +
                 `<button type="button" onclick="fecharSheetMais();document.getElementById('btnTour').click()">🧭 Tour guiado</button>` +
                 `<button type="button" class="sm-sair" onclick="fecharSheetMais();document.getElementById('btnSair').click()">Sair da conta</button>`;
@@ -2362,7 +2383,7 @@
         function mostrarTelaAcessoPendente() {
             telaAuth.classList.add('hidden');
             sidebarApp.classList.add('hidden');
-            document.body.classList.remove('tema-escuro');
+            document.body.classList.remove('tema-escuro', 'tema-neon');
             conteudoPainel.classList.add('hidden');
             mobileTopBar.classList.add('hidden');
             document.getElementById('telaCompletarCadastro').classList.add('hidden');
@@ -2605,7 +2626,7 @@
                 document.getElementById('telaAcessoPendente').classList.add('hidden');
                 document.getElementById('telaCompletarCadastro').classList.add('hidden');
                 sidebarApp.classList.add('hidden');
-                document.body.classList.remove('tema-escuro');
+                document.body.classList.remove('tema-escuro', 'tema-neon');
                 conteudoPainel.classList.add('hidden');
                 mobileTopBar.classList.add('hidden');
                 telaAuth.classList.remove('hidden');
@@ -3304,14 +3325,16 @@
 
         // --- MODO ESCURO ---
         function aplicarTema() {
-            let escuro = false; try { escuro = localStorage.getItem('tema') === 'escuro'; } catch (e) {}
+            let t = 'claro'; try { t = localStorage.getItem('tema') || 'claro'; } catch (e) {}
             const appVisivel = !sidebarApp.classList.contains('hidden') && !modoPublicoAtivo;
-            document.body.classList.toggle('tema-escuro', escuro && appVisivel);
-            document.getElementById('btnTemaIcone').innerText = escuro ? '☀️' : '🌙';
-            document.getElementById('btnTemaTxt').innerText = escuro ? 'Modo claro' : 'Modo escuro';
+            document.body.classList.toggle('tema-escuro', t !== 'claro' && appVisivel);
+            document.body.classList.toggle('tema-neon', t === 'neon' && appVisivel);
+            // o botão mostra o PRÓXIMO tema do ciclo: claro > escuro > neon > claro
+            document.getElementById('btnTemaIcone').innerText = t === 'claro' ? '🌙' : t === 'escuro' ? '✨' : '☀️';
+            document.getElementById('btnTemaTxt').innerText = t === 'claro' ? 'Modo escuro' : t === 'escuro' ? 'Tema Neon 3D' : 'Modo claro';
         }
         document.getElementById('btnTema').addEventListener('click', () => {
-            let escuro = false; try { escuro = localStorage.getItem('tema') === 'escuro'; localStorage.setItem('tema', escuro ? 'claro' : 'escuro'); } catch (e) { escuro = document.body.classList.contains('tema-escuro'); }
+            let t = 'claro'; try { t = localStorage.getItem('tema') || 'claro'; localStorage.setItem('tema', t === 'claro' ? 'escuro' : t === 'escuro' ? 'neon' : 'claro'); } catch (e) {}
             aplicarTema();
             if (typeof renderizarHistoricoDashboard === 'function') { try { renderizarHistoricoDashboard(); } catch (e) {} }
         });
