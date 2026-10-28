@@ -808,6 +808,11 @@
                     <select id="projCategoriaSel" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></select>
                     <input type="text" id="projCategoria" maxlength="40" placeholder="Nome da nova categoria (ex: Decoração, Natal)" class="hidden mt-2 w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
                 </div>
+                <div id="blocoSubcategoria" class="hidden">
+                    <label class="block text-sm font-medium mb-1">Subcategoria <span class="text-inkmute font-normal">(opcional)</span></label>
+                    <select id="projSubcategoriaSel" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></select>
+                    <input type="text" id="projSubcategoria" maxlength="40" placeholder="Nome da nova subcategoria (ex: Árvore, Presépio)" class="hidden mt-2 w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
+                </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Descrição do produto final <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
                     <textarea id="projDescricao" rows="3" maxlength="500" placeholder="Ex: Anjo decorativo vazado, ótimo para enfeitar a árvore de Natal. Altura de 12 cm." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></textarea>
@@ -971,6 +976,8 @@
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Filtrar por Status:</label>
                         <select id="selectFiltroStatusPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
                             <option value="Todos">Todos</option>
+                            <option value="__portfolio">Somente os que estão no Portfólio/Revenda</option>
+                            <option value="__categoria">Somente os que têm categoria</option>
                             <option value="Aguardando Impressão">Aguardando Impressão</option>
                             <option value="Imprimindo">Imprimindo</option>
                             <option value="Montagem">Montagem</option>
@@ -1011,6 +1018,7 @@
                     <div class="p-4 sm:p-6">
                         <div id="portDestaques" class="hidden mb-5"></div>
                         <div id="portCategorias" class="hidden flex gap-1.5 text-xs font-bold overflow-x-auto pb-2 mb-3"></div>
+                        <div id="portSubcategorias" class="hidden flex gap-1.5 text-xs font-bold overflow-x-auto pb-2 mb-3"></div>
                         <div class="flex flex-col lg:flex-row lg:items-center gap-3 mb-4">
                             <div class="relative flex-1">
                                 <span class="absolute left-3 top-1/2 -translate-y-1/2 text-inkmute text-sm">🔎</span>
@@ -1057,6 +1065,7 @@
                             </div>
                             <div class="flex flex-wrap items-center gap-2">
                                 <select id="revCategoria" class="bg-surface2 border border-line rounded-full px-3 py-2 text-xs font-semibold text-ink"><option value="">Todas as categorias</option></select>
+                                <select id="revSub" class="hidden bg-surface2 border border-line rounded-full px-3 py-2 text-xs font-semibold text-ink"><option value="">Todas as subcategorias</option></select>
                                 <select id="revOrdem" class="bg-surface2 border border-line rounded-full px-3 py-2 text-xs font-semibold text-ink">
                                     <option value="nome">Nome (A–Z)</option><option value="menor">Menor preço</option><option value="maior">Maior preço</option><option value="categoria">Categoria</option>
                                 </select>
@@ -1621,7 +1630,7 @@
         const usuarioLogadoText = document.getElementById('usuarioLogado');
 
         const projNome = document.getElementById('projNome');
-        const projCor = document.getElementById('projCor'); const projCategoria = document.getElementById('projCategoria'); const projCategoriaSel = document.getElementById('projCategoriaSel');
+        const projCor = document.getElementById('projCor'); const projCategoria = document.getElementById('projCategoria'); const projCategoriaSel = document.getElementById('projCategoriaSel'); const projSubcategoria = document.getElementById('projSubcategoria'); const projSubcategoriaSel = document.getElementById('projSubcategoriaSel');
         // Seletor de categoria: lista as já cadastradas e permite criar uma nova no próprio campo
         function sincronizarSeletorCategoria() {
             const cats = [...new Set(projetosCacheLocal.map(x => (x.categoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
@@ -1630,11 +1639,29 @@
             projCategoriaSel.innerHTML = '<option value="">Sem categoria</option>' + cats.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('') + '<option value="__nova">➕ Nova categoria…</option>';
             projCategoriaSel.value = ehNova ? '__nova' : atual;
             projCategoria.classList.toggle('hidden', !ehNova);
+            sincronizarSeletorSubcategoria();
         }
+        // Subcategorias: lista as já usadas dentro da categoria escolhida
+        function sincronizarSeletorSubcategoria() {
+            const cat = projCategoria.value.trim();
+            document.getElementById('blocoSubcategoria').classList.toggle('hidden', !cat);
+            if (!cat) { projSubcategoria.value = ''; return; }
+            const subs = [...new Set(projetosCacheLocal.filter(x => (x.categoria || '').trim() === cat).map(x => (x.subcategoria || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
+            const atual = projSubcategoria.value.trim(), ehNova = atual && !subs.includes(atual);
+            projSubcategoriaSel.innerHTML = '<option value="">Sem subcategoria</option>' + subs.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('') + '<option value="__nova">➕ Nova subcategoria…</option>';
+            projSubcategoriaSel.value = ehNova ? '__nova' : atual;
+            projSubcategoria.classList.toggle('hidden', !ehNova);
+        }
+        projSubcategoriaSel.addEventListener('change', () => {
+            if (projSubcategoriaSel.value === '__nova') { projSubcategoria.value = ''; projSubcategoria.classList.remove('hidden'); projSubcategoria.focus(); }
+            else { projSubcategoria.value = projSubcategoriaSel.value; projSubcategoria.classList.add('hidden'); }
+        });
+        projCategoria.addEventListener('input', sincronizarSeletorSubcategoria);
         try { sincronizarSeletorCategoria(); } catch (e) {}
         projCategoriaSel.addEventListener('change', () => {
             if (projCategoriaSel.value === '__nova') { projCategoria.value = ''; projCategoria.classList.remove('hidden'); projCategoria.focus(); }
             else { projCategoria.value = projCategoriaSel.value; projCategoria.classList.add('hidden'); }
+            projSubcategoria.value = ''; sincronizarSeletorSubcategoria();
         });
         const projDescricao = document.getElementById('projDescricao');
         const projMaquina = document.getElementById('projMaquina');
@@ -3130,10 +3157,10 @@
             { aba: 'maquinas', titulo: '1. Cadastre sua impressora', texto: 'Comece por aqui: escolha o modelo da sua impressora na lista (Elegoo, Creality, Bambu Lab...) e veja a ilustração dela. Informe valor, vida útil e potência: o app calcula o custo por hora de máquina. Mais abaixo ficam os custos do negócio (energia, mão de obra, manutenção).' },
             { aba: 'filamentos', titulo: '2. Estoque de filamentos', texto: 'Cadastre seus rolos com preço, peso e a cor (escolha o tom na paleta e veja o rolo colorido). O custo por grama vem daqui e o estoque é abatido a cada impressão. Filtre o histórico e alterne entre Cards, Lista e Miniaturas.' },
             { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: informe peso e tempo (ou carregue um arquivo .3mf) e veja o custo, o preço para revenda e para o consumidor, e o valor em cada canal (Shopee, Mercado Livre...).' },
-            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categoria, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir, e a lista dos seus projetos fica ali também. Em “Imprimir Projeto Cadastrado”, escolha o projeto, clique em Imprimir, informe a quantidade e confirme: soma ao estoque pronto e desconta o filamento. Na aba Histórico você filtra por data, vê quantidade, material e valor gasto e pode editar as quantidades. Se trocar o filamento de um projeto já impresso, o estoque é reajustado.' },
+            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categoria e subcategoria, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir, e a lista dos seus projetos fica ali também. Em “Imprimir Projeto Cadastrado”, escolha o projeto, clique em Imprimir, informe a quantidade e confirme: soma ao estoque pronto e desconta o filamento. Na aba Histórico você filtra por data, vê quantidade, material e valor gasto e pode editar as quantidades. Se trocar o filamento de um projeto já impresso, o estoque é reajustado.' },
             { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
             { aba: 'vendas', titulo: '6. Vendas', texto: 'Lance vendas rápidas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra.' },
-            { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. Alterne a visualização (Grade, Lista ou Compacta), navegue pelas categorias e veja o carrossel “Mais visitados”. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
+            { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. Alterne a visualização (Grade, Lista ou Compacta), navegue pelas categorias e subcategorias e veja o carrossel “Mais visitados”. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
             { aba: 'revenda', titulo: '8. Revenda', texto: 'A mesma lista do Portfólio, mas com o valor de revenda. No fim do formulário do projeto, ao lado do valor de venda, você informa o “Valor de revenda” (se deixar em branco, o app estima pelo custo × o multiplicador de revenda da aba Calcular). É de uso interno: esta aba não tem link público.' },
             { aba: 'buscador', titulo: '9. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez, veja as imagens dos modelos e salve o que achou como projeto.' },
             { aba: 'dashboard', titulo: '10. Visão geral', texto: 'Faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
@@ -3921,6 +3948,7 @@
                 nome_projeto: nomeProjeto, 
                 cor: projCor.value.trim(),
                 categoria: projCategoria.value.trim().slice(0, 40),
+                subcategoria: projCategoria.value.trim() ? projSubcategoria.value.trim().slice(0, 40) : '',
                 descricao: projDescricao.value.trim().slice(0, 500),
                 maquina_id: projMaquina.value || null,
                 maquina_nome: (maquinaDoFormulario() || {}).nome || '',
@@ -4018,7 +4046,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
-            projNome.value = ''; projPrecoVenda.value = ''; projPrecoRevenda.value = ''; projCor.value = ''; projCategoria.value = ''; sincronizarSeletorCategoria(); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
+            projNome.value = ''; projPrecoVenda.value = ''; projPrecoRevenda.value = ''; projCor.value = ''; projCategoria.value = ''; projSubcategoria.value = ''; sincronizarSeletorCategoria(); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projOcultarPortfolio.checked = false; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
@@ -4030,7 +4058,7 @@
             mostrarSubAbaImp('adicionar');
             abrirCartaoFormMobile(document.getElementById('projNome'), document.getElementById('btnRecalcularCustos'));
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
-            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; sincronizarSeletorCategoria(); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projPrecoRevenda.value = proj.revenda_manual ? proj.preco_revenda_total : ''; projMaquina.value = proj.maquina_id || ''; 
+            idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; projSubcategoria.value = proj.subcategoria || ''; sincronizarSeletorCategoria(); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projPrecoRevenda.value = proj.revenda_manual ? proj.preco_revenda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
             projOcultarPortfolio.checked = proj.visibilidade_portfolio === 'esconder';
@@ -4112,7 +4140,7 @@
             const criterio = selectOrdenacaoPortfolio.value;
             const filtroStatus = selectFiltroStatusPortfolio.value;
             const termoBusca = buscaProjetoNome.value.trim().toLowerCase();
-            let projetosOrdenados = filtroStatus === 'Todos' ? [...projetosCacheLocal] : projetosCacheLocal.filter(p => p.status === filtroStatus);
+            let projetosOrdenados = filtroStatus === 'Todos' ? [...projetosCacheLocal] : filtroStatus === '__portfolio' ? projetosCacheLocal.filter(deveAparecerNoPortfolio) : filtroStatus === '__categoria' ? projetosCacheLocal.filter(p => (p.categoria || '').trim()) : projetosCacheLocal.filter(p => p.status === filtroStatus);
             if (termoBusca) { projetosOrdenados = projetosOrdenados.filter(p => (p.nome_projeto || '').toLowerCase().includes(termoBusca)); }
             atualizarFiltroMaquinas();
             const filtroMaq = selectFiltroMaquinaPortfolio.value;
@@ -4123,7 +4151,7 @@
             const cmpTxt = (x, y) => String(x || '').localeCompare(String(y || ''), 'pt-BR', { sensitivity: 'base' });
             if (criterio === 'cad_desc') projetosOrdenados.sort((a, b) => dataCad(b).localeCompare(dataCad(a)));
             else if (criterio === 'cad_asc') projetosOrdenados.sort((a, b) => dataCad(a).localeCompare(dataCad(b)));
-            else if (criterio === 'categoria') projetosOrdenados.sort((a, b) => { const ca = (a.categoria || '').trim(), cb = (b.categoria || '').trim(); if (!ca !== !cb) return ca ? -1 : 1; return cmpTxt(ca, cb) || cmpTxt(a.nome_projeto, b.nome_projeto); });
+            else if (criterio === 'categoria') projetosOrdenados.sort((a, b) => { const ca = (a.categoria || '').trim(), cb = (b.categoria || '').trim(); if (!ca !== !cb) return ca ? -1 : 1; return cmpTxt(ca, cb) || cmpTxt(a.subcategoria, b.subcategoria) || cmpTxt(a.nome_projeto, b.nome_projeto); });
             else if (criterio === 'nome') projetosOrdenados.sort((a, b) => cmpTxt(a.nome_projeto, b.nome_projeto));
             else projetosOrdenados.sort((a, b) => typeof a[criterio] === 'string' ? a[criterio].localeCompare(b[criterio]) : b[criterio] - a[criterio]);
 
@@ -4164,7 +4192,7 @@
                 const subPecasHtml = proj.pecas ? proj.pecas.map(p => `<div class="flex justify-between text-[11px] text-inkmute bg-base/40 px-1.5 py-0.5 rounded"><span>${p.nome_peca}</span><span>R$ ${parseFloat(p.custo_calculado).toFixed(2)}</span></div>`).join('') : '';
                 const badgePortfolio = deveAparecerNoPortfolio(proj) ? `<span class="text-[9px] bg-teal2/15 text-teal2 px-1.5 py-0.5 rounded font-bold" title="Aparece no Portfólio de Clientes">👁️ No Portfólio</span>` : `<span class="text-[9px] bg-surface2 text-inkmute/70 px-1.5 py-0.5 rounded font-bold" title="Não aparece no Portfólio de Clientes">🙈 Oculto</span>`;
 
-                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${proj.categoria ? `<span class="text-[9px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-bold">🏷️ ${escHtml(proj.categoria)}</span>` : ''}${proj.maquina_id ? `<span class="text-[9px] bg-surface text-inkmute border border-line px-1.5 py-0.5 rounded font-bold">🖨️ ${escHtml(proj.maquina_nome || 'Máquina')}</span>` : `<span class="text-[9px] bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded font-bold" title="Cadastre a impressora deste projeto">⚠️ Sem impressora</span>`}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2 max-h-20 overflow-y-auto">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
+                return `<div class="bg-surface2 rounded-lg border border-line flex flex-col justify-between shadow-md">${imgTag}<div class="p-3 space-y-2 flex-1 flex flex-col justify-between"><div><div class="flex justify-between items-start gap-1"><h3 class="font-bold text-ink text-sm truncate max-w-[150px]" style="color:#111827 !important;">${proj.nome_projeto}</h3>${proj.cor ? `<span class="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold whitespace-nowrap">🎨 ${escHtml(proj.cor)}</span>` : ''}</div><div class="flex justify-between items-center mt-1"><p class="text-[11px] text-inkmute">${proj.peso_total_g || 0}g | ${Math.floor((proj.tempo_total_min || 0)/60)}h ${(proj.tempo_total_min || 0)%60}m</p><span class="text-[9px] ${statusColor} px-1.5 py-0.5 rounded font-bold uppercase">${proj.status || 'Aguardando'}</span></div><div class="mt-1 flex flex-wrap gap-1">${badgePortfolio}${proj.categoria ? `<span class="text-[9px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-bold">🏷️ ${escHtml(proj.categoria)}${proj.subcategoria ? ' › ' + escHtml(proj.subcategoria) : ''}</span>` : ''}${proj.maquina_id ? `<span class="text-[9px] bg-surface text-inkmute border border-line px-1.5 py-0.5 rounded font-bold">🖨️ ${escHtml(proj.maquina_nome || 'Máquina')}</span>` : `<span class="text-[9px] bg-amber-500/15 text-amber-600 px-1.5 py-0.5 rounded font-bold" title="Cadastre a impressora deste projeto">⚠️ Sem impressora</span>`}${(parseInt(proj.quantidade_estoque)||0) > 0 ? `<span class="text-[9px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold">📦 ${parseInt(proj.quantidade_estoque)} em estoque</span>` : `<span class="text-[9px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded font-bold">Sob encomenda</span>`}</div><p class="text-xs text-amber-600 font-bold mt-1">Custo Total: R$ ${parseFloat(proj.custo_total || 0).toFixed(2)}</p>${tag3mf}</div><div class="space-y-1 border-t border-line/60 pt-2 mt-2 max-h-20 overflow-y-auto">${subPecasHtml}</div><div class="flex justify-between items-center pt-2 mt-2 border-t border-line/60"><div class="flex gap-2"><button onclick="editarProjeto3d('${proj.id}')" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button><button onclick="duplicarProjeto3d('${proj.id}')" class="text-[11px] text-amber-600 font-semibold">👯 Duplicar</button></div><button onclick="deletarProjeto3d('${proj.id}')" class="text-[11px] text-red-600">Excluir</button></div></div></div>`;
             }).join('');
         }
 
@@ -4174,7 +4202,7 @@
             return proj.visibilidade_portfolio !== 'esconder';
         }
 
-        let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [], portCat = '', portVisao = 'grade';
+        let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [], portCat = '', portSub = '', portVisao = 'grade';
         try { portVisao = localStorage.getItem('portVisao') || 'grade'; } catch (e) {}
         function agruparModelosPortfolio(rev = false) {
             const visiveis = projetosCacheLocal.filter(deveAparecerNoPortfolio);
@@ -4190,6 +4218,7 @@
                 return {
                     id: proj.id, estimada: rev && itens.every(x => !((parseFloat(x.preco_revenda_total) || 0) > 0) || x.revenda_estimada), nome: proj.nome_projeto || '', imagem: proj.imagem_base64 || '', pMin: Math.min(...precos), pMax: Math.max(...precos),
                     categoria: ((itens.find(x => (x.categoria || '').trim()) || {}).categoria || '').trim(),
+                    subcategoria: ((itens.find(x => (x.subcategoria || '').trim()) || {}).subcategoria || '').trim(),
                     descricao: ((itens.find(x => (x.descricao || '').trim()) || {}).descricao || '').trim(),
                     estoque: itens.reduce((a, x) => a + (parseInt(x.quantidade_estoque) || 0), 0), cores: [...cores.values()],
                     pecas: (proj.pecas || []).map(pc => pc.nome_peca).filter(Boolean)
@@ -4281,13 +4310,18 @@
             // Categorias
             const cats = [...new Set(portModelos.map(m => m.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             if (portCat && !cats.includes(portCat)) portCat = '';
+            const subs = portCat ? [...new Set(portModelos.filter(m => m.categoria === portCat).map(m => m.subcategoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')) : [];
+            if (portSub && !subs.includes(portSub)) portSub = '';
+            const barSub = document.getElementById('portSubcategorias');
+            barSub.classList.toggle('hidden', !subs.length); barSub.classList.toggle('flex', !!subs.length);
+            barSub.innerHTML = subs.length ? ['', ...subs].map(c => `<button type="button" data-sub="${escHtml(c)}" class="port-chip${c === portSub ? ' ativo' : ''}">${c ? escHtml(c) : 'Todas as subcategorias'}</button>`).join('') : '';
             const barCat = document.getElementById('portCategorias');
             barCat.classList.toggle('hidden', !cats.length); barCat.classList.toggle('flex', !!cats.length);
             barCat.innerHTML = cats.length ? ['', ...cats].map(c => `<button type="button" data-cat="${escHtml(c)}" class="port-chip${c === portCat ? ' ativo' : ''}">${c ? escHtml(c) : 'Todas as categorias'}</button>`).join('') : '';
             // Mais visitados
             const dest = document.getElementById('portDestaques');
             const top = portModelos.map((m, i) => ({ m, i, v: visitasMapa[m.id] || 0 })).filter(x => x.v > 0).sort((a, b) => b.v - a.v).slice(0, 10);
-            if (top.length && !portBusca && !portCat) {
+            if (top.length && !portBusca && !portCat && !portSub) {
                 dest.classList.remove('hidden');
                 dest.innerHTML = `<h3 class="font-display font-bold text-ink text-lg mb-2">🔥 Mais visitados</h3><div class="flex gap-3 overflow-x-auto snap-x snap-mandatory pb-2">${top.map(({ m, i, v }) => `<button type="button" data-modelo="${i}" class="snap-start shrink-0 w-40 sm:w-44 text-left bg-surface rounded-xl border border-line hover:border-emerald-500 overflow-hidden"><span class="block aspect-square bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</span><span class="block p-2"><span class="block text-xs font-semibold text-ink line-clamp-2">${escHtml(m.nome)}</span><span class="block text-sm font-black text-emerald-700">${textoPrecoModelo(m)}</span><span class="block text-[10px] text-inkmute">👁 ${v} visita${v === 1 ? '' : 's'}</span></span></button>`).join('')}</div>`;
             } else { dest.classList.add('hidden'); dest.innerHTML = ''; }
@@ -4296,7 +4330,8 @@
             box.className = portVisao === 'lista' ? 'grid grid-cols-1 gap-3' : portVisao === 'mini' ? 'grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3' : 'grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-5';
             let lista = portModelos.map((m, i) => ({ m, i }));
             if (portCat) lista = lista.filter(({ m }) => m.categoria === portCat);
-            if (portBusca) lista = lista.filter(({ m }) => (m.nome + ' ' + m.descricao + ' ' + m.categoria + ' ' + m.cores.map(c => c.cor).join(' ')).toLowerCase().includes(portBusca));
+            if (portSub) lista = lista.filter(({ m }) => m.subcategoria === portSub);
+            if (portBusca) lista = lista.filter(({ m }) => (m.nome + ' ' + m.descricao + ' ' + m.categoria + ' ' + m.subcategoria + ' ' + m.cores.map(c => c.cor).join(' ')).toLowerCase().includes(portBusca));
             if (portFiltro === 'estoque') lista = lista.filter(({ m }) => m.estoque > 0);
             if (portFiltro === 'encomenda') lista = lista.filter(({ m }) => m.estoque <= 0);
             if (portOrdem === 'menor') lista.sort((a, b) => a.m.pMin - b.m.pMin);
@@ -4314,7 +4349,7 @@
                 if (portVisao === 'mini') return `<button type="button" data-modelo="${i}" class="group text-left bg-surface rounded-lg border border-line hover:border-emerald-500 overflow-hidden"><span class="block aspect-square bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</span><span class="block p-1.5"><span class="block text-[11px] font-semibold text-ink leading-tight line-clamp-2">${escHtml(m.nome)}</span><span class="block text-xs font-black text-emerald-700">${brlPort(m.pMin)}</span></span></button>`;
                 if (portVisao === 'lista') return `<div class="flex gap-3 items-center bg-surface rounded-xl border border-line hover:border-emerald-500 p-2.5">
                     <button type="button" data-modelo="${i}" class="relative h-24 w-24 sm:h-28 sm:w-28 shrink-0 rounded-lg bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}${badge}</button>
-                    <button type="button" data-modelo="${i}" class="text-left min-w-0 flex-1"><span class="block text-sm sm:text-base font-semibold text-ink leading-snug">${escHtml(m.nome)}</span>${m.categoria ? `<span class="block text-[10px] font-bold uppercase text-emerald-700">${escHtml(m.categoria)}</span>` : ''}${m.descricao ? `<span class="block text-xs text-inkmute leading-snug line-clamp-2 mt-0.5">${escHtml(m.descricao)}</span>` : ''}${cores}<span class="block text-lg font-black text-emerald-700 mt-1">${textoPrecoModelo(m)}</span></button>
+                    <button type="button" data-modelo="${i}" class="text-left min-w-0 flex-1"><span class="block text-sm sm:text-base font-semibold text-ink leading-snug">${escHtml(m.nome)}</span>${m.categoria ? `<span class="block text-[10px] font-bold uppercase text-emerald-700">${escHtml(m.categoria)}${m.subcategoria ? ' › ' + escHtml(m.subcategoria) : ''}</span>` : ''}${m.descricao ? `<span class="block text-xs text-inkmute leading-snug line-clamp-2 mt-0.5">${escHtml(m.descricao)}</span>` : ''}${cores}<span class="block text-lg font-black text-emerald-700 mt-1">${textoPrecoModelo(m)}</span></button>
                     <div class="w-32 sm:w-40 shrink-0">${botoesCompra(m, i)}</div></div>`;
                 return `<div class="group bg-surface rounded-xl border border-line hover:border-emerald-500 hover:shadow-lg transition overflow-hidden flex flex-col">
                     <button type="button" data-modelo="${i}" class="text-left flex flex-col flex-1">
@@ -4338,8 +4373,12 @@
             const selCat = document.getElementById('revCategoria'), catAtual = selCat.value;
             const cats = [...new Set(modelos.map(m => m.categoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             selCat.innerHTML = '<option value="">Todas as categorias</option>' + cats.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join(''); selCat.value = cats.includes(catAtual) ? catAtual : '';
+            const selSub = document.getElementById('revSub'), subAtual = selSub.value;
+            const subsRev = selCat.value ? [...new Set(modelos.filter(m => m.categoria === selCat.value).map(m => m.subcategoria).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'pt-BR')) : [];
+            selSub.classList.toggle('hidden', !subsRev.length);
+            selSub.innerHTML = '<option value="">Todas as subcategorias</option>' + subsRev.map(c => `<option value="${escHtml(c)}">${escHtml(c)}</option>`).join(''); selSub.value = subsRev.includes(subAtual) ? subAtual : '';
             const termo = semAcento(document.getElementById('revBusca').value.trim()), ordem = document.getElementById('revOrdem').value;
-            let lista = modelos.filter(m => (!selCat.value || m.categoria === selCat.value) && (!termo || semAcento(m.nome + ' ' + m.categoria + ' ' + m.cores.map(c => c.cor).join(' ')).includes(termo)));
+            let lista = modelos.filter(m => (!selCat.value || m.categoria === selCat.value) && (!selSub.value || m.subcategoria === selSub.value) && (!termo || semAcento(m.nome + ' ' + m.categoria + ' ' + m.cores.map(c => c.cor).join(' ')).includes(termo)));
             if (ordem === 'menor') lista.sort((a, b) => a.pMin - b.pMin); else if (ordem === 'maior') lista.sort((a, b) => b.pMin - a.pMin);
             else if (ordem === 'categoria') lista.sort((a, b) => (!a.categoria - !b.categoria) || a.categoria.localeCompare(b.categoria, 'pt-BR') || a.nome.localeCompare(b.nome, 'pt-BR'));
             else lista.sort((a, b) => a.nome.localeCompare(b.nome, 'pt-BR'));
@@ -4352,12 +4391,13 @@
                 const cores = m.cores.length ? `<span class="text-[11px] text-inkmute truncate block">${m.cores.length === 1 ? escHtml(m.cores[0].cor) : m.cores.length + ' cores'}</span>` : '';
                 const aviso = m.estimada ? '<span class="block text-[10px] text-amber-600 font-semibold">valor estimado (custo × multiplicador)</span>' : '';
                 const preco = `<span class="block text-lg font-black text-sky-700 leading-tight">${textoPrecoModelo(m).replace('text-inkmute', 'text-inkmute')}</span>`;
-                if (revVisao === 'lista') return `<div class="flex gap-3 items-center bg-surface rounded-xl border border-line p-2.5"><div class="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-lg bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</div><div class="min-w-0 flex-1"><span class="block text-sm sm:text-base font-semibold text-ink leading-snug">${escHtml(m.nome)}</span>${m.categoria ? `<span class="block text-[10px] font-bold uppercase text-sky-700">${escHtml(m.categoria)}</span>` : ''}${cores}${aviso}</div><div class="text-right shrink-0 space-y-1">${preco}${est}</div></div>`;
-                return `<div class="bg-surface rounded-xl border border-line overflow-hidden flex flex-col"><div class="aspect-square w-full bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</div><div class="p-3 flex flex-col gap-1 flex-1"><span class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</span>${m.categoria ? `<span class="text-[10px] font-bold uppercase text-sky-700">${escHtml(m.categoria)}</span>` : ''}${cores}${aviso}<div class="mt-auto pt-1 flex items-end justify-between gap-1">${preco}</div>${est}</div></div>`;
+                if (revVisao === 'lista') return `<div class="flex gap-3 items-center bg-surface rounded-xl border border-line p-2.5"><div class="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-lg bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</div><div class="min-w-0 flex-1"><span class="block text-sm sm:text-base font-semibold text-ink leading-snug">${escHtml(m.nome)}</span>${m.categoria ? `<span class="block text-[10px] font-bold uppercase text-sky-700">${escHtml(m.categoria)}${m.subcategoria ? ' › ' + escHtml(m.subcategoria) : ''}</span>` : ''}${cores}${aviso}</div><div class="text-right shrink-0 space-y-1">${preco}${est}</div></div>`;
+                return `<div class="bg-surface rounded-xl border border-line overflow-hidden flex flex-col"><div class="aspect-square w-full bg-surface2 overflow-hidden">${imgModelo(m, 'w-full h-full object-cover')}</div><div class="p-3 flex flex-col gap-1 flex-1"><span class="text-sm font-semibold text-ink leading-snug line-clamp-2">${escHtml(m.nome)}</span>${m.categoria ? `<span class="text-[10px] font-bold uppercase text-sky-700">${escHtml(m.categoria)}${m.subcategoria ? ' › ' + escHtml(m.subcategoria) : ''}</span>` : ''}${cores}${aviso}<div class="mt-auto pt-1 flex items-end justify-between gap-1">${preco}</div>${est}</div></div>`;
             }).join('');
         }
         document.getElementById('revBusca').addEventListener('input', renderizarRevenda);
-        document.getElementById('revCategoria').addEventListener('change', renderizarRevenda);
+        document.getElementById('revCategoria').addEventListener('change', () => { document.getElementById('revSub').value = ''; renderizarRevenda(); });
+        document.getElementById('revSub').addEventListener('change', renderizarRevenda);
         document.getElementById('revOrdem').addEventListener('change', renderizarRevenda);
         document.getElementById('revVisoes').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) { revVisao = b.dataset.v; renderizarRevenda(); } });
         function fecharModalPortfolio() { const md = document.getElementById('portModal'); md.classList.add('hidden'); md.innerHTML = ''; document.body.style.overflow = ''; }
@@ -4401,7 +4441,8 @@
             const add = e.target.closest('[data-addcarrinho]'); if (add) { adicionarAoCarrinho(+add.dataset.addcarrinho); return; }
             const b = e.target.closest('[data-modelo]'); if (b) abrirModalPortfolio(+b.dataset.modelo);
         });
-        document.getElementById('portCategorias').addEventListener('click', (e) => { const b = e.target.closest('[data-cat]'); if (b) { portCat = b.dataset.cat; renderizerPortfolioCliente(); } });
+        document.getElementById('portCategorias').addEventListener('click', (e) => { const b = e.target.closest('[data-cat]'); if (b) { portCat = b.dataset.cat; portSub = ''; renderizerPortfolioCliente(); } });
+        document.getElementById('portSubcategorias').addEventListener('click', (e) => { const b = e.target.closest('[data-sub]'); if (b) { portSub = b.dataset.sub; renderizerPortfolioCliente(); } });
         document.getElementById('portVisoes').addEventListener('click', (e) => { const b = e.target.closest('[data-v]'); if (b) { portVisao = b.dataset.v; try { localStorage.setItem('portVisao', portVisao); } catch (x) {} renderizerPortfolioCliente(); } });
         document.getElementById('portBusca').addEventListener('input', (e) => { portBusca = e.target.value.trim().toLowerCase(); renderizerPortfolioCliente(); });
         document.getElementById('portOrdem').addEventListener('change', (e) => { portOrdem = e.target.value; renderizerPortfolioCliente(); });
