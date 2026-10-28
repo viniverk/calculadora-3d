@@ -174,7 +174,7 @@ async function previewModelo(url, cors) {
 
 const BUSCADORES = { printables, thingiverse, myminifactory, cults3d, nexprint, makerworld };
 
-// --- Sugestão de descrição com IA (precisa do segredo ANTHROPIC_API_KEY e de usuário logado no app) ---
+// --- Sugestão de descrição com IA grátis: Cloudflare Workers AI (binding AI) ou Google Gemini (GEMINI_API_KEY); exige usuário logado no app ---
 const FIREBASE_API_KEY = 'AIzaSyD_lFHCahBrkWONtbGgBdwgFsE7P048DpQ';
 async function uidFirebase(idToken) {
   if (!idToken) return null;
@@ -200,7 +200,7 @@ async function imagemBase64(url) {
 }
 async function descreverProduto(req, env, cors) {
   if (req.method !== 'POST') return json({ erro: 'Use POST.' }, cors, 405);
-  if (!env.ANTHROPIC_API_KEY) return json({ erro: 'sem chave (ANTHROPIC_API_KEY)' }, cors, 503);
+  if (!env.AI && !env.GEMINI_API_KEY) return json({ erro: 'sem IA configurada (ligar o Workers AI ou definir GEMINI_API_KEY)' }, cors, 503);
   let corpo; try { corpo = await req.json(); } catch (e) { return json({ erro: 'JSON inválido.' }, cors, 400); }
   const uid = await uidFirebase(corpo.idToken);
   if (!uid) return json({ erro: 'Faça login no app para usar a IA.' }, cors, 401);
@@ -213,18 +213,32 @@ async function descreverProduto(req, env, cors) {
   await cache.put(chave, new Response(String(usado + 1), { headers: { 'cache-control': 'max-age=3600' } }));
 
   const img = corpo.imagem ? await imagemBase64(String(corpo.imagem)) : null;
-  const conteudo = [];
-  if (img) conteudo.push({ type: 'image', source: { type: 'base64', media_type: img.tipo, data: img.dados } });
-  conteudo.push({ type: 'text', text: `Nome do produto: "${nome}".${corpo.cor ? ` Cor: ${String(corpo.cor).slice(0, 40)}.` : ''}\n\nEscreva a descrição deste produto impresso em 3D para o catálogo de uma loja, em português do Brasil, com até 300 caracteres, tom simpático e vendedor. Use apenas o que o nome${img ? ' e a imagem' : ''} permitem concluir: não invente medidas, materiais, preços nem garantias. Responda somente com o texto da descrição, sem aspas, título ou emojis.` });
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-    body: JSON.stringify({ model: env.MODELO_IA || 'claude-haiku-5-5', max_tokens: 400, messages: [{ role: 'user', content: conteudo }] }),
-  });
-  if (!r.ok) { const t = await r.text(); return json({ erro: 'A IA não respondeu (' + r.status + ').', detalhe: t.slice(0, 200) }, cors, 502); }
-  const d = await r.json();
-  const texto = ((d.content || []).find((c) => c.type === 'text') || {}).text || '';
-  return json({ descricao: texto.trim().replace(/^["“]|["”]$/g, '').slice(0, 500), usouImagem: !!img }, cors);
+  const pedido = `Nome do produto: "${nome}".${corpo.cor ? ` Cor: ${String(corpo.cor).slice(0, 40)}.` : ''}\n\nEscreva a descrição deste produto impresso em 3D para o catálogo de uma loja, em português do Brasil, com até 300 caracteres, tom simpático e vendedor. Use apenas o que o nome${img ? ' e a imagem' : ''} permitem concluir: não invente medidas, materiais, preços nem garantias. Responda somente com o texto da descrição, sem aspas, título ou emojis.`;
+  let texto = '';
+  try {
+    if (env.GEMINI_API_KEY) {
+      // Google Gemini (camada gratuita do AI Studio)
+      const partes = []; if (img) partes.push({ inline_data: { mime_type: img.tipo, data: img.dados } }); partes.push({ text: pedido });
+      const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${env.MODELO_GEMINI || 'gemini-2.0-flash'}:generateContent?key=${encodeURIComponent(env.GEMINI_API_KEY.trim())}`, {
+        method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ contents: [{ parts: partes }], generationConfig: { maxOutputTokens: 400, temperature: 0.7 } }),
+      });
+      if (!r.ok) throw new Error('Gemini ' + r.status + ' ' + (await r.text()).slice(0, 160));
+      const d = await r.json(); texto = (((d.candidates || [])[0] || {}).content || {}).parts?.map((x) => x.text || '').join('') || '';
+    } else {
+      // Cloudflare Workers AI (gratuito dentro da cota diária da conta, sem chave)
+      const conteudo = [{ type: 'text', text: pedido }];
+      if (img) conteudo.push({ type: 'image_url', image_url: { url: `data:${img.tipo};base64,${img.dados}` } });
+      const modelo = env.MODELO_WORKERS_AI || '@cf/meta/llama-3.2-11b-vision-instruct';
+      const rodar = () => env.AI.run(modelo, { messages: [{ role: 'user', content: conteudo }], max_tokens: 350 });
+      let d;
+      try { d = await rodar(); }
+      catch (e) { if (/agree|license|5016/i.test(String(e.message || e))) { await env.AI.run(modelo, { prompt: 'agree' }); d = await rodar(); } else throw e; }
+      texto = (d && (d.response || (d.result && d.result.response))) || '';
+    }
+  } catch (e) { return json({ erro: 'A IA não respondeu.', detalhe: String(e.message || e).slice(0, 200) }, cors, 502); }
+  texto = String(texto).trim().replace(/^["“]|["”]$/g, '').slice(0, 500);
+  if (!texto) return json({ erro: 'A IA devolveu uma resposta vazia. Tente novamente.' }, cors, 502);
+  return json({ descricao: texto, usouImagem: !!img }, cors);
 }
 
 function json(corpo, cors, status = 200) {

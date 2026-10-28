@@ -3959,7 +3959,7 @@
                 const idToken = await auth.currentUser.getIdToken();
                 const r = await fetch(SERVIDOR_BUSCA.replace(/\/$/, '') + '/descrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken, nome, cor: projCor.value.trim(), imagem: projImagemUrl.value.trim() }) });
                 const d = await r.json().catch(() => ({}));
-                if (!r.ok) throw new Error(/sem chave/.test(d.erro || '') ? 'A IA ainda não foi ativada no servidor (falta a chave da IA).' : (d.erro || 'Falha ao gerar a descrição.'));
+                if (!r.ok) throw new Error(/sem IA configurada/.test(d.erro || '') ? 'A IA ainda não foi ativada no servidor.' : (d.erro || 'Falha ao gerar a descrição.'));
                 projDescricao.value = d.descricao || '';
                 msg.className = 'text-[11px] text-emerald-700'; msg.textContent = d.usouImagem ? 'Sugestão pronta (baseada no nome e na imagem). Revise e ajuste se quiser.' : 'Sugestão pronta, só pelo nome (não consegui abrir a imagem). Revise antes de salvar.';
             } catch (e) { msg.className = 'text-[11px] text-red-600'; msg.textContent = e.message; }
