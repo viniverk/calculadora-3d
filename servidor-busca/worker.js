@@ -174,6 +174,59 @@ async function previewModelo(url, cors) {
 
 const BUSCADORES = { printables, thingiverse, myminifactory, cults3d, nexprint, makerworld };
 
+// --- Sugestão de descrição com IA (precisa do segredo ANTHROPIC_API_KEY e de usuário logado no app) ---
+const FIREBASE_API_KEY = 'AIzaSyD_lFHCahBrkWONtbGgBdwgFsE7P048DpQ';
+async function uidFirebase(idToken) {
+  if (!idToken) return null;
+  const r = await fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken }),
+  });
+  if (!r.ok) return null;
+  const d = await r.json();
+  return (d.users && d.users[0] && d.users[0].localId) || null;
+}
+async function imagemBase64(url) {
+  try {
+    if (!/^https?:\/\//i.test(url)) return null;
+    const r = await fetch(url, { headers: { 'user-agent': UA, accept: 'image/*' }, redirect: 'follow' });
+    if (!r.ok) return null;
+    const tipo = (r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(tipo)) return null;
+    const buf = new Uint8Array(await r.arrayBuffer());
+    if (buf.length > 4.5 * 1024 * 1024) return null;
+    let bin = ''; for (let i = 0; i < buf.length; i += 0x8000) bin += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+    return { tipo, dados: btoa(bin) };
+  } catch (e) { return null; }
+}
+async function descreverProduto(req, env, cors) {
+  if (req.method !== 'POST') return json({ erro: 'Use POST.' }, cors, 405);
+  if (!env.ANTHROPIC_API_KEY) return json({ erro: 'sem chave (ANTHROPIC_API_KEY)' }, cors, 503);
+  let corpo; try { corpo = await req.json(); } catch (e) { return json({ erro: 'JSON inválido.' }, cors, 400); }
+  const uid = await uidFirebase(corpo.idToken);
+  if (!uid) return json({ erro: 'Faça login no app para usar a IA.' }, cors, 401);
+  const nome = String(corpo.nome || '').trim().slice(0, 120);
+  if (!nome) return json({ erro: 'Informe o nome do projeto.' }, cors, 400);
+  // limite simples: 20 sugestões por hora por usuário
+  const hora = Math.floor(Date.now() / 3600000), chave = new Request(`https://cache.local/ia/${uid}/${hora}`), cache = caches.default;
+  const usado = parseInt(await (await cache.match(chave) || new Response('0')).text(), 10) || 0;
+  if (usado >= 20) return json({ erro: 'Limite de 20 sugestões por hora atingido. Tente mais tarde.' }, cors, 429);
+  await cache.put(chave, new Response(String(usado + 1), { headers: { 'cache-control': 'max-age=3600' } }));
+
+  const img = corpo.imagem ? await imagemBase64(String(corpo.imagem)) : null;
+  const conteudo = [];
+  if (img) conteudo.push({ type: 'image', source: { type: 'base64', media_type: img.tipo, data: img.dados } });
+  conteudo.push({ type: 'text', text: `Nome do produto: "${nome}".${corpo.cor ? ` Cor: ${String(corpo.cor).slice(0, 40)}.` : ''}\n\nEscreva a descrição deste produto impresso em 3D para o catálogo de uma loja, em português do Brasil, com até 300 caracteres, tom simpático e vendedor. Use apenas o que o nome${img ? ' e a imagem' : ''} permitem concluir: não invente medidas, materiais, preços nem garantias. Responda somente com o texto da descrição, sem aspas, título ou emojis.` });
+  const r = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-api-key': env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    body: JSON.stringify({ model: env.MODELO_IA || 'claude-haiku-5-5', max_tokens: 400, messages: [{ role: 'user', content: conteudo }] }),
+  });
+  if (!r.ok) { const t = await r.text(); return json({ erro: 'A IA não respondeu (' + r.status + ').', detalhe: t.slice(0, 200) }, cors, 502); }
+  const d = await r.json();
+  const texto = ((d.content || []).find((c) => c.type === 'text') || {}).text || '';
+  return json({ descricao: texto.trim().replace(/^["“]|["”]$/g, '').slice(0, 500), usouImagem: !!img }, cors);
+}
+
 function json(corpo, cors, status = 200) {
   return new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors } });
 }
@@ -185,10 +238,11 @@ export default {
     const origem = req.headers.get('Origin') || '';
     const cors = {
       'access-control-allow-origin': permitidas.includes(origem) ? origem : permitidas[0], vary: 'Origin',
-      'access-control-allow-methods': 'GET, OPTIONS', 'access-control-allow-headers': 'content-type',
+      'access-control-allow-methods': 'GET, POST, OPTIONS', 'access-control-allow-headers': 'content-type',
     };
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (url.pathname === '/preview') return previewModelo(url, cors);
+    if (url.pathname === '/descrever') return descreverProduto(req, env, cors);
     if (url.pathname !== '/search') return json({ ok: true, servico: 'busca-modelos', fontes: Object.keys(BUSCADORES) }, cors);
 
     const q = (url.searchParams.get('q') || '').trim().slice(0, 100);

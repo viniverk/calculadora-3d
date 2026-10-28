@@ -811,6 +811,10 @@
                 <div>
                     <label class="block text-sm font-medium mb-1">Descrição do produto final <span class="text-inkmute font-normal">(opcional — aparece no portfólio)</span></label>
                     <textarea id="projDescricao" rows="3" maxlength="500" placeholder="Ex: Anjo decorativo vazado, ótimo para enfeitar a árvore de Natal. Altura de 12 cm." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm"></textarea>
+                    <div class="flex flex-wrap items-center gap-2 mt-1.5">
+                        <button type="button" id="btnSugerirDescricao" class="text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg">✨ Sugerir descrição com IA</button>
+                        <span id="msgSugerirDescricao" class="text-[11px] text-inkmute">Usa o nome do projeto e a imagem (link) da capa.</span>
+                    </div>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-1">Máquina usada <span class="text-inkmute font-normal">(define o custo por hora)</span></label>
@@ -3943,6 +3947,24 @@
             renderizarPecasDoEscopo(); atualizarAcumuladoresMaster();
         });
         projMargemPorcentagem.addEventListener('input', atualizarAcumuladoresMaster);
+
+        // --- SUGESTÃO DE DESCRIÇÃO COM IA (via servidor de busca, precisa do segredo ANTHROPIC_API_KEY) ---
+        document.getElementById('btnSugerirDescricao').addEventListener('click', async () => {
+            const btn = document.getElementById('btnSugerirDescricao'), msg = document.getElementById('msgSugerirDescricao');
+            const nome = projNome.value.trim();
+            if (!nome) { msg.textContent = 'Preencha o "Nome do Projeto Geral" primeiro.'; msg.className = 'text-[11px] text-red-600'; projNome.focus(); return; }
+            if (projDescricao.value.trim() && !confirm('Já existe uma descrição. Substituir pela sugestão da IA?')) return;
+            btn.disabled = true; btn.textContent = '✨ Gerando…'; msg.className = 'text-[11px] text-inkmute'; msg.textContent = 'Analisando o nome e a imagem…';
+            try {
+                const idToken = await auth.currentUser.getIdToken();
+                const r = await fetch(SERVIDOR_BUSCA.replace(/\/$/, '') + '/descrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken, nome, cor: projCor.value.trim(), imagem: projImagemUrl.value.trim() }) });
+                const d = await r.json().catch(() => ({}));
+                if (!r.ok) throw new Error(/sem chave/.test(d.erro || '') ? 'A IA ainda não foi ativada no servidor (falta a chave da IA).' : (d.erro || 'Falha ao gerar a descrição.'));
+                projDescricao.value = d.descricao || '';
+                msg.className = 'text-[11px] text-emerald-700'; msg.textContent = d.usouImagem ? 'Sugestão pronta (baseada no nome e na imagem). Revise e ajuste se quiser.' : 'Sugestão pronta, só pelo nome (não consegui abrir a imagem). Revise antes de salvar.';
+            } catch (e) { msg.className = 'text-[11px] text-red-600'; msg.textContent = e.message; }
+            btn.disabled = false; btn.textContent = '✨ Sugerir descrição com IA';
+        });
 
         // --- SALVAMENTO DO PROJETO (imagem = link colado, sem upload) ---
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
