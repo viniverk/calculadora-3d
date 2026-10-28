@@ -773,6 +773,7 @@
             <div id="impAbasTopo" class="xl:col-span-3 flex gap-1 p-1 bg-surface border border-line rounded-xl shadow-sm w-full sm:w-fit" role="tablist">
                 <button type="button" role="tab" data-subaba="imprimir" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap">🖨️ Imprimir Projeto Cadastrado</button>
                 <button type="button" role="tab" data-subaba="adicionar" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap">➕ Adicionar Projeto</button>
+                <button type="button" role="tab" data-subaba="projetos" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap">📋 Projetos Cadastrados</button>
             </div>
             <div id="impCard" class="bg-surface p-6 rounded-xl shadow-sm border border-line xl:col-span-3 space-y-3">
                 <div class="flex flex-wrap items-center justify-between gap-2 border-b border-line pb-2">
@@ -970,7 +971,7 @@
                     <input type="text" id="buscaProjetoNome" placeholder="🔍 Buscar projeto pelo nome..." class="w-full bg-surface2 p-2.5 rounded-lg border border-line text-ink text-sm focus:outline-none focus:border-accent">
                 </div>
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-line pb-2 gap-2">
-                    <h2 class="font-display text-xl font-semibold text-teal-600">Projetos em Portfólio Interno</h2>
+                    <h2 class="font-display text-xl font-semibold text-teal-600">Projetos Cadastrados</h2>
                     <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Filtrar por Status:</label>
                         <select id="selectFiltroStatusPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
@@ -1894,12 +1895,13 @@
                 if (vid === 'view-inserir-impressao') document.getElementById('projListaCard').classList.add('lista-primeiro');
             });
         }
-        // Sub-abas de Impressões: "Imprimir Projeto Cadastrado" e "Adicionar Projeto"
+        // Sub-abas de Impressões: Imprimir Projeto Cadastrado, Adicionar Projeto e Projetos Cadastrados
         let subAbaImp = 'imprimir';
         function mostrarSubAbaImp(a) {
             subAbaImp = a;
             document.getElementById('impCard').classList.toggle('hidden', a !== 'imprimir');
-            ['projCapaCard', 'projPecasCard', 'projListaCard'].forEach(id => document.getElementById(id).classList.toggle('hidden', a !== 'adicionar'));
+            ['projCapaCard', 'projPecasCard'].forEach(id => document.getElementById(id).classList.toggle('hidden', a !== 'adicionar'));
+            document.getElementById('projListaCard').classList.toggle('hidden', a !== 'projetos');
             document.querySelectorAll('#impAbasTopo [data-subaba]').forEach(b => {
                 const on = b.dataset.subaba === a;
                 b.classList.toggle('bg-emerald-700', on); b.classList.toggle('text-white', on); b.classList.toggle('text-ink', !on); b.classList.toggle('hover:bg-surface2', !on);
@@ -3185,7 +3187,7 @@
             { aba: 'maquinas', titulo: '1. Cadastre sua impressora', texto: 'Comece por aqui: escolha o modelo da sua impressora na lista (Elegoo, Creality, Bambu Lab...) e veja a ilustração dela. Informe valor, vida útil e potência: o app calcula o custo por hora de máquina. Mais abaixo ficam os custos do negócio (energia, mão de obra, manutenção).' },
             { aba: 'filamentos', titulo: '2. Estoque de filamentos', texto: 'Cadastre seus rolos com preço, peso e a cor (escolha o tom na paleta e veja o rolo colorido). O custo por grama vem daqui e o estoque é abatido a cada impressão. Filtre o histórico e alterne entre Cards, Lista e Miniaturas.' },
             { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: informe peso e tempo (ou carregue um arquivo .3mf) e veja o custo, o preço para revenda e para o consumidor, e o valor em cada canal (Shopee, Mercado Livre...).' },
-            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir, e a lista dos seus projetos fica ali também. Em “Imprimir Projeto Cadastrado”, escolha o projeto, clique em Imprimir, informe a quantidade e confirme: soma ao estoque pronto e desconta o filamento. Na aba Histórico você filtra por data, vê quantidade, material e valor gasto e pode editar as quantidades. Se trocar o filamento de um projeto já impresso, o estoque é reajustado.' },
+            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem três abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Em “Projetos Cadastrados” fica a lista de todos os seus projetos, com busca, filtros e ordenação, e é de lá que você edita ou exclui. Em “Imprimir Projeto Cadastrado”, escolha o projeto, clique em Imprimir, informe a quantidade e confirme: soma ao estoque pronto e desconta o filamento. Na aba Histórico você filtra por data, vê quantidade, material e valor gasto e pode editar as quantidades. Se trocar o filamento de um projeto já impresso, o estoque é reajustado.' },
             { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
             { aba: 'vendas', titulo: '6. Vendas', texto: 'Lance vendas rápidas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra.' },
             { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. Alterne a visualização (Grade, Lista ou Compacta), navegue pelas categorias e subcategorias e veja o carrossel “Mais visitados”. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
