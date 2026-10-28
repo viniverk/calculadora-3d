@@ -610,7 +610,7 @@
                 <p id="pendenteTexto" class="text-sm text-inkmute mt-1">Sua conta <strong id="pendenteEmail" class="text-ink"></strong> foi criada. Escolha um plano, pague via PIX e envie o comprovante.</p>
             </div>
             <div class="bg-surface2 border border-line rounded-xl p-4 space-y-2 text-sm">
-                <div class="flex justify-between gap-3"><span class="text-inkmute">Chave PIX (CPF)</span><span id="pixChave" class="font-mono2 font-bold text-ink">07216976908</span></div>
+                <div class="flex justify-between gap-3"><span class="text-inkmute">Chave PIX (e-mail)</span><span id="pixChave" class="font-mono2 font-bold text-ink">viniciosv@gmail.com</span></div>
                 <div class="flex justify-between gap-3"><span class="text-inkmute">Favorecido</span><span class="font-bold text-ink text-right">VINICIOS VERKRUESSEN</span></div>
                 <div class="border-t border-line pt-2 space-y-1.5">
                     <p class="text-inkmute text-xs uppercase tracking-wide">Planos</p>
@@ -2472,8 +2472,8 @@
 
         document.getElementById('btnCopiarPix').addEventListener('click', async () => {
             const btn = document.getElementById('btnCopiarPix');
-            try { await navigator.clipboard.writeText('07216976908'); btn.innerText = '✅ Chave copiada!'; }
-            catch (e) { btn.innerText = 'Chave: 07216976908'; }
+            try { await navigator.clipboard.writeText('viniciosv@gmail.com'); btn.innerText = '✅ Chave copiada!'; }
+            catch (e) { btn.innerText = 'Chave: viniciosv@gmail.com'; }
             setTimeout(() => { btn.innerText = '📋 Copiar chave PIX'; }, 2500);
         });
         document.getElementById('btnVerificarAcesso').addEventListener('click', async () => {
