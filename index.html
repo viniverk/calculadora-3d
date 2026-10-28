@@ -832,18 +832,14 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Peças em estoque (prontas para entrega)</label>
-                    <input type="number" id="projQuantidadeEstoque" min="0" step="1" value="0" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
-                    <p class="text-[11px] text-inkmute mt-1">0 = "Sob encomenda" no Portfólio. Cada venda registrada desconta 1 peça.</p>
+                    <label class="block text-sm font-medium mb-1">Peças em estoque (prontas para entrega) — automático</label>
+                    <input readonly tabindex="-1" type="number" id="projQuantidadeEstoque" min="0" step="1" value="0" class="w-full bg-surface2 opacity-70 cursor-not-allowed p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
+                    <p class="text-[11px] text-inkmute mt-1">Só muda ao registrar impressões (soma) ou vendas (subtrai). 0 = "Sob encomenda" no Portfólio.</p>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium mb-1">Visibilidade no Portfólio (Clientes)</label>
-                    <select id="projVisibilidadePortfolio" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-sm text-ink">
-                        <option value="auto">Automático (só aparece quando Finalizado/Vendido)</option>
-                        <option value="mostrar">Sempre mostrar (mesmo antes de finalizar)</option>
-                        <option value="esconder">Nunca mostrar (mesmo finalizado)</option>
-                    </select>
-                </div>
+                <label class="flex items-start gap-2 cursor-pointer select-none">
+                    <input type="checkbox" id="projOcultarPortfolio" class="mt-1 h-4 w-4 accent-emerald-600">
+                    <span class="text-sm text-ink"><span class="font-medium">Não mostrar no Portfólio e na Revenda</span><span class="block text-[11px] text-inkmute">Por padrão todo projeto cadastrado aparece nas duas abas. Marque só se quiser escondê-lo.</span></span>
+                </label>
                 <div>
                     <label class="block text-sm font-medium mb-1">Link de Download do Arquivo (.3mf)</label>
                     <input type="url" id="projLink3mf" placeholder="https://drive.google.com/..." class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
@@ -1650,7 +1646,7 @@
         const imgPreview = document.getElementById('imgPreview');
         const previewContainer = document.getElementById('previewContainer');
         const projLink3mf = document.getElementById('projLink3mf');
-        const projVisibilidadePortfolio = document.getElementById('projVisibilidadePortfolio');
+        const projOcultarPortfolio = document.getElementById('projOcultarPortfolio');
         const projQuantidadeEstoque = document.getElementById('projQuantidadeEstoque');
         const projCanalVenda = document.getElementById('projCanalVenda');
 
@@ -3079,7 +3075,7 @@
                 const ref = await colecao('projetos_3d').add({
                     nome_projeto: nome, cor: '', imagem_base64: img || null, nome_arquivo_3mf: link, arquivo_3mf_data: null,
                     pecas: [], margem_lucro_porcentagem: 100, custo_total: 0, preco_venda_total: 0, tempo_total_min: 0, peso_total_g: 0,
-                    status: 'Aguardando Impressão', data_conclusao: null, visibilidade_portfolio: 'esconder', quantidade_estoque: 0,
+                    status: 'Aguardando Impressão', data_conclusao: null, visibilidade_portfolio: 'mostrar', quantidade_estoque: 0,
                     canal_venda: 'direta', taxa_percentual: 0, taxas_canal_valor: 0, custo_fixo_aplicado: 0,
                     maquina_id: (maquinasCache.find(m => m.padrao) || {}).id || null, maquina_nome: (maquinasCache.find(m => m.padrao) || {}).nome || '',
                     user_id: usuarioAtual.uid, created_at: new Date().toISOString()
@@ -3939,7 +3935,7 @@
                 peso_total_g: pesoTotalG, 
                 status: statusAtual, 
                 data_conclusao: dataConclusao,
-                visibilidade_portfolio: projVisibilidadePortfolio.value,
+                visibilidade_portfolio: projOcultarPortfolio.checked ? 'esconder' : 'mostrar',
                 quantidade_estoque: Math.max(0, parseInt(projQuantidadeEstoque.value) || 0),
                 canal_venda: projCanalVenda.value,
                 taxa_percentual: finProj.taxa,
@@ -4022,7 +4018,7 @@
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
             projNome.value = ''; projPrecoVenda.value = ''; projCor.value = ''; projCategoria.value = ''; sincronizarSeletorCategoria(); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
-            projImagemUrl.value = ''; projLink3mf.value = ''; projVisibilidadePortfolio.value = 'auto'; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
+            projImagemUrl.value = ''; projLink3mf.value = ''; projOcultarPortfolio.checked = false; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
             btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
@@ -4036,7 +4032,7 @@
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; projCategoria.value = proj.categoria || ''; sincronizarSeletorCategoria(); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
             projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
-            projVisibilidadePortfolio.value = proj.visibilidade_portfolio || 'auto';
+            projOcultarPortfolio.checked = proj.visibilidade_portfolio === 'esconder';
             projQuantidadeEstoque.value = parseInt(proj.quantidade_estoque) || 0;
             projCanalVenda.value = (proj.canal_venda && NOME_CANAL[proj.canal_venda]) ? proj.canal_venda : 'direta';
             if (proj.imagem_base64) { imgPreview.src = proj.imagem_base64; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
@@ -4060,7 +4056,7 @@
                     pecas: proj.pecas, margem_lucro_porcentagem: proj.margem_lucro_porcentagem, custo_total: proj.custo_total,
                     preco_venda_total: proj.preco_venda_total, tempo_total_min: proj.tempo_total_min, peso_total_g: proj.peso_total_g,
                     canal_venda: proj.canal_venda || 'direta', taxa_percentual: proj.taxa_percentual || 0, taxas_canal_valor: proj.taxas_canal_valor || 0, custo_fixo_aplicado: proj.custo_fixo_aplicado || 0,
-                    status: 'Aguardando Impressão', estoque_descontado: false, quantidade_estoque: 0, visibilidade_portfolio: proj.visibilidade_portfolio || 'auto', user_id: usuarioAtual.uid, created_at: new Date().toISOString()
+                    status: 'Aguardando Impressão', estoque_descontado: false, quantidade_estoque: 0, visibilidade_portfolio: proj.visibilidade_portfolio === 'esconder' ? 'esconder' : 'mostrar', user_id: usuarioAtual.uid, created_at: new Date().toISOString()
                 });
                 if (!proj.grupo_modelo) await colecao('projetos_3d').doc(proj.id).update({ grupo_modelo: grupo });
             } catch (error) { alert(error.message); return; }
@@ -4173,10 +4169,8 @@
 
         // --- ABA DE CLIENTES (LIVRE DE LENTIDÃO COM CARREGAMENTO ASSÍNCRONO) ---
         function deveAparecerNoPortfolio(proj) {
-            if (proj.visibilidade_portfolio === 'mostrar') return true;
-            if (proj.visibilidade_portfolio === 'esconder') return false;
-            // 'auto' (ou não definido): só aparece quando o projeto está pronto
-            return proj.status === 'Projeto Finalizado' || proj.status === 'Vendido';
+            // Todo projeto cadastrado aparece no Portfólio e na Revenda, a menos que tenha sido marcado para esconder
+            return proj.visibilidade_portfolio !== 'esconder';
         }
 
         let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [], portCat = '', portVisao = 'grade';
