@@ -834,9 +834,9 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium mb-1">Peças em estoque (prontas para entrega) — automático</label>
-                    <input readonly tabindex="-1" type="number" id="projQuantidadeEstoque" min="0" step="1" value="0" class="w-full bg-surface2 opacity-70 cursor-not-allowed p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
-                    <p class="text-[11px] text-inkmute mt-1">Só muda ao registrar impressões (soma) ou vendas (subtrai). 0 = "Sob encomenda" no Portfólio.</p>
+                    <label class="block text-sm font-medium mb-1">Peças em estoque (prontas para entrega)</label>
+                    <input type="number" id="projQuantidadeEstoque" min="0" step="1" value="0" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none focus:border-sky-500 text-ink text-sm">
+                    <p class="text-[11px] text-inkmute mt-1">Muda sozinho ao registrar impressões (soma) ou vendas (subtrai), e você pode corrigir aqui à mão: a edição acerta só a contagem de peças prontas, sem mexer no filamento. 0 = "Sob encomenda" no Portfólio.</p>
                 </div>
                 <label class="flex items-start gap-2 cursor-pointer select-none">
                     <input type="checkbox" id="projOcultarPortfolio" class="mt-1 h-4 w-4 accent-emerald-600">
