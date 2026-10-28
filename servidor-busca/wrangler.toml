@@ -4,3 +4,7 @@ compatibility_date = "2025-01-01"
 
 [vars]
 ALLOWED_ORIGIN = "https://viniverk.github.io,https://cliente3d.com.br,https://www.cliente3d.com.br"
+
+# IA grátis (Cloudflare Workers AI) usada em /descrever
+[ai]
+binding = "AI"
