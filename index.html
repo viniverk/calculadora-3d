@@ -1026,6 +1026,7 @@
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Categoria</p>
                                     <select id="selectFiltroCategoriaProj" class="w-full bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none"><option value="">Todas as categorias</option></select></div>
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Valores</p>
+                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="jaImpresso" class="accent-emerald-600"> Já foram impressos</label>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semVenda" class="accent-emerald-600"> Sem valor de venda</label>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semRevenda" class="accent-emerald-600"> Sem valor de revenda</label></div>
                                 <div class="flex justify-between items-center pt-1 border-t border-line"><button type="button" id="limparFiltrosProj" class="text-xs text-sky-600 font-semibold">Limpar filtros</button><button type="button" id="fecharFiltrosProj" class="text-xs font-bold bg-emerald-600 text-white px-3 py-1 rounded">Fechar</button></div>
@@ -4289,6 +4290,7 @@
             if (fc === '__com' && !catsDe(p).length) return false;
             if (fc === '__sem' && catsDe(p).length) return false;
             if (fc && fc.includes('::')) { const [fcat, fsub] = fc.split('::'); if (!catsDe(p).some(x => x.c === fcat && (!fsub || x.s === fsub))) return false; }
+            if (filtrosProj.has('jaImpresso') && !((parseInt(p.total_impresso) || 0) > 0 || (p.historico_impressoes || []).length)) return false;
             if (filtrosProj.has('semVenda') && temVendaDefinida(p)) return false;
             if (filtrosProj.has('semRevenda') && temRevendaDefinida(p)) return false;
             return true;
