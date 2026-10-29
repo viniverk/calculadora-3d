@@ -4677,7 +4677,7 @@
             const pulso = 1 + .035 * Math.sin(Math.max(0, ts - 1.6) * 5);
             const cy = story ? 1500 : 1170, bw = 820, bh = story ? 120 : 100;
             ctx.save(); ctx.translate(W / 2, cy + bh / 2); ctx.scale(pulso, pulso); ctx.fillStyle = '#ffffff'; rr(-bw / 2, -bh / 2, bw, bh, bh / 2); ctx.fill();
-            ctx.fillStyle = '#065f46'; ctx.font = `800 ${story ? 44 : 40}px ${FONT}`; ctx.fillText(story ? '🛍️ Toque no link para comprar' : '🛍️ Compre pelo link da bio', 0, 3); ctx.restore();
+            ctx.fillStyle = '#065f46'; ctx.font = `800 ${story ? 44 : 40}px ${FONT}`; ctx.fillText(story ? '👆 Toque aqui para comprar' : '🛍️ Compre pelo link da bio', 0, 3); ctx.restore();
             if (insta) { ctx.fillStyle = '#d1fae5'; ctx.font = `700 38px ${FONT}`; ctx.fillText(insta, W / 2, cy + bh + (story ? 70 : 52)); }
             ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
         }
@@ -4701,7 +4701,7 @@
                     <button type="button" id="shLink" class="border border-line text-ink font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">🔗 Copiar link de compra</button>
                     ${insta ? `<a href="https://instagram.com/${encodeURIComponent(insta)}" target="_blank" rel="noopener" class="text-center border border-line text-ink font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">Abrir @${escHtml(insta)}</a>` : '<span></span>'}
                 </div>
-                <p class="text-[11px] text-inkmute">Dica: no Stories, toque no adesivo <b>Link</b> e cole o link de compra. No post, ponha o link na bio ou na legenda.</p>
+                <div class="text-[11px] text-inkmute bg-surface2 rounded-xl p-3 space-y-1"><p class="font-bold text-ink">Como deixar o link clicável no Stories</p><p>O Instagram não deixa tocar em link que está dentro da imagem. Por isso o botão branco do cartão é só o lugar do link:</p><ol class="list-decimal pl-4 space-y-0.5"><li>Toque em <b>Enviar / Instagram</b> (o link de compra já é copiado) e escolha Stories.</li><li>No Instagram, toque no adesivo 🙂 e depois em <b>Link</b>.</li><li>Cole o link, toque em Concluído e arraste o adesivo para cima do botão branco.</li></ol><p>No post, ponha o link na bio ou na legenda.</p></div>
             </div>`;
             const q = (id) => document.getElementById(id), canvas = q('shCanvas'), video = q('shVideo'), msg = q('shMsg');
             const fechar = () => { if (est.urlMidia) URL.revokeObjectURL(est.urlMidia); md.className = 'hidden'; md.innerHTML = ''; };
@@ -4724,7 +4724,7 @@
                 const baseNome = (m.nome || 'produto').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'produto';
                 if (!est.video) {
                     quadro(99);
-                    try { est.blob = await new Promise((r, j) => canvas.toBlob(b => b ? r(b) : j(new Error('vazio')), 'image/jpeg', .92)); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.jpg`; msg.textContent = 'Pronto! Baixe a imagem ou envie direto pelo celular.'; }
+                    try { est.blob = await new Promise((r, j) => canvas.toBlob(b => b ? r(b) : j(new Error('vazio')), 'image/jpeg', .92)); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.jpg`; msg.textContent = est.story ? 'Pronto! No Stories, o link vai no adesivo Link (veja o passo a passo abaixo).' : 'Pronto! Baixe a imagem ou envie direto pelo celular.'; }
                     catch (e) { msg.textContent = 'Não foi possível gerar a imagem (a foto do produto bloqueia o uso). Tente outra foto.'; }
                     return;
                 }
@@ -4751,6 +4751,7 @@
             });
             q('shCompartilhar').addEventListener('click', async () => {
                 if (!est.blob) { msg.textContent = 'Aguarde a mídia ficar pronta.'; return; }
+                try { navigator.clipboard.writeText(link); } catch (x) {}
                 const arq = new File([est.blob], est.nomeArq, { type: est.blob.type }), texto = `${m.nome} por ${precoTextoPlano(m)}\nCompre aqui: ${link}`;
                 try {
                     if (navigator.canShare && navigator.canShare({ files: [arq] })) await navigator.share({ files: [arq], text: texto, title: m.nome });

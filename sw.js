@@ -1,6 +1,6 @@
 // Service worker do Cliente 3D: deixa o app instalável e abre mesmo com internet ruim.
 // Estratégia: rede primeiro para a página (sempre a versão nova); cache só como reserva.
-const CACHE = 'cliente3d-v48';
+const CACHE = 'cliente3d-v49';
 const BASICO = ['./', 'icons/icon-192.png', 'icons/icon-512.png', 'icone-venda3d.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASICO)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
