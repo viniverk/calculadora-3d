@@ -1063,7 +1063,7 @@
         <div id="view-portfolio-cliente" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="max-w-7xl mx-auto w-full">
                 <div class="bg-surface rounded-2xl border border-line overflow-hidden shadow-sm">
-                    <div id="portfolioMarca" class="bg-gradient-to-r from-emerald-700 to-teal-600 px-5 py-6 sm:px-8 text-white"></div>
+                    <div id="portfolioMarca" class="px-5 py-6 sm:px-8 text-white" style="background:linear-gradient(90deg,#047857,#0d9488)"></div>
                     <div class="p-4 sm:p-6">
                         <div id="portDestaques" class="hidden mb-5"></div>
                         <div id="portCategorias" class="hidden flex gap-1.5 text-xs font-bold overflow-x-auto pb-2 mb-3"></div>
@@ -1332,6 +1332,13 @@
                 <div><label class="ped-lbl">WhatsApp (com DDD)</label><input type="text" id="marcaWhats" placeholder="(41) 99999-9999" class="ped-inp"></div>
                 <div><label class="ped-lbl">Instagram (opcional)</label><input type="text" id="marcaInsta" placeholder="@suamarca" class="ped-inp"></div>
                 <div><label class="ped-lbl">Mensagem curta</label><input type="text" id="marcaMsg" placeholder="Peças personalizadas impressas em 3D" class="ped-inp"></div>
+                <div><label class="ped-lbl">Cor do topo do catálogo</label>
+                    <div class="flex flex-wrap items-center gap-2" id="marcaCoresBox">
+                        <input type="color" id="marcaCorBanner" value="#047857" class="h-9 w-12 rounded border border-line bg-surface2 cursor-pointer p-0.5" title="Escolher outra cor">
+                        <button type="button" data-cor="" class="text-[11px] font-bold px-2.5 py-1.5 rounded-lg border border-line text-ink bg-surface2">Verde padrão</button>
+                    </div>
+                    <div id="marcaCorFaixa" class="mt-2 h-8 rounded-lg border border-line flex items-center px-3 text-xs font-bold text-white">Prévia do topo</div>
+                </div>
                 <label class="flex items-start gap-2 cursor-pointer select-none rounded-xl border border-line bg-surface2 p-3">
                     <input type="checkbox" id="marcaCompartilhar" class="mt-1 h-4 w-4 accent-emerald-600">
                     <span class="text-sm text-ink"><span class="font-semibold">📤 Liberar compartilhamento dos produtos do Portfólio</span><span class="block text-[11px] text-inkmute">Mostra o botão "Compartilhar" em cada produto do catálogo: gera foto ou vídeo com o valor, em formato de post ou stories, com o link de compra e o seu Instagram (cadastrado acima).</span></span>
@@ -3240,10 +3247,19 @@
                 <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="border border-line text-ink text-xs font-bold px-4 py-2 rounded-lg">@${escHtml(ig)}</a>` : ''}</div>
             </div>`;
         }
+        const CORES_BANNER = ['#047857', '#1d4ed8', '#6d28d9', '#be185d', '#c2410c', '#b91c1c', '#b45309', '#0f766e', '#111827'];
+        function estiloBanner(hex) {
+            if (!/^#[0-9a-f]{6}$/i.test(hex || '')) return { fundo: 'linear-gradient(90deg,#047857,#0d9488)', texto: '#ffffff' };
+            const n = parseInt(hex.slice(1), 16), r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+            const mix = (v) => Math.round(v + (255 - v) * 0.22), c2 = '#' + [mix(r), mix(g), mix(b)].map(v => v.toString(16).padStart(2, '0')).join('');
+            const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+            return { fundo: `linear-gradient(90deg,${hex},${c2})`, texto: lum > 0.7 ? '#111827' : '#ffffff' };
+        }
         function renderizarMarcaPortfolio() {
             const el = document.getElementById('portfolioMarca'); if (!el) return;
             const m = marcaAtual || {};
             const wa = digitosWhats(m.whatsapp); const ig = String(m.instagram || '').replace(/^@/, '').trim();
+            const est = estiloBanner(m.cor_banner); el.style.background = est.fundo; el.style.color = est.texto;
             const promo = modoPublicoAtivo ? `<a href="https://cliente3d.com.br/?site=1" target="_blank" rel="noopener" class="group w-full lg:w-auto lg:max-w-xs flex items-center gap-3 bg-slate-900/85 hover:bg-slate-900 border border-white/25 rounded-2xl p-3 shadow-lg transition" title="Conheça o Cliente 3D">
                     <img src="https://cliente3d.com.br/icone-venda3d.png" alt="Cliente 3D" class="h-14 w-14 rounded-xl object-cover shrink-0">
                     <span class="min-w-0 text-left"><span class="block text-[11px] font-bold uppercase tracking-wide text-emerald-300">Feito com Cliente 3D</span><span class="block text-sm font-bold leading-snug text-white">Tenha um catálogo assim e controle suas impressões 3D</span><span class="inline-block mt-1.5 bg-emerald-500 group-hover:bg-emerald-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-full">Conhecer e testar 5 dias grátis ›</span></span>
@@ -3251,23 +3267,31 @@
             el.innerHTML = `<div class="flex flex-col lg:flex-row lg:items-center gap-4">
                 <div class="flex items-center gap-3 sm:gap-4 min-w-0 lg:flex-1">
                 ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl object-contain bg-white p-1 shadow">` : ''}
-                <div class="min-w-0 flex-1"><h2 class="font-display font-bold text-xl sm:text-3xl leading-tight break-words">${escHtml(m.nome || 'Catálogo de produtos')}</h2><p class="text-sm text-emerald-50 mt-1">${escHtml(m.mensagem || 'Peças impressas em 3D sob medida. Escolha o seu e peça pelo WhatsApp.')}</p></div>
+                <div class="min-w-0 flex-1"><h2 class="font-display font-bold text-xl sm:text-3xl leading-tight break-words">${escHtml(m.nome || 'Catálogo de produtos')}</h2><p class="text-sm opacity-90 mt-1">${escHtml(m.mensagem || 'Peças impressas em 3D sob medida. Escolha o seu e peça pelo WhatsApp.')}</p></div>
                 </div>
-                <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-white text-emerald-800 text-xs font-bold px-4 py-2 rounded-full shadow">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="bg-white/20 border border-white/40 text-white text-xs font-bold px-4 py-2 rounded-full">@${escHtml(ig)}</a>` : ''}</div>
+                <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-white text-emerald-800 text-xs font-bold px-4 py-2 rounded-full shadow">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="bg-white/20 border border-white/40 text-xs font-bold px-4 py-2 rounded-full" style="color:inherit">@${escHtml(ig)}</a>` : ''}</div>
             ${promo}
             </div>`;
         }
         function renderizarPreviewMarca() { document.getElementById('marcaPreview').innerHTML = htmlMarca({ nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim() }, true) || '<p class="text-sm text-inkmute">Preencha o nome ou a logo para ver a prévia.</p>'; }
         const marcaNome = document.getElementById('marcaNome'), marcaLogo = document.getElementById('marcaLogo'), marcaWhats = document.getElementById('marcaWhats'), marcaInsta = document.getElementById('marcaInsta'), marcaMsg = document.getElementById('marcaMsg');
         [marcaNome, marcaLogo, marcaWhats, marcaInsta, marcaMsg].forEach(el => el.addEventListener('input', renderizarPreviewMarca));
-        function preencherFormMarca() { const m = marcaAtual || {}; marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; document.getElementById('marcaCompartilhar').checked = m.compartilhar_produtos === true; renderizarPreviewMarca(); }
+        let corBannerSel = '';
+        function definirCorBanner(hex) {
+            corBannerSel = /^#[0-9a-f]{6}$/i.test(hex || '') ? hex : '';
+            const inp = document.getElementById('marcaCorBanner'); if (inp) inp.value = corBannerSel || '#047857';
+            const f = document.getElementById('marcaCorFaixa'); if (f) { const e = estiloBanner(corBannerSel); f.style.background = e.fundo; f.style.color = e.texto; }
+            document.querySelectorAll('#marcaCoresBox [data-cor]').forEach(b => { const on = (b.dataset.cor || '') === corBannerSel; b.style.outline = on ? '3px solid #10b981' : 'none'; });
+        }
+        (() => { const box = document.getElementById('marcaCoresBox'); if (!box) return; const padrao = box.querySelector('[data-cor=""]'); CORES_BANNER.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.dataset.cor = c; b.title = c; b.className = 'h-8 w-8 rounded-full border border-line'; b.style.background = c; box.insertBefore(b, padrao); }); box.addEventListener('click', (e) => { const b = e.target.closest('[data-cor]'); if (b) definirCorBanner(b.dataset.cor); }); document.getElementById('marcaCorBanner').addEventListener('input', (e) => definirCorBanner(e.target.value)); })();
+        function preencherFormMarca() { const m = marcaAtual || {}; definirCorBanner(m.cor_banner || ''); marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; document.getElementById('marcaCompartilhar').checked = m.compartilhar_produtos === true; renderizarPreviewMarca(); }
         async function carregarMarca(uid) {
             try { const d = await colecao('marcas').doc(uid || usuarioAtual.uid).get(); marcaAtual = d.exists ? d.data() : null; } catch (e) { marcaAtual = null; }
             renderizarMarcaPortfolio();
             if (typeof renderizerPortfolioCliente === 'function') renderizerPortfolioCliente();
         }
         document.getElementById('btnSalvarMarca').addEventListener('click', async () => {
-            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), compartilhar_produtos: document.getElementById('marcaCompartilhar').checked, user_id: usuarioAtual.uid };
+            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), compartilhar_produtos: document.getElementById('marcaCompartilhar').checked, cor_banner: corBannerSel, user_id: usuarioAtual.uid };
             try { await colecao('marcas').doc(usuarioAtual.uid).set(dados); marcaAtual = dados; renderizarMarcaPortfolio(); renderizerPortfolioCliente(); alert('Marca salva! Ela aparece no topo do seu catálogo público.'); }
             catch (e) { alert('Erro ao salvar: ' + e.message); }
         });
@@ -3285,7 +3309,7 @@
             { aba: 'revenda', titulo: '8. Revenda', texto: 'A mesma lista do Portfólio, mas com o valor de revenda. No fim do formulário do projeto, ao lado do valor de venda, você informa o “Valor de revenda” (se deixar em branco, o app estima pelo custo × o multiplicador de revenda da aba Calcular). É de uso interno: esta aba não tem link público.' },
             { aba: 'buscador', titulo: '9. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez, veja as imagens dos modelos e salve o que achou como projeto.' },
             { aba: 'dashboard', titulo: '10. Visão geral', texto: 'Faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
-            { aba: 'marca', titulo: '11. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público. Marque também "Permitir compartilhar produtos" para que clientes gerem post, stories ou vídeo com foto e preço e o link de compra para o seu Instagram.' },
+            { aba: 'marca', titulo: '11. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público, e você escolhe a cor desse topo. Marque também "Permitir compartilhar produtos" para que clientes gerem post, stories ou vídeo com foto e preço e o link de compra para o seu Instagram.' },
             { centro: true, final: true, titulo: 'Tudo pronto! 🚀', texto: 'Sugestão de ordem: cadastre a máquina, depois os filamentos, cadastre seus projetos e registre as impressões em Impressões. Para rever este guia, use “Tour guiado” no menu.' }
         ];
         let tourPasso = -1, tourEls = null;
