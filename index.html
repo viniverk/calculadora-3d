@@ -4886,16 +4886,21 @@
             }
             await carregarFilamentos();
         }
-        async function aplicarMudancaImpressao(pid, idx, novaQtd, novaData) {
+        async function aplicarMudancaImpressao(pid, idx, novaQtd, novaData, extra) {
             const p = projetosCacheLocal.find(x => x.id === pid); if (!p) return;
             const hist = [...(p.historico_impressoes || [])]; const h = hist[idx]; if (!h) return;
             const delta = novaQtd - h.qtd;
-            if (novaQtd <= 0) hist.splice(idx, 1); else hist[idx] = { ...h, qtd: novaQtd, data: novaData || h.data };
+            const corNova = extra && extra.cor !== undefined ? String(extra.cor || '').trim() : String(h.cor || '').trim(), corAntiga = String(h.cor || '').trim();
+            if (novaQtd <= 0) hist.splice(idx, 1);
+            else {
+                hist[idx] = { ...h, qtd: novaQtd, data: novaData || h.data, cor: corNova };
+                if (extra && extra.maqId !== undefined) { const maq = extra.maqId ? maquinasCache.find(m => m.id === extra.maqId) : null; const c = custoImpressaoProjeto(p, extra.maqId || ''); hist[idx].maquina_id = maq ? maq.id : null; hist[idx].maquina_nome = maq ? maq.nome : 'Padrão das Configurações'; hist[idx].custo_un = Math.round(c.total * 100) / 100; }
+            }
             await colecao('projetos_3d').doc(pid).update({
                 historico_impressoes: hist,
                 ...(p.consumo_abatido ? { consumo_abatido: somarConsumo(p.consumo_abatido, consumoPorChaveDe(p.pecas, Math.abs(delta)), delta >= 0 ? 1 : -1) } : {}),
                 quantidade_estoque: Math.max(0, (parseInt(p.quantidade_estoque) || 0) + delta),
-                ...(h.cor ? { estoque_cores: (() => { const l = estoquePorCor(p), k = l.find(x => x.cor.toLowerCase() === String(h.cor).toLowerCase()); if (k) k.qtd = Math.max(0, k.qtd + delta); else if (delta > 0) l.push({ cor: h.cor, qtd: delta }); return l; })() } : {}),
+                ...((corAntiga || corNova) ? { estoque_cores: (() => { const l = estoquePorCor(p); const ajusta = (c, d) => { if (!c || !d) return; const k = l.find(x => x.cor.toLowerCase() === c.toLowerCase()); if (k) k.qtd = Math.max(0, k.qtd + d); else if (d > 0) l.push({ cor: c, qtd: d }); }; const corBase = corAntiga || String(p.cor || '').trim(); if (novaQtd <= 0) ajusta(corBase, -h.qtd); else { ajusta(corBase, -h.qtd); ajusta(corNova || corBase, novaQtd); } return l; })() } : {}),
                 total_impresso: Math.max(0, (parseInt(p.total_impresso) || 0) + delta)
             });
             if (delta > 0) await descontarEstoquePelasPecas(p.pecas, delta); else if (delta < 0) await devolverEstoquePelasPecas(p.pecas, -delta);
@@ -4908,13 +4913,15 @@
                 <h3 class="font-display text-lg font-bold text-ink truncate">Editar impressão: ${escHtml(p.nome_projeto)}</h3>
                 <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1 text-ink">Quantidade impressa</label><input type="number" id="impQtd" min="1" step="1" value="${h.qtd}" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-lg font-bold text-center"></div>
                 <div><label class="block text-xs font-semibold mb-1 text-ink">Data</label><input type="date" id="impData" value="${h.data}" class="w-full bg-surface2 p-2 rounded border border-line text-ink"></div></div>
+                <div><label class="block text-xs font-semibold mb-1 text-ink">Impressora usada <span class="text-inkmute font-normal">(o custo é recalculado)</span></label><select id="impMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm"><option value="" ${!h.maquina_id ? 'selected' : ''}>Padrão das Configurações</option>${maquinasCache.map(mq => `<option value="${mq.id}" ${mq.id === h.maquina_id ? 'selected' : ''}>${escHtml(mq.nome)}${mq.modelo ? ' — ' + escHtml(mq.modelo) : ''}</option>`).join('')}</select></div>
+                <div><label class="block text-xs font-semibold mb-1 text-ink">Cor desta impressão</label><input type="text" id="impCor" list="impCoresLista" value="${escHtml(h.cor || '')}" placeholder="Ex: Preto" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm"><datalist id="impCoresLista">${[...new Set([...(filamentosCache || []).map(i => (i.cor || '').trim()), ...estoquePorCor(p).map(x => x.cor), (p.cor || '').trim()].filter(Boolean))].map(c => `<option value="${escHtml(c)}">`).join('')}</datalist></div>
                 <p class="text-xs text-inkmute">Ao mudar a quantidade, o estoque pronto do projeto e o filamento do estoque são ajustados pela diferença.</p>
                 <div class="flex justify-end gap-2"><button type="button" onclick="fecharImprimirProjeto()" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="impConfirmar" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold">Salvar</button></div></div>`;
             m.classList.remove('hidden'); m.classList.add('flex');
             document.getElementById('impConfirmar').addEventListener('click', async () => {
                 const q = parseInt(document.getElementById('impQtd').value) || 0; if (q < 1) { alert('Informe pelo menos 1 unidade (ou use Excluir).'); return; }
                 const b = document.getElementById('impConfirmar'); b.disabled = true;
-                try { await aplicarMudancaImpressao(pid, idx, q, document.getElementById('impData').value); } catch (e) { alert('Falha ao salvar: ' + e.message); b.disabled = false; return; }
+                try { await aplicarMudancaImpressao(pid, idx, q, document.getElementById('impData').value, { maqId: document.getElementById('impMaquina').value, cor: document.getElementById('impCor').value }); } catch (e) { alert('Falha ao salvar: ' + e.message); b.disabled = false; return; }
                 fecharImprimirProjeto();
             });
         }
