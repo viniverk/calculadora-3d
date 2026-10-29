@@ -1009,9 +1009,9 @@
                         <div class="relative" id="filtrosProjWrap">
                             <button type="button" id="btnFiltrosProj" class="bg-surface2 px-3 py-1.5 rounded border border-line text-xs font-bold text-ink hover:border-emerald-500">⚙️ Filtros <span id="filtrosProjQtd" class="hidden ml-1 bg-emerald-600 text-white rounded-full px-1.5 text-[10px]">0</span></button>
                             <div id="painelFiltrosProj" class="hidden absolute z-30 left-0 sm:right-0 sm:left-auto mt-1 w-72 max-w-[85vw] bg-surface border border-line rounded-xl shadow-xl p-3 text-sm text-ink space-y-3">
-                                <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Mostrar somente</p>
-                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="noPortfolio" class="accent-emerald-600"> Portfólio/Revenda</label>
-                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="comEstoque" class="accent-emerald-600"> Com estoque</label></div>
+                                <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Mostrar somente <span class="normal-case font-normal">(1º clique: tem · 2º: não tem · 3º: todos)</span></p>
+                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="noPortfolio" data-tri="foraPortfolio" class="accent-emerald-600"> Portfólio/Revenda <span class="text-[10px] text-inkmute" data-triTxt></span></label>
+                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="comEstoque" data-tri="semEstoque" class="accent-emerald-600"> Estoque <span class="text-[10px] text-inkmute" data-triTxt></span></label></div>
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Status do projeto</p>
                                     <select id="selectFiltroStatusPortfolio" class="w-full bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none">
                             <option value="Todos">Todos os status</option>
@@ -1026,7 +1026,7 @@
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Valores</p>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semVenda" class="accent-emerald-600"> Sem valor de venda</label>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semRevenda" class="accent-emerald-600"> Sem valor de revenda</label></div>
-                                <div class="flex justify-between items-center pt-1 border-t border-line"><button type="button" id="limparFiltrosProj" class="text-xs text-sky-600 font-semibold">Limpar filtros</button><button type="button" id="fecharFiltrosProj" class="text-xs font-bold bg-emerald-600 text-white px-3 py-1 rounded">Fechar</button></div>
+                                <div class="flex justify-between items-center pt-1 border-t border-line"><span class="flex gap-3"><button type="button" id="marcarTodosFiltrosProj" class="text-xs text-emerald-700 font-semibold">Marcar todos</button><button type="button" id="limparFiltrosProj" class="text-xs text-sky-600 font-semibold">Limpar filtros</button></span><button type="button" id="fecharFiltrosProj" class="text-xs font-bold bg-emerald-600 text-white px-3 py-1 rounded">Fechar</button></div>
                             </div>
                         </div>
                         <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Impressora:</label>
@@ -4253,7 +4253,9 @@
         const temRevendaDefinida = (p) => !!p.revenda_manual || (p.pecas || []).some(x => (x.preco_revenda || 0) > 0);
         function passaFiltrosProj(p) {
             if (filtrosProj.has('noPortfolio') && !deveAparecerNoPortfolio(p)) return false;
+            if (filtrosProj.has('foraPortfolio') && deveAparecerNoPortfolio(p)) return false;
             if (filtrosProj.has('comEstoque') && !((parseInt(p.quantidade_estoque) || 0) > 0)) return false;
+            if (filtrosProj.has('semEstoque') && (parseInt(p.quantidade_estoque) || 0) > 0) return false;
             const fc = document.getElementById('selectFiltroCategoriaProj').value;
             if (fc === '__com' && !catsDe(p).length) return false;
             if (fc === '__sem' && catsDe(p).length) return false;
@@ -4261,6 +4263,13 @@
             if (filtrosProj.has('semVenda') && temVendaDefinida(p)) return false;
             if (filtrosProj.has('semRevenda') && temRevendaDefinida(p)) return false;
             return true;
+        }
+        function pintarTriFiltros() {
+            document.querySelectorAll('#painelFiltrosProj [data-tri]').forEach(c => {
+                const est = filtrosProj.has(c.dataset.fp) ? 1 : filtrosProj.has(c.dataset.tri) ? -1 : 0;
+                c.checked = est === 1; c.indeterminate = est === 0;
+                const t = c.parentElement.querySelector('[data-triTxt]'); if (t) t.textContent = est === 1 ? '(tem)' : est === -1 ? '(não tem)' : '(todos)';
+            });
         }
         function atualizarBadgeFiltrosProj() { const n = filtrosProj.size + (selectFiltroStatusPortfolio.value !== 'Todos' ? 1 : 0) + (document.getElementById('selectFiltroCategoriaProj').value ? 1 : 0); const b = document.getElementById('filtrosProjQtd'); b.textContent = n; b.classList.toggle('hidden', n === 0); }
         function atualizarOpcoesCategoriaProj() {
@@ -4274,11 +4283,23 @@
         document.getElementById('selectFiltroCategoriaProj').addEventListener('change', () => { atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('btnFiltrosProj').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('painelFiltrosProj').classList.toggle('hidden'); });
         document.getElementById('fecharFiltrosProj').addEventListener('click', () => document.getElementById('painelFiltrosProj').classList.add('hidden'));
-        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); selectFiltroStatusPortfolio.value = 'Todos'; document.getElementById('selectFiltroCategoriaProj').value = ''; atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
+        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); selectFiltroStatusPortfolio.value = 'Todos'; document.getElementById('selectFiltroCategoriaProj').value = ''; pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('painelFiltrosProj').addEventListener('click', (e) => e.stopPropagation());
+        document.getElementById('marcarTodosFiltrosProj').addEventListener('click', () => {
+            document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = true; filtrosProj.add(c.dataset.fp); if (c.dataset.tri) filtrosProj.delete(c.dataset.tri); });
+            pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados();
+        });
+        pintarTriFiltros();
         document.addEventListener('click', () => document.getElementById('painelFiltrosProj').classList.add('hidden'));
         document.getElementById('painelFiltrosProj').addEventListener('change', (e) => {
             const c = e.target.closest('[data-fp]'); if (!c) return;
+            if (c.dataset.tri) {
+                const pos = c.dataset.fp, neg = c.dataset.tri;
+                const cur = filtrosProj.has(pos) ? 1 : filtrosProj.has(neg) ? -1 : 0, prox = cur === 0 ? 1 : cur === 1 ? -1 : 0;
+                filtrosProj.delete(pos); filtrosProj.delete(neg);
+                if (prox === 1) filtrosProj.add(pos); else if (prox === -1) filtrosProj.add(neg);
+                pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); return;
+            }
             if (c.checked) { filtrosProj.add(c.dataset.fp); if (c.dataset.par) { filtrosProj.delete(c.dataset.par); document.querySelector(`#painelFiltrosProj [data-fp="${c.dataset.par}"]`).checked = false; } const outro = document.querySelector(`#painelFiltrosProj [data-par="${c.dataset.fp}"]`); if (outro) { outro.checked = false; filtrosProj.delete(outro.dataset.fp); } }
             else filtrosProj.delete(c.dataset.fp);
             atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados();
