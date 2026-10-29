@@ -1006,24 +1006,23 @@
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 border-b border-line pb-2 gap-2">
                     <h2 class="font-display text-xl font-semibold text-teal-600">Projetos Cadastrados</h2>
                     <div class="flex items-center gap-2 w-full sm:w-auto flex-wrap">
-                        <label class="text-xs uppercase font-bold text-inkmute whitespace-nowrap">Filtrar por Status:</label>
-                        <select id="selectFiltroStatusPortfolio" class="bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none w-full sm:w-auto">
-                            <option value="Todos">Todos</option>
-                            <option value="Aguardando Impressão">Aguardando Impressão</option>
-                            <option value="Imprimindo">Imprimindo</option>
-                            <option value="Montagem">Montagem</option>
-                            <option value="Projeto Finalizado">Projeto Finalizado</option>
-                            <option value="Vendido">Vendido</option>
-                        </select>
                         <div class="relative" id="filtrosProjWrap">
                             <button type="button" id="btnFiltrosProj" class="bg-surface2 px-3 py-1.5 rounded border border-line text-xs font-bold text-ink hover:border-emerald-500">⚙️ Filtros <span id="filtrosProjQtd" class="hidden ml-1 bg-emerald-600 text-white rounded-full px-1.5 text-[10px]">0</span></button>
                             <div id="painelFiltrosProj" class="hidden absolute z-30 left-0 sm:right-0 sm:left-auto mt-1 w-72 max-w-[85vw] bg-surface border border-line rounded-xl shadow-xl p-3 text-sm text-ink space-y-3">
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Portfólio / Revenda</p>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="noPortfolio" class="accent-emerald-600"> Estão no Portfólio/Revenda</label>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="foraPortfolio" data-par="noPortfolio" class="accent-emerald-600"> Fora do Portfólio/Revenda</label></div>
+                                <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Status do projeto</p>
+                                    <select id="selectFiltroStatusPortfolio" class="w-full bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none">
+                            <option value="Todos">Todos os status</option>
+                            <option value="Aguardando Impressão">Aguardando Impressão</option>
+                            <option value="Imprimindo">Imprimindo</option>
+                            <option value="Montagem">Montagem</option>
+                            <option value="Projeto Finalizado">Projeto Finalizado</option>
+                            <option value="Vendido">Vendido</option>
+                        </select></div>
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Categoria</p>
-                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="comCategoria" class="accent-emerald-600"> Têm categoria</label>
-                                    <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semCategoria" data-par="comCategoria" class="accent-emerald-600"> Sem categoria</label></div>
+                                    <select id="selectFiltroCategoriaProj" class="w-full bg-surface2 p-1.5 rounded border border-line text-xs font-semibold text-ink focus:outline-none"><option value="">Todas as categorias</option></select></div>
                                 <div><p class="text-[10px] uppercase font-bold text-inkmute mb-1">Valores</p>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semVenda" class="accent-emerald-600"> Sem valor de venda</label>
                                     <label class="flex items-center gap-2 py-0.5"><input type="checkbox" data-fp="semRevenda" class="accent-emerald-600"> Sem valor de revenda</label></div>
@@ -4213,7 +4212,7 @@
 
         // --- SISTEMAS DE RENDERIZAÇÃO ---
         selectOrdenacaoPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
-        selectFiltroStatusPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
+        selectFiltroStatusPortfolio.addEventListener('change', () => { atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         buscaProjetoNome.addEventListener('input', () => { renderizarProjetosOrdenados(); });
         selectFiltroMaquinaPortfolio.addEventListener('change', () => { renderizarProjetosOrdenados(); });
 
@@ -4255,16 +4254,27 @@
         function passaFiltrosProj(p) {
             if (filtrosProj.has('noPortfolio') && !deveAparecerNoPortfolio(p)) return false;
             if (filtrosProj.has('foraPortfolio') && deveAparecerNoPortfolio(p)) return false;
-            if (filtrosProj.has('comCategoria') && !catsDe(p).length) return false;
-            if (filtrosProj.has('semCategoria') && catsDe(p).length) return false;
+            const fc = document.getElementById('selectFiltroCategoriaProj').value;
+            if (fc === '__com' && !catsDe(p).length) return false;
+            if (fc === '__sem' && catsDe(p).length) return false;
+            if (fc && fc.includes('::')) { const [fcat, fsub] = fc.split('::'); if (!catsDe(p).some(x => x.c === fcat && (!fsub || x.s === fsub))) return false; }
             if (filtrosProj.has('semVenda') && temVendaDefinida(p)) return false;
             if (filtrosProj.has('semRevenda') && temRevendaDefinida(p)) return false;
             return true;
         }
-        function atualizarBadgeFiltrosProj() { const b = document.getElementById('filtrosProjQtd'); b.textContent = filtrosProj.size; b.classList.toggle('hidden', filtrosProj.size === 0); }
+        function atualizarBadgeFiltrosProj() { const n = filtrosProj.size + (selectFiltroStatusPortfolio.value !== 'Todos' ? 1 : 0) + (document.getElementById('selectFiltroCategoriaProj').value ? 1 : 0); const b = document.getElementById('filtrosProjQtd'); b.textContent = n; b.classList.toggle('hidden', n === 0); }
+        function atualizarOpcoesCategoriaProj() {
+            const sel = document.getElementById('selectFiltroCategoriaProj'); const atual = sel.value;
+            const mapa = new Map(); projetosCacheLocal.forEach(p => catsDe(p).forEach(x => { if (!mapa.has(x.c)) mapa.set(x.c, new Set()); if (x.s) mapa.get(x.c).add(x.s); }));
+            const cmp = (a, b) => a.localeCompare(b, 'pt-BR', { sensitivity: 'base' });
+            let h = '<option value="">Todas as categorias</option><option value="__com">Com categoria</option><option value="__sem">Sem categoria</option>';
+            [...mapa.keys()].sort(cmp).forEach(c => { h += `<option value="${escHtml(c)}::">${escHtml(c)}</option>`; [...mapa.get(c)].sort(cmp).forEach(sb => { h += `<option value="${escHtml(c)}::${escHtml(sb)}">&nbsp;&nbsp;↳ ${escHtml(sb)}</option>`; }); });
+            if (sel.innerHTML !== h) { sel.innerHTML = h; sel.value = [...sel.options].some(o => o.value === atual) ? atual : ''; }
+        }
+        document.getElementById('selectFiltroCategoriaProj').addEventListener('change', () => { atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('btnFiltrosProj').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('painelFiltrosProj').classList.toggle('hidden'); });
         document.getElementById('fecharFiltrosProj').addEventListener('click', () => document.getElementById('painelFiltrosProj').classList.add('hidden'));
-        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
+        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); selectFiltroStatusPortfolio.value = 'Todos'; document.getElementById('selectFiltroCategoriaProj').value = ''; atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('painelFiltrosProj').addEventListener('click', (e) => e.stopPropagation());
         document.addEventListener('click', () => document.getElementById('painelFiltrosProj').classList.add('hidden'));
         document.getElementById('painelFiltrosProj').addEventListener('change', (e) => {
@@ -4274,6 +4284,7 @@
             atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados();
         });
         function renderizarProjetosOrdenados() {
+            atualizarOpcoesCategoriaProj(); atualizarBadgeFiltrosProj();
             const criterio = selectOrdenacaoPortfolio.value;
             const filtroStatus = selectFiltroStatusPortfolio.value;
             const termoBusca = buscaProjetoNome.value.trim().toLowerCase();
