@@ -3211,9 +3211,9 @@
             if (!m || !(m.nome || m.logo_url)) return '';
             const wa = digitosWhats(m.whatsapp);
             const ig = String(m.instagram || '').replace(/^@/, '').trim();
-            return `<div class="flex flex-wrap items-center gap-4">
-                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="${grande ? 'h-16 w-16' : 'h-12 w-12'} rounded-xl object-contain bg-surface2 border border-line">` : ''}
-                <div class="min-w-0 flex-1"><p class="font-display font-bold ${grande ? 'text-2xl' : 'text-xl'} text-ink">${escHtml(m.nome || '')}</p>${m.mensagem ? `<p class="text-sm text-inkmute">${escHtml(m.mensagem)}</p>` : ''}</div>
+            return `<div class="flex flex-wrap items-center gap-3 sm:gap-4">
+                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="${grande ? 'h-16 w-16' : 'h-12 w-12'} shrink-0 rounded-xl object-contain bg-surface2 border border-line">` : ''}
+                <div class="min-w-[9rem] flex-1"><p class="font-display font-bold ${grande ? 'text-2xl' : 'text-xl'} text-ink">${escHtml(m.nome || '')}</p>${m.mensagem ? `<p class="text-sm text-inkmute">${escHtml(m.mensagem)}</p>` : ''}</div>
                 <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-lg">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="border border-line text-ink text-xs font-bold px-4 py-2 rounded-lg">@${escHtml(ig)}</a>` : ''}</div>
             </div>`;
         }
@@ -3225,9 +3225,11 @@
                     <img src="https://cliente3d.com.br/icone-venda3d.png" alt="Cliente 3D" class="h-14 w-14 rounded-xl object-cover shrink-0">
                     <span class="min-w-0 text-left"><span class="block text-[11px] font-bold uppercase tracking-wide text-emerald-300">Feito com Cliente 3D</span><span class="block text-sm font-bold leading-snug text-white">Tenha um catálogo assim e controle suas impressões 3D</span><span class="inline-block mt-1.5 bg-emerald-500 group-hover:bg-emerald-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-full">Conhecer e testar 5 dias grátis ›</span></span>
                 </a>` : '';
-            el.innerHTML = `<div class="flex flex-wrap items-center gap-4">
-                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="h-16 w-16 sm:h-20 sm:w-20 rounded-2xl object-contain bg-white p-1 shadow">` : ''}
-                <div class="min-w-0 flex-1"><h2 class="font-display font-bold text-2xl sm:text-3xl leading-tight">${escHtml(m.nome || 'Catálogo de produtos')}</h2><p class="text-sm text-emerald-50 mt-1">${escHtml(m.mensagem || 'Peças impressas em 3D sob medida. Escolha o seu e peça pelo WhatsApp.')}</p></div>
+            el.innerHTML = `<div class="flex flex-col lg:flex-row lg:items-center gap-4">
+                <div class="flex items-center gap-3 sm:gap-4 min-w-0 lg:flex-1">
+                ${m.logo_url ? `<img src="${escHtml(m.logo_url)}" alt="" class="h-16 w-16 sm:h-20 sm:w-20 shrink-0 rounded-2xl object-contain bg-white p-1 shadow">` : ''}
+                <div class="min-w-0 flex-1"><h2 class="font-display font-bold text-xl sm:text-3xl leading-tight break-words">${escHtml(m.nome || 'Catálogo de produtos')}</h2><p class="text-sm text-emerald-50 mt-1">${escHtml(m.mensagem || 'Peças impressas em 3D sob medida. Escolha o seu e peça pelo WhatsApp.')}</p></div>
+                </div>
                 <div class="flex gap-2 flex-wrap">${wa ? `<a href="https://wa.me/${wa}?text=${encodeURIComponent('Olá! Vi seu catálogo e gostaria de fazer um pedido.')}" target="_blank" rel="noopener" class="bg-white text-emerald-800 text-xs font-bold px-4 py-2 rounded-full shadow">💬 WhatsApp</a>` : ''}${ig ? `<a href="https://instagram.com/${encodeURIComponent(ig)}" target="_blank" rel="noopener" class="bg-white/20 border border-white/40 text-white text-xs font-bold px-4 py-2 rounded-full">@${escHtml(ig)}</a>` : ''}</div>
             ${promo}
             </div>`;
