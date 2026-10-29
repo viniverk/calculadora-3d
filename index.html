@@ -4644,10 +4644,10 @@
             }));
             linhas.sort((a, b) => String(b.h.data).localeCompare(String(a.h.data)) || String(b.h.em || '').localeCompare(String(a.h.em || '')));
             if (!linhas.length) { el.innerHTML = '<p class="text-sm text-inkmute italic py-4 text-center">Nenhuma impressão encontrada. Impressões feitas pelo botão "Imprimir" aparecem aqui.</p>'; return; }
-            const tq = linhas.reduce((a, x) => a + x.h.qtd, 0), tr = linhas.reduce((a, x) => a + x.r, 0), tg = linhas.reduce((a, x) => a + x.g, 0);
-            el.innerHTML = `<table class="w-full text-sm"><thead class="sticky top-0 bg-surface text-[11px] uppercase text-inkmute"><tr class="border-b border-line"><th class="text-left py-2">Data</th><th class="text-left">Projeto</th><th class="text-right">Qtde</th><th class="text-right">Material</th><th class="text-right">Valor filamento</th><th></th></tr></thead><tbody>` +
-                linhas.map(({ p, h, idx, g, r }) => `<tr class="border-b border-line/60"><td class="py-2 whitespace-nowrap">${String(h.data || '').split('-').reverse().join('/')}</td><td class="max-w-[220px]"><div class="flex items-center gap-2">${miniaturaProjeto(p, 'h-8 w-8')}<span class="truncate font-semibold text-ink">${escHtml(p.nome_projeto)}</span></div></td><td class="text-right font-bold">${h.qtd}</td><td class="text-right">${g.toFixed(0)} g</td><td class="text-right font-bold">R$ ${r.toFixed(2)}</td><td class="text-right whitespace-nowrap pl-2"><button type="button" onclick="editarImpressao('${p.id}',${idx})" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button> <button type="button" onclick="excluirImpressao('${p.id}',${idx})" class="text-[11px] text-red-600 ml-1">Excluir</button></td></tr>`).join('') +
-                `</tbody><tfoot><tr class="font-bold"><td class="py-2" colspan="2">Total</td><td class="text-right">${tq}</td><td class="text-right">${tg.toFixed(0)} g</td><td class="text-right">R$ ${tr.toFixed(2)}</td><td></td></tr></tfoot></table>`;
+            const tq = linhas.reduce((a, x) => a + x.h.qtd, 0), tr = linhas.reduce((a, x) => a + x.r, 0), tg = linhas.reduce((a, x) => a + x.g, 0), tc = linhas.reduce((a, x) => a + (x.h.custo_un != null ? x.h.custo_un * x.h.qtd : 0), 0);
+            el.innerHTML = `<table class="w-full text-sm"><thead class="sticky top-0 bg-surface text-[11px] uppercase text-inkmute"><tr class="border-b border-line"><th class="text-left py-2">Data</th><th class="text-left">Projeto</th><th class="text-left pl-2">Impressora</th><th class="text-right">Qtde</th><th class="text-right">Material</th><th class="text-right">Valor filamento</th><th class="text-right">Custo total</th><th></th></tr></thead><tbody>` +
+                linhas.map(({ p, h, idx, g, r }) => `<tr class="border-b border-line/60"><td class="py-2 whitespace-nowrap">${String(h.data || '').split('-').reverse().join('/')}</td><td class="max-w-[220px]"><div class="flex items-center gap-2">${miniaturaProjeto(p, 'h-8 w-8')}<span class="truncate font-semibold text-ink">${escHtml(p.nome_projeto)}</span></div></td><td class="pl-2 text-xs text-inkmute max-w-[130px] truncate">${h.maquina_nome ? '🖨️ ' + escHtml(h.maquina_nome) : '—'}</td><td class="text-right font-bold">${h.qtd}</td><td class="text-right">${g.toFixed(0)} g</td><td class="text-right font-bold">R$ ${r.toFixed(2)}</td><td class="text-right font-bold text-amber-600">${h.custo_un != null ? 'R$ ' + (h.custo_un * h.qtd).toFixed(2) : '—'}</td><td class="text-right whitespace-nowrap pl-2"><button type="button" onclick="editarImpressao('${p.id}',${idx})" class="text-[11px] text-sky-600 font-semibold">✏️ Editar</button> <button type="button" onclick="excluirImpressao('${p.id}',${idx})" class="text-[11px] text-red-600 ml-1">Excluir</button></td></tr>`).join('') +
+                `</tbody><tfoot><tr class="font-bold"><td class="py-2" colspan="3">Total</td><td class="text-right">${tq}</td><td class="text-right">${tg.toFixed(0)} g</td><td class="text-right">R$ ${tr.toFixed(2)}</td><td class="text-right text-amber-600">R$ ${tc.toFixed(2)}</td><td></td></tr></tfoot></table>`;
         }
         // Controle do filamento já abatido do estoque por projeto (consumo_abatido: {chave: gramas}), para poder reconciliar.
         function consumoPorChaveDe(pecas, mult) {
@@ -4753,11 +4753,35 @@
         document.getElementById('impBusca').addEventListener('input', renderizarImpLista);
         ['impDe', 'impAte'].forEach(i => document.getElementById(i).addEventListener('change', renderizarImpLista));
         document.getElementById('impLimparFiltro').addEventListener('click', () => { document.getElementById('impDe').value = ''; document.getElementById('impAte').value = ''; renderizarImpLista(); });
+        // Custo de UMA unidade impressa numa impressora: filamento das peças + (energia + desgaste + mão de obra) por hora da máquina
+        function custoImpressaoProjeto(p, maqId) {
+            const maq = maqId ? (maquinasCache.find(m => m.id === maqId) || null) : null;
+            const h = custoHoraMaquina(maq);
+            const pecas = p.pecas || [];
+            const horas = pecas.length ? pecas.reduce((a, x) => a + (parseFloat(x.tempo_h) || 0), 0) : (parseFloat(p.tempo_total_min) || 0) / 60;
+            const g = pecas.reduce((a, x) => a + (parseFloat(x.peso_g) || 0), 0) || parseFloat(p.peso_total_g) || 0;
+            const filamento = consumoProjeto(p).r;
+            const energia = horas * h.energia, desgaste = horas * h.desgaste, mao = horas * h.mao;
+            return { g, horas, filamento, energia, desgaste, mao, total: filamento + energia + desgaste + mao, maq };
+        }
         function atualizarResumoImp(id) {
             const p = projetosCacheLocal.find(x => x.id === id); if (!p) return;
             const q = Math.max(1, parseInt(document.getElementById('impQtd').value) || 1);
             const est = parseInt(p.quantidade_estoque) || 0;
-            document.getElementById('impResumo').innerHTML = `<p>Filamento: <b>${((parseFloat(p.peso_total_g) || 0) * q).toFixed(0)} g</b> descontados do estoque</p><p>Estoque pronto: <b>${est} → ${est + q}</b></p><p>Custo desta impressão: <b>R$ ${((parseFloat(p.custo_total) || 0) * q).toFixed(2)}</b></p>`;
+            const c = custoImpressaoProjeto(p, document.getElementById('impMaquina').value);
+            const ln = (t, v, forte) => `<p class="flex justify-between gap-3"><span>${t}</span><span class="${forte ? 'font-bold' : ''}">${v}</span></p>`;
+            const hh = c.horas * q, hm = Math.floor(hh), mm = Math.round((hh - hm) * 60);
+            document.getElementById('impResumo').innerHTML =
+                ln('Filamento descontado do estoque', `<b>${(c.g * q).toFixed(0)} g</b>`) +
+                ln('Tempo de impressão', `<b>${hm}h${String(mm).padStart(2, '0')}</b>`) +
+                ln('Estoque pronto', `<b>${est} → ${est + q}</b>`) +
+                `<div class="border-t border-emerald-200 my-1"></div>` +
+                ln('Filamento', brl(c.filamento * q)) + ln('Energia', brl(c.energia * q)) + (c.desgaste > 0 ? ln('Desgaste da impressora', brl(c.desgaste * q)) : '') + (c.mao > 0 ? ln('Mão de obra', brl(c.mao * q)) : '') +
+                ln('Custo desta impressão', `<b>${brl(c.total * q)}</b>`, true);
+        }
+        function impOpcoesMaquina(p) {
+            const sel = (p.maquina_id && maquinasCache.some(m => m.id === p.maquina_id)) ? p.maquina_id : ((maquinasCache.find(m => m.padrao) || {}).id || '');
+            return '<option value="">Padrão das Configurações</option>' + maquinasCache.map(m => `<option value="${m.id}" ${m.id === sel ? 'selected' : ''}>${escHtml(m.nome)}${m.modelo ? ' — ' + escHtml(m.modelo) : ''}</option>`).join('');
         }
         function abrirImprimirProjeto(id) {
             const p = projetosCacheLocal.find(x => x.id === id); if (!p) return;
@@ -4766,10 +4790,12 @@
                 <div class="flex items-center gap-3">${miniaturaProjeto(p, 'h-14 w-14')}<div class="min-w-0"><h3 class="font-display text-lg font-bold text-ink truncate">Imprimir: ${escHtml(p.nome_projeto)}</h3><p class="text-xs text-inkmute">${parseFloat(p.peso_total_g) || 0} g por unidade</p></div></div>
                 <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1 text-ink">Quantas unidades?</label><input type="number" id="impQtd" min="1" step="1" value="1" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-lg font-bold text-center"></div>
                 <div><label class="block text-xs font-semibold mb-1 text-ink">Data</label><input type="date" id="impData" value="${new Date().toISOString().slice(0, 10)}" class="w-full bg-surface2 p-2 rounded border border-line text-ink"></div></div>
+                <div><label class="block text-xs font-semibold mb-1 text-ink">Impressora usada <span class="text-inkmute font-normal">(o custo é calculado por ela)</span></label><select id="impMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm">${impOpcoesMaquina(p)}</select></div>
                 <div id="impResumo" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900 space-y-1"></div>
                 <div class="flex justify-end gap-2"><button type="button" onclick="fecharImprimirProjeto()" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="impConfirmar" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold">Registrar impressão</button></div></div>`;
             m.classList.remove('hidden'); m.classList.add('flex');
             document.getElementById('impQtd').addEventListener('input', () => atualizarResumoImp(id));
+            document.getElementById('impMaquina').addEventListener('change', () => atualizarResumoImp(id));
             document.getElementById('impConfirmar').addEventListener('click', () => confirmarImprimirProjeto(id));
             atualizarResumoImp(id);
         }
@@ -4780,6 +4806,7 @@
             if (q < 1) { alert('Informe pelo menos 1 unidade.'); return; }
             const btn = document.getElementById('impConfirmar'); btn.disabled = true;
             const data = document.getElementById('impData').value || new Date().toISOString().slice(0, 10);
+            const cimp = custoImpressaoProjeto(p, document.getElementById('impMaquina').value);
             try {
                 await colecao('projetos_3d').doc(id).update({
                     quantidade_estoque: (parseInt(p.quantidade_estoque) || 0) + q,
@@ -4789,7 +4816,7 @@
                     data_conclusao: data,
                     estoque_descontado: true,
                     ...(p.consumo_abatido || !(p.historico_impressoes || []).length ? { consumo_abatido: somarConsumo(p.consumo_abatido, consumoPorChaveDe(p.pecas, q), 1) } : {}),
-                    historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, em: new Date().toISOString() }]
+                    historico_impressoes: [...(p.historico_impressoes || []), { data, qtd: q, em: new Date().toISOString(), maquina_id: cimp.maq ? cimp.maq.id : null, maquina_nome: cimp.maq ? cimp.maq.nome : 'Padrão das Configurações', custo_un: Math.round(cimp.total * 100) / 100 }]
                 });
                 await descontarEstoquePelasPecas(p.pecas, q);
             } catch (e) { alert('Falha ao registrar a impressão: ' + e.message); btn.disabled = false; return; }
