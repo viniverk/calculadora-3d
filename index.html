@@ -1330,6 +1330,10 @@
                 <div><label class="ped-lbl">WhatsApp (com DDD)</label><input type="text" id="marcaWhats" placeholder="(41) 99999-9999" class="ped-inp"></div>
                 <div><label class="ped-lbl">Instagram (opcional)</label><input type="text" id="marcaInsta" placeholder="@suamarca" class="ped-inp"></div>
                 <div><label class="ped-lbl">Mensagem curta</label><input type="text" id="marcaMsg" placeholder="Peças personalizadas impressas em 3D" class="ped-inp"></div>
+                <label class="flex items-start gap-2 cursor-pointer select-none rounded-xl border border-line bg-surface2 p-3">
+                    <input type="checkbox" id="marcaCompartilhar" class="mt-1 h-4 w-4 accent-emerald-600">
+                    <span class="text-sm text-ink"><span class="font-semibold">📤 Liberar compartilhamento dos produtos do Portfólio</span><span class="block text-[11px] text-inkmute">Mostra o botão "Compartilhar" em cada produto do catálogo: gera foto ou vídeo com o valor, em formato de post ou stories, com o link de compra e o seu Instagram (cadastrado acima).</span></span>
+                </label>
                 <button id="btnSalvarMarca" class="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm py-2.5 rounded-xl">Salvar marca</button>
             </div>
             <div class="space-y-2">
@@ -3231,14 +3235,14 @@
         function renderizarPreviewMarca() { document.getElementById('marcaPreview').innerHTML = htmlMarca({ nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim() }, true) || '<p class="text-sm text-inkmute">Preencha o nome ou a logo para ver a prévia.</p>'; }
         const marcaNome = document.getElementById('marcaNome'), marcaLogo = document.getElementById('marcaLogo'), marcaWhats = document.getElementById('marcaWhats'), marcaInsta = document.getElementById('marcaInsta'), marcaMsg = document.getElementById('marcaMsg');
         [marcaNome, marcaLogo, marcaWhats, marcaInsta, marcaMsg].forEach(el => el.addEventListener('input', renderizarPreviewMarca));
-        function preencherFormMarca() { const m = marcaAtual || {}; marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; renderizarPreviewMarca(); }
+        function preencherFormMarca() { const m = marcaAtual || {}; marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; document.getElementById('marcaCompartilhar').checked = m.compartilhar_produtos === true; renderizarPreviewMarca(); }
         async function carregarMarca(uid) {
             try { const d = await colecao('marcas').doc(uid || usuarioAtual.uid).get(); marcaAtual = d.exists ? d.data() : null; } catch (e) { marcaAtual = null; }
             renderizarMarcaPortfolio();
             if (typeof renderizerPortfolioCliente === 'function') renderizerPortfolioCliente();
         }
         document.getElementById('btnSalvarMarca').addEventListener('click', async () => {
-            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), user_id: usuarioAtual.uid };
+            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), compartilhar_produtos: document.getElementById('marcaCompartilhar').checked, user_id: usuarioAtual.uid };
             try { await colecao('marcas').doc(usuarioAtual.uid).set(dados); marcaAtual = dados; renderizarMarcaPortfolio(); renderizerPortfolioCliente(); alert('Marca salva! Ela aparece no topo do seu catálogo público.'); }
             catch (e) { alert('Erro ao salvar: ' + e.message); }
         });
@@ -3256,7 +3260,7 @@
             { aba: 'revenda', titulo: '8. Revenda', texto: 'A mesma lista do Portfólio, mas com o valor de revenda. No fim do formulário do projeto, ao lado do valor de venda, você informa o “Valor de revenda” (se deixar em branco, o app estima pelo custo × o multiplicador de revenda da aba Calcular). É de uso interno: esta aba não tem link público.' },
             { aba: 'buscador', titulo: '9. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez, veja as imagens dos modelos e salve o que achou como projeto.' },
             { aba: 'dashboard', titulo: '10. Visão geral', texto: 'Faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
-            { aba: 'marca', titulo: '11. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público.' },
+            { aba: 'marca', titulo: '11. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público. Marque também "Permitir compartilhar produtos" para que clientes gerem post, stories ou vídeo com foto e preço e o link de compra para o seu Instagram.' },
             { centro: true, final: true, titulo: 'Tudo pronto! 🚀', texto: 'Sugestão de ordem: cadastre a máquina, depois os filamentos, cadastre seus projetos e registre as impressões em Impressões. Para rever este guia, use “Tour guiado” no menu.' }
         ];
         let tourPasso = -1, tourEls = null;
@@ -4378,6 +4382,7 @@
             return proj.visibilidade_portfolio !== 'esconder';
         }
 
+        let produtoAbertoPorLink = false;
         let portFiltro = 'todos', portOrdem = 'relevantes', portBusca = '', portModelos = [], portCat = '', portSub = '', portVisao = 'grade';
         try { portVisao = localStorage.getItem('portVisao') || 'grade'; } catch (e) {}
         function agruparModelosPortfolio(rev = false) {
@@ -4484,6 +4489,8 @@
             if (!carrinhoCarregado) { carrinhoCarregado = true; carregarCarrinho(); }
             if (!visitasCarregadas) { visitasCarregadas = true; carregarVisitas().then(renderizerPortfolioCliente); }
             portModelos = agruparModelosPortfolio();
+            const pidLink = parametrosUrl().get('produto');
+            if (pidLink && !produtoAbertoPorLink) { const ixl = portModelos.findIndex(x => x.id === pidLink); if (ixl >= 0) { produtoAbertoPorLink = true; setTimeout(() => abrirModalPortfolio(ixl), 0); } }
             // Categorias
             const cats = [...new Set(portModelos.flatMap(m => m.cats.map(x => x.c)))].sort((a, b) => a.localeCompare(b, 'pt-BR'));
             if (portCat && !cats.includes(portCat)) portCat = '';
@@ -4596,7 +4603,8 @@
                         ${m.descricao ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1">Sobre o produto</p><p class="text-sm text-ink whitespace-pre-line leading-relaxed">${escHtml(m.descricao)}</p></div>` : ''}
                         ${cores}${pecas}
                         <div class="mt-auto flex flex-col gap-2"><button type="button" id="portAddCarrinho" class="text-center border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold py-2.5 rounded-xl">🛍️ Adicionar ao carrinho</button>
-                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute">Entre em contato com o vendedor para pedir este produto.</p>'}</div>
+                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute">Entre em contato com o vendedor para pedir este produto.</p>'}
+                        ${marcaAtual && marcaAtual.compartilhar_produtos ? `<button type="button" id="portCompartilhar" class="text-center border border-line text-ink hover:bg-surface2 font-bold py-2.5 rounded-xl">📤 Compartilhar (post ou stories)</button>` : ''}</div>
                     </div>
                 </div></div>`;
             md.classList.remove('hidden'); document.body.style.overflow = 'hidden';
@@ -4605,10 +4613,151 @@
             atualizarLink();
             md.querySelectorAll('#portCores [data-cor]').forEach(b => b.addEventListener('click', () => { corSel = corSel === b.dataset.cor ? '' : b.dataset.cor; md.querySelectorAll('#portCores [data-cor]').forEach(x => x.classList.toggle('ativo', x.dataset.cor === corSel)); atualizarLink(); }));
             document.getElementById('portFechar').addEventListener('click', fecharModalPortfolio);
+            const bcomp = document.getElementById('portCompartilhar'); if (bcomp) bcomp.addEventListener('click', () => abrirCompartilharProduto(m));
             document.getElementById('portAddCarrinho').addEventListener('click', () => {
                 if (m.cores.length > 1 && !corSel) { toastCarrinho('Escolha uma cor acima'); return; }
                 adicionarAoCarrinho(i, corSel); 
             });
+        }
+
+        // --- COMPARTILHAR PRODUTO (foto ou vídeo com valor, para post ou stories) ---
+        function carregarImagemCanvas(url) {
+            return new Promise((res) => {
+                if (!url) return res(null);
+                const tenta = (src, cb) => { const im = new Image(); im.crossOrigin = 'anonymous'; im.referrerPolicy = 'no-referrer'; im.onload = () => cb(im); im.onerror = () => cb(null); im.src = src; };
+                tenta(url, (im) => { if (im) return res(im); tenta(SERVIDOR_BUSCA.replace(/\/$/, '') + '/imagem?u=' + encodeURIComponent(url), res); });
+            });
+        }
+        function linkCompraProduto(m) {
+            const uid = uidDonoCatalogo();
+            return (uid && typeof UID_LOJA !== 'undefined' && uid === UID_LOJA) ? `${location.origin}/loja/?produto=${encodeURIComponent(m.id)}` : `${location.origin}${location.pathname.replace(/\/loja\/?$/, '/')}?modo=publico&uid=${uid}&produto=${encodeURIComponent(m.id)}`;
+        }
+        function precoTextoPlano(m) { return m.pMin === m.pMax ? brlPort(m.pMin) : 'a partir de ' + brlPort(m.pMin); }
+        function desenharCartao(ctx, o) {
+            const { W, H, story, img, logo, m, marca } = o; const ts = o.ts == null ? 99 : o.ts;
+            const ease = (x) => { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); };
+            const rr = (x, y, w, h, r) => { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); };
+            const FONT = '"Inter","Helvetica Neue",Arial,sans-serif';
+            const g = ctx.createLinearGradient(0, 0, W, H); g.addColorStop(0, '#04211f'); g.addColorStop(.55, '#065f46'); g.addColorStop(1, '#0f766e');
+            ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+            const rg = ctx.createRadialGradient(W * .85, H * .1, 20, W * .85, H * .1, W * .8); rg.addColorStop(0, 'rgba(110,231,183,.35)'); rg.addColorStop(1, 'rgba(110,231,183,0)'); ctx.fillStyle = rg; ctx.fillRect(0, 0, W, H);
+            const padX = 60, imgW = W - 2 * padX, imgH = story ? 820 : 700;
+            let y = story ? 250 : 60;
+            // cabeçalho com a marca
+            const nome = (marca && marca.nome) || 'Catálogo';
+            let x = padX;
+            if (logo) { ctx.save(); ctx.beginPath(); ctx.arc(x + 42, y + 42, 42, 0, Math.PI * 2); ctx.clip(); ctx.fillStyle = '#fff'; ctx.fillRect(x, y, 84, 84); const k = Math.min(84 / logo.width, 84 / logo.height); ctx.drawImage(logo, x + 42 - logo.width * k / 2, y + 42 - logo.height * k / 2, logo.width * k, logo.height * k); ctx.restore(); x += 104; }
+            ctx.fillStyle = '#fff'; ctx.font = `800 44px ${FONT}`; ctx.textBaseline = 'middle'; ctx.fillText(nome.slice(0, 28), x, y + 42);
+            y += 110;
+            // foto do produto
+            ctx.save(); rr(padX, y, imgW, imgH, 40); ctx.clip();
+            if (img) { const z = 1 + Math.min(ts, 6) * .02; const k = Math.max(imgW / img.width, imgH / img.height) * z; ctx.drawImage(img, padX + imgW / 2 - img.width * k / 2, y + imgH / 2 - img.height * k / 2, img.width * k, img.height * k); }
+            else { ctx.fillStyle = '#e2e8f0'; ctx.fillRect(padX, y, imgW, imgH); ctx.fillStyle = '#64748b'; ctx.font = `800 120px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('🧊', W / 2, y + imgH / 2); ctx.textAlign = 'left'; }
+            ctx.restore();
+            // selo de estoque
+            const emEst = m.estoque > 0, sel = emEst ? 'Em estoque' : 'Sob encomenda';
+            ctx.font = `800 30px ${FONT}`; const sw = ctx.measureText(sel).width + 44;
+            ctx.fillStyle = emEst ? '#059669' : '#f59e0b'; rr(padX + 24, y + 24, sw, 56, 28); ctx.fill(); ctx.fillStyle = '#fff'; ctx.fillText(sel, padX + 46, y + 53);
+            // preço
+            const pa = ease((ts - .5) / .6), preco = precoTextoPlano(m);
+            ctx.font = `900 ${preco.length > 12 ? 58 : 76}px ${FONT}`; const pw = Math.max(380, ctx.measureText(preco).width + 100), ph = 124;
+            const py = y + imgH - ph / 2 + (1 - pa) * 220; ctx.globalAlpha = pa;
+            ctx.save(); ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10; ctx.fillStyle = '#fbbf24'; rr(W / 2 - pw / 2, py, pw, ph, 62); ctx.fill(); ctx.restore();
+            ctx.fillStyle = '#1c1917'; ctx.textAlign = 'center'; ctx.fillText(preco, W / 2, py + ph / 2 + 3); ctx.globalAlpha = 1;
+            // nome
+            const na = ease((ts - 1) / .6); ctx.globalAlpha = na; ctx.fillStyle = '#fff'; ctx.font = `800 58px ${FONT}`;
+            const palavras = String(m.nome || '').split(/\s+/); const linhas = []; let at = '';
+            palavras.forEach(w => { const t = at ? at + ' ' + w : w; if (ctx.measureText(t).width > imgW - 20 && at) { linhas.push(at); at = w; } else at = t; }); if (at) linhas.push(at);
+            const ny = y + imgH + ph / 2 + 70; linhas.slice(0, 2).forEach((l, i) => ctx.fillText(l + (i === 1 && linhas.length > 2 ? '…' : ''), W / 2, ny + i * 70));
+            ctx.globalAlpha = 1;
+            // chamada para compra
+            const insta = marca && marca.instagram ? '@' + String(marca.instagram).replace(/^@/, '').trim() : '';
+            const pulso = 1 + .035 * Math.sin(Math.max(0, ts - 1.6) * 5);
+            const cy = story ? 1500 : 1170, bw = 820, bh = story ? 120 : 100;
+            ctx.save(); ctx.translate(W / 2, cy + bh / 2); ctx.scale(pulso, pulso); ctx.fillStyle = '#ffffff'; rr(-bw / 2, -bh / 2, bw, bh, bh / 2); ctx.fill();
+            ctx.fillStyle = '#065f46'; ctx.font = `800 ${story ? 44 : 40}px ${FONT}`; ctx.fillText(story ? '🛍️ Toque no link para comprar' : '🛍️ Compre pelo link da bio', 0, 3); ctx.restore();
+            if (insta) { ctx.fillStyle = '#d1fae5'; ctx.font = `700 38px ${FONT}`; ctx.fillText(insta, W / 2, cy + bh + (story ? 70 : 52)); }
+            ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        }
+        async function abrirCompartilharProduto(m) {
+            let md = document.getElementById('portShareModal');
+            if (!md) { md = document.createElement('div'); md.id = 'portShareModal'; md.className = 'fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4'; document.body.appendChild(md); }
+            const marca = marcaAtual || {}, insta = String(marca.instagram || '').replace(/^@/, '').trim();
+            const link = linkCompraProduto(m);
+            const est = { story: false, video: false, urlMidia: null, blob: null, nomeArq: '' };
+            md.className = 'fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4';
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-md max-h-[94vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 space-y-3 relative">
+                <button type="button" id="shFechar" class="absolute top-2 right-2 h-8 w-8 rounded-full bg-surface2 text-ink" aria-label="Fechar">✕</button>
+                <h3 class="font-display font-bold text-ink text-lg pr-8">📤 Compartilhar produto</h3>
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold" id="shFormato"><button type="button" data-f="post">📷 Post (4:5)</button><button type="button" data-f="story">📱 Stories (9:16)</button></div>
+                <div class="grid grid-cols-2 gap-2 text-xs font-bold" id="shTipo"><button type="button" data-t="foto">🖼️ Foto</button><button type="button" data-t="video">🎬 Vídeo (6 s)</button></div>
+                <div class="rounded-xl bg-surface2 flex items-center justify-center overflow-hidden min-h-[200px]"><canvas id="shCanvas" class="max-h-[52vh] max-w-full"></canvas><video id="shVideo" class="hidden max-h-[52vh] max-w-full" controls playsinline loop muted></video></div>
+                <p id="shMsg" class="text-[11px] text-inkmute text-center">Preparando imagem…</p>
+                <div class="grid grid-cols-2 gap-2">
+                    <button type="button" id="shBaixar" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm">⬇️ Baixar</button>
+                    <button type="button" id="shCompartilhar" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2.5 rounded-xl text-sm">📲 Enviar / Instagram</button>
+                    <button type="button" id="shLink" class="border border-line text-ink font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">🔗 Copiar link de compra</button>
+                    ${insta ? `<a href="https://instagram.com/${encodeURIComponent(insta)}" target="_blank" rel="noopener" class="text-center border border-line text-ink font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">Abrir @${escHtml(insta)}</a>` : '<span></span>'}
+                </div>
+                <p class="text-[11px] text-inkmute">Dica: no Stories, toque no adesivo <b>Link</b> e cole o link de compra. No post, ponha o link na bio ou na legenda.</p>
+            </div>`;
+            const q = (id) => document.getElementById(id), canvas = q('shCanvas'), video = q('shVideo'), msg = q('shMsg');
+            const fechar = () => { if (est.urlMidia) URL.revokeObjectURL(est.urlMidia); md.className = 'hidden'; md.innerHTML = ''; };
+            q('shFechar').addEventListener('click', fechar); md.addEventListener('click', (e) => { if (e.target === md) fechar(); });
+            const [img, logo] = await Promise.all([carregarImagemCanvas(m.imagem), carregarImagemCanvas(marca.logo_url)]);
+            if (!img && m.imagem) msg.textContent = 'Não foi possível carregar a foto do produto; o cartão será gerado sem ela.';
+            const pintarBotoes = () => {
+                q('shFormato').querySelectorAll('button').forEach(b => { const on = (b.dataset.f === 'story') === est.story; b.className = 'py-2 rounded-xl border ' + (on ? 'bg-emerald-600 text-white border-emerald-600' : 'border-line text-ink bg-surface2'); });
+                q('shTipo').querySelectorAll('button').forEach(b => { const on = (b.dataset.t === 'video') === est.video; b.className = 'py-2 rounded-xl border ' + (on ? 'bg-emerald-600 text-white border-emerald-600' : 'border-line text-ink bg-surface2'); });
+            };
+            let geracao = 0;
+            const gerar = async () => {
+                const id = ++geracao; pintarBotoes();
+                if (est.urlMidia) { URL.revokeObjectURL(est.urlMidia); est.urlMidia = null; } est.blob = null;
+                video.pause(); video.classList.add('hidden'); canvas.classList.remove('hidden');
+                const W = 1080, H = est.story ? 1920 : 1350, k = est.video ? (est.story ? 720 / 1080 : 864 / 1080) : 1;
+                canvas.width = Math.round(W * k); canvas.height = Math.round(H * k);
+                const ctx = canvas.getContext('2d'), base = { W, H, story: est.story, img, logo, m, marca };
+                const quadro = (ts) => { ctx.setTransform(k, 0, 0, k, 0, 0); ctx.clearRect(0, 0, W, H); desenharCartao(ctx, { ...base, ts }); };
+                const baseNome = (m.nome || 'produto').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'produto';
+                if (!est.video) {
+                    quadro(99);
+                    try { est.blob = await new Promise((r, j) => canvas.toBlob(b => b ? r(b) : j(new Error('vazio')), 'image/jpeg', .92)); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.jpg`; msg.textContent = 'Pronto! Baixe a imagem ou envie direto pelo celular.'; }
+                    catch (e) { msg.textContent = 'Não foi possível gerar a imagem (a foto do produto bloqueia o uso). Tente outra foto.'; }
+                    return;
+                }
+                if (typeof MediaRecorder === 'undefined' || !canvas.captureStream) { msg.textContent = 'Este navegador não gera vídeo. Use a opção Foto ou o Chrome/Safari atualizado.'; return; }
+                const tipos = ['video/mp4;codecs=avc1.42E01E', 'video/mp4', 'video/webm;codecs=vp9', 'video/webm;codecs=vp8', 'video/webm'];
+                const tipo = tipos.find(t => MediaRecorder.isTypeSupported(t)); if (!tipo) { msg.textContent = 'Este navegador não suporta gravação de vídeo.'; return; }
+                msg.textContent = 'Gerando vídeo de 6 segundos… aguarde.';
+                let rec; try { rec = new MediaRecorder(canvas.captureStream(30), { mimeType: tipo, videoBitsPerSecond: 4000000 }); } catch (e) { msg.textContent = 'Não foi possível iniciar a gravação.'; return; }
+                const partes = []; rec.ondataavailable = (e) => { if (e.data && e.data.size) partes.push(e.data); };
+                const fim = new Promise(r => { rec.onstop = r; });
+                rec.start(); const t0 = performance.now();
+                await new Promise(r => { const f = () => { if (id !== geracao) { r(); return; } const ts = (performance.now() - t0) / 1000; quadro(ts); if (ts >= 6) r(); else requestAnimationFrame(f); }; f(); });
+                rec.stop(); await fim; if (id !== geracao) return;
+                const ext = tipo.startsWith('video/mp4') ? 'mp4' : 'webm';
+                est.blob = new Blob(partes, { type: tipo.split(';')[0] }); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.${ext}`;
+                est.urlMidia = URL.createObjectURL(est.blob); video.src = est.urlMidia; video.classList.remove('hidden'); canvas.classList.add('hidden'); video.play().catch(() => {});
+                msg.textContent = ext === 'mp4' ? 'Vídeo pronto!' : 'Vídeo pronto em WebM. O Instagram aceita melhor MP4: se não abrir, gere pelo Safari/Chrome do celular ou use a opção Foto.';
+            };
+            q('shFormato').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (b) { est.story = b.dataset.f === 'story'; gerar(); } });
+            q('shTipo').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (b) { est.video = b.dataset.t === 'video'; gerar(); } });
+            q('shBaixar').addEventListener('click', () => {
+                if (!est.blob) { msg.textContent = 'Aguarde a mídia ficar pronta.'; return; }
+                const u = URL.createObjectURL(est.blob), a = document.createElement('a'); a.href = u; a.download = est.nomeArq; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000);
+            });
+            q('shCompartilhar').addEventListener('click', async () => {
+                if (!est.blob) { msg.textContent = 'Aguarde a mídia ficar pronta.'; return; }
+                const arq = new File([est.blob], est.nomeArq, { type: est.blob.type }), texto = `${m.nome} por ${precoTextoPlano(m)}\nCompre aqui: ${link}`;
+                try {
+                    if (navigator.canShare && navigator.canShare({ files: [arq] })) await navigator.share({ files: [arq], text: texto, title: m.nome });
+                    else if (navigator.share) { await navigator.share({ text: texto, url: link, title: m.nome }); msg.textContent = 'Seu aparelho não envia arquivos daqui: baixe a mídia e poste no Instagram.'; }
+                    else { q('shBaixar').click(); msg.textContent = 'Baixamos a mídia. Abra o Instagram e poste por lá.'; }
+                } catch (e) { /* cancelado */ }
+            });
+            q('shLink').addEventListener('click', () => { navigator.clipboard.writeText(link).then(() => { msg.textContent = '✅ Link de compra copiado!'; }).catch(() => { prompt('Copie o link:', link); }); });
+            gerar();
         }
         document.getElementById('portModal').addEventListener('click', (e) => { if (e.target.id === 'portModal') fecharModalPortfolio(); });
         document.addEventListener('keydown', (e) => { if (e.key === 'Escape') { fecharModalPortfolio(); fecharCarrinho(); } });

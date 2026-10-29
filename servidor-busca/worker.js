@@ -241,6 +241,22 @@ async function descreverProduto(req, env, cors) {
   return json({ descricao: texto, usouImagem: !!img }, cors);
 }
 
+// --- Proxy de imagem (com CORS) para o app desenhar a foto do produto num cartão de compartilhamento ---
+async function proxyImagem(url, cors) {
+  try {
+    const alvo = new URL(url.searchParams.get('u') || '');
+    if (!/^https?:$/.test(alvo.protocol)) return json({ erro: 'URL inválida.' }, cors, 400);
+    const h = alvo.hostname.toLowerCase();
+    if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || /^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.|\[)/.test(h) || !h.includes('.')) return json({ erro: 'Endereço não permitido.' }, cors, 400);
+    const r = await fetch(alvo.toString(), { headers: { 'user-agent': UA, accept: 'image/*' }, redirect: 'follow', cf: { cacheTtl: 86400, cacheEverything: true } });
+    if (!r.ok) return json({ erro: 'Imagem indisponível.' }, cors, 502);
+    const tipo = (r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(tipo)) return json({ erro: 'Não é uma imagem.' }, cors, 415);
+    const buf = await r.arrayBuffer();
+    if (buf.byteLength > 8 * 1024 * 1024) return json({ erro: 'Imagem grande demais.' }, cors, 413);
+    return new Response(buf, { headers: { 'content-type': tipo, 'cache-control': 'public, max-age=86400', ...cors } });
+  } catch (e) { return json({ erro: 'Falha ao buscar a imagem.' }, cors, 502); }
+}
 function json(corpo, cors, status = 200) {
   return new Response(JSON.stringify(corpo), { status, headers: { 'content-type': 'application/json; charset=utf-8', ...cors } });
 }
@@ -257,6 +273,7 @@ export default {
     if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
     if (url.pathname === '/preview') return previewModelo(url, cors);
     if (url.pathname === '/descrever') return descreverProduto(req, env, cors);
+    if (url.pathname === '/imagem') return proxyImagem(url, cors);
     if (url.pathname !== '/search') return json({ ok: true, servico: 'busca-modelos', fontes: Object.keys(BUSCADORES) }, cors);
 
     const q = (url.searchParams.get('q') || '').trim().slice(0, 100);
