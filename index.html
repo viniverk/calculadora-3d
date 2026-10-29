@@ -2610,6 +2610,19 @@
                 return; 
             }
 
+            // ?site=1: mostra a página inicial (landing) mesmo com a conta conectada (ex.: clique no banner do catálogo público)
+            if (user && urlParams.get('site') === '1') {
+                document.getElementById('telaAcessoPendente').classList.add('hidden');
+                document.getElementById('telaCompletarCadastro').classList.add('hidden');
+                sidebarApp.classList.add('hidden');
+                document.body.classList.remove('tema-escuro', 'tema-neon');
+                conteudoPainel.classList.add('hidden');
+                mobileTopBar.classList.add('hidden');
+                telaAuth.classList.remove('hidden');
+                document.querySelectorAll('#telaAutenticacao button[onclick="abrirAuth(\'login\')"]').forEach(b => { b.textContent = 'Meu painel ›'; });
+                return;
+            }
+
             if (user) {
                 usuarioAtual = user;
                 let perfilOk;
@@ -3203,7 +3216,7 @@
             const el = document.getElementById('portfolioMarca'); if (!el) return;
             const m = marcaAtual || {};
             const wa = digitosWhats(m.whatsapp); const ig = String(m.instagram || '').replace(/^@/, '').trim();
-            const promo = modoPublicoAtivo ? `<a href="https://cliente3d.com.br/" target="_blank" rel="noopener" class="group w-full lg:w-auto lg:max-w-xs flex items-center gap-3 bg-slate-900/85 hover:bg-slate-900 border border-white/25 rounded-2xl p-3 shadow-lg transition" title="Conheça o Cliente 3D">
+            const promo = modoPublicoAtivo ? `<a href="https://cliente3d.com.br/?site=1" target="_blank" rel="noopener" class="group w-full lg:w-auto lg:max-w-xs flex items-center gap-3 bg-slate-900/85 hover:bg-slate-900 border border-white/25 rounded-2xl p-3 shadow-lg transition" title="Conheça o Cliente 3D">
                     <img src="https://cliente3d.com.br/icone-venda3d.png" alt="Cliente 3D" class="h-14 w-14 rounded-xl object-cover shrink-0">
                     <span class="min-w-0 text-left"><span class="block text-[11px] font-bold uppercase tracking-wide text-emerald-300">Feito com Cliente 3D</span><span class="block text-sm font-bold leading-snug text-white">Tenha um catálogo assim e controle suas impressões 3D</span><span class="inline-block mt-1.5 bg-emerald-500 group-hover:bg-emerald-400 text-slate-950 text-xs font-extrabold px-3 py-1.5 rounded-full">Conhecer e testar 5 dias grátis ›</span></span>
                 </a>` : '';
@@ -5271,6 +5284,7 @@
 
         // --- LANDING PAGE: abrir/fechar modal de login ---
         function abrirAuth(modo) {
+            if (auth.currentUser && parametrosUrl().get('site') === '1') { window.location.href = window.location.origin + window.location.pathname; return; }
             window.modoAbas = modo;
             const cadastro = modo === 'cadastro';
             document.getElementById('tituloAuth').innerText = cadastro ? 'Criar Conta — 5 dias grátis' : 'Entrar no Sistema';
