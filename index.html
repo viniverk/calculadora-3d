@@ -4089,8 +4089,7 @@
         btnSalvarProjetoCompleto.addEventListener('click', async () => {
             const nomeProjeto = projNome.value.trim(); const margem = parseFloat(projMargemPorcentagem.value) || 0; const statusAtual = projStatus.value; const dataConclusao = projDataConclusao.value || null;
             if (!nomeProjeto) return alert('Por favor, defina o nome do projeto geral.');
-            if (pecasProjetoAtual.length === 0) return alert('Adicione pelo menos uma peça.');
-            
+            // Projeto sem peças pode ser salvo: fica com custo zero até você incluir as peças (o preço manual, se informado, vale)
             let tempoTotalMin = 0; let pesoTotalG = 0; let custoPecasAcum = 0;
             pecasProjetoAtual.forEach(p => { tempoTotalMin += Math.round(p.tempo_h * 60); pesoTotalG += p.peso_g; custoPecasAcum += p.custo_calculado; });
             const finProj = calcularFinanceiroProjeto(custoPecasAcum, margem, projCanalVenda.value);
@@ -4226,7 +4225,7 @@
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; definirCatsForm(proj); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projPrecoRevenda.value = proj.revenda_manual ? proj.preco_revenda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
-            projMargemPorcentagem.value = proj.margem_lucro_porcentagem; projImagemUrl.value = proj.imagem_base64 || '';
+            projMargemPorcentagem.value = proj.margem_lucro_porcentagem != null ? proj.margem_lucro_porcentagem : projMargemPorcentagem.value; projImagemUrl.value = proj.imagem_base64 || '';
             projOcultarPortfolio.checked = proj.visibilidade_portfolio === 'esconder';
             projQuantidadeEstoque.value = parseInt(proj.quantidade_estoque) || 0;
             projCanalVenda.value = (proj.canal_venda && NOME_CANAL[proj.canal_venda]) ? proj.canal_venda : 'direta';
