@@ -4475,7 +4475,7 @@
         }
         const brlPort = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
         const modeloSemPreco = (m) => !((parseFloat(m.pMax) || 0) > 0);
-        function textoPrecoModelo(m) { if (modeloSemPreco(m)) return '<span class="text-base font-extrabold text-ink">Sob consulta</span>'; return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
+        function textoPrecoModelo(m) { if (modeloSemPreco(m)) return '<span class="text-base font-extrabold" style="color:#065f46 !important;opacity:1">Sob consulta</span>'; return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
 
         // --- MAIS VISITADOS (contador de visitas por produto) ---
         let visitasMapa = {}, visitasCarregadas = false;
