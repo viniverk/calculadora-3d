@@ -165,6 +165,12 @@
         #sidebarApp .item-menu-btn { border-radius: 0.8rem; }
         #sidebarApp .item-menu-btn:hover { transform: translateX(2px); }
         #sidebarApp nav p { letter-spacing: .14em; }
+        #sidebarApp .grupo-cab { letter-spacing: .14em; }
+        #sidebarApp.w-64 .grupo-menu.recolhido .grupo-itens { display: none; }
+        #sidebarApp .grupo-menu.recolhido .grupo-seta { transform: rotate(-90deg); }
+        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab::before { content: '●'; color: #10b981; margin-right: .4rem; font-size: 8px; }
+        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab { justify-content: flex-start; }
+        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab > span:first-of-type { flex: 1; text-align: left; }
         /* campos */
         .ped-inp, input.rounded-lg, select.rounded-lg, textarea.rounded-lg { border-radius: 0.8rem; }
         .ped-inp:focus { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.18) !important; }
@@ -643,17 +649,23 @@
 
             <nav class="p-3 space-y-1">
                 <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn !bg-emerald-50 !text-emerald-800 border border-emerald-200 font-bold" data-aba="calculadora"><span class="text-lg">🧮</span><span class="whitespace-nowrap label-texto font-medium">Calcular</span></button>
-                <p class="label-texto px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70">Operação</p>
+                <div class="grupo-menu space-y-1" data-grupo="operacao">
+                <button type="button" class="grupo-cab label-texto w-full flex items-center justify-between px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70 hover:text-ink" data-grupo-cab="operacao" aria-expanded="true"><span>Operação</span><span class="grupo-seta text-[11px] transition-transform">▾</span></button>
+                <div class="grupo-itens space-y-1">
                 <button onclick="mudarAba('dashboard')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn ativo-nav" data-aba="dashboard"><span class="text-lg">📊</span><span class="whitespace-nowrap label-texto font-medium">Visão geral</span></button>
                 <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="inserir-impressao"><span class="text-lg">🚀</span><span class="whitespace-nowrap label-texto font-medium">Impressões</span></button>
                 <button onclick="mudarAba('pedidos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="pedidos"><span class="text-lg">📋</span><span class="whitespace-nowrap label-texto font-medium">Pedidos e Fila</span></button>
                 <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas"><span class="text-lg">💰</span><span class="whitespace-nowrap label-texto font-medium">Vendas</span></button>
                 <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="portfolio-cliente"><span class="text-lg">🖼️</span><span class="whitespace-nowrap label-texto font-medium">Portfólio</span></button>
                 <button onclick="mudarAba('revenda')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="revenda"><span class="text-lg">🏷️</span><span class="whitespace-nowrap label-texto font-medium">Revenda</span></button>
-                <p class="label-texto px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70">Recursos</p>
+                </div></div>
+                <div class="grupo-menu space-y-1" data-grupo="recursos">
+                <button type="button" class="grupo-cab label-texto w-full flex items-center justify-between px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70 hover:text-ink" data-grupo-cab="recursos" aria-expanded="true"><span>Recursos</span><span class="grupo-seta text-[11px] transition-transform">▾</span></button>
+                <div class="grupo-itens space-y-1">
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos"><span class="text-lg">🧵</span><span class="whitespace-nowrap label-texto font-medium">Estoque</span></button>
                 <button onclick="mudarAba('maquinas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="maquinas"><span class="text-lg">🖨️</span><span class="whitespace-nowrap label-texto font-medium">Máquinas</span></button>
                 <button onclick="mudarAba('buscador')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="buscador"><span class="text-lg">🔎</span><span class="whitespace-nowrap label-texto font-medium">Buscar modelos</span></button>
+                </div></div>
 
                 <button id="abaAdminBtn" onclick="mudarAba('admin')" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-left transition hover:bg-gold2/10 text-gold2 border border-gold2/20 font-medium hidden item-menu-btn mt-3" data-aba="admin">
                     <span class="text-lg">🛡️</span>
@@ -2027,6 +2039,25 @@
             });
         })();
 
+        // Grupos do menu (Operação / Recursos) que podem ser recolhidos; o estado fica salvo neste aparelho
+        const CHAVE_GRUPOS_MENU = 'menuGruposRecolhidos';
+        let gruposRecolhidos = []; try { gruposRecolhidos = JSON.parse(localStorage.getItem(CHAVE_GRUPOS_MENU) || '[]'); } catch (e) { gruposRecolhidos = []; }
+        const lerGruposRecolhidos = () => [...gruposRecolhidos];
+        function salvarGruposRecolhidos(l) { gruposRecolhidos = [...l]; try { localStorage.setItem(CHAVE_GRUPOS_MENU, JSON.stringify(gruposRecolhidos)); } catch (e) {} }
+        function aplicarGruposMenu() {
+            const rec = lerGruposRecolhidos();
+            document.querySelectorAll('#sidebarApp .grupo-menu').forEach(g => {
+                const r = rec.includes(g.dataset.grupo); g.classList.toggle('recolhido', r);
+                g.classList.toggle('tem-ativo', !!g.querySelector('.ativo-nav'));
+                const c = g.querySelector('.grupo-cab'); if (c) c.setAttribute('aria-expanded', String(!r));
+            });
+        }
+        document.querySelectorAll('#sidebarApp .grupo-cab').forEach(c => c.addEventListener('click', () => {
+            const g = c.closest('.grupo-menu').dataset.grupo, l = lerGruposRecolhidos(), i = l.indexOf(g);
+            if (i >= 0) l.splice(i, 1); else l.push(g);
+            salvarGruposRecolhidos(l); aplicarGruposMenu();
+        }));
+        aplicarGruposMenu();
         function mudarAba(abaDestino) {
             if (modoPublicoAtivo) return; 
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
@@ -2038,11 +2069,13 @@
                 if (btn.getAttribute('data-aba') === abaDestino) {
                     btn.classList.add('ativo-nav');
                     btn.classList.remove('hover:bg-surface2');
+                    const gm = btn.closest('.grupo-menu'); if (gm) { const l = lerGruposRecolhidos(), i = l.indexOf(gm.dataset.grupo); if (i >= 0) { l.splice(i, 1); salvarGruposRecolhidos(l); } }
                 } else {
                     btn.classList.remove('ativo-nav');
                     btn.classList.add('hover:bg-surface2');
                 }
             });
+            aplicarGruposMenu();
 
             if (abaDestino === 'dashboard') carregarDashboard();
             if (abaDestino === 'calculadora') { carregarModelos(); preencherMaquinasCalc(); calcularAbaBase(); }
