@@ -165,12 +165,11 @@
         #sidebarApp .item-menu-btn { border-radius: 0.8rem; }
         #sidebarApp .item-menu-btn:hover { transform: translateX(2px); }
         #sidebarApp nav p { letter-spacing: .14em; }
-        #sidebarApp .grupo-cab { letter-spacing: .14em; }
         #sidebarApp.w-64 .grupo-menu.recolhido .grupo-itens { display: none; }
         #sidebarApp .grupo-menu.recolhido .grupo-seta { transform: rotate(-90deg); }
-        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab::before { content: '●'; color: #10b981; margin-right: .4rem; font-size: 8px; }
-        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab { justify-content: flex-start; }
-        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-cab > span:first-of-type { flex: 1; text-align: left; }
+        #sidebarApp .grupo-menu.recolhido .grupo-qtd { display: inline-flex; }
+        #sidebarApp .grupo-menu.recolhido.tem-ativo .grupo-nome::after { content: ' ●'; color: #10b981; font-size: 9px; }
+        #sidebarApp .grupo-menu .grupo-itens { padding-left: .5rem; border-left: 2px solid rgb(var(--c-line)); margin-left: .9rem; margin-top: .25rem; }
         /* campos */
         .ped-inp, input.rounded-lg, select.rounded-lg, textarea.rounded-lg { border-radius: 0.8rem; }
         .ped-inp:focus { border-color: #10B981; box-shadow: 0 0 0 3px rgba(16,185,129,.18) !important; }
@@ -650,7 +649,7 @@
             <nav class="p-3 space-y-1">
                 <button onclick="mudarAba('calculadora')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn !bg-emerald-50 !text-emerald-800 border border-emerald-200 font-bold" data-aba="calculadora"><span class="text-lg">🧮</span><span class="whitespace-nowrap label-texto font-medium">Calcular</span></button>
                 <div class="grupo-menu space-y-1" data-grupo="operacao">
-                <button type="button" class="grupo-cab label-texto w-full flex items-center justify-between px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70 hover:text-ink" data-grupo-cab="operacao" aria-expanded="true"><span>Operação</span><span class="grupo-seta text-[11px] transition-transform">▾</span></button>
+                <button type="button" class="grupo-cab label-texto w-full flex items-center gap-2 px-3 py-2 mt-3 rounded-xl text-sm font-bold text-ink bg-surface2/70 hover:bg-surface2 border border-line/70 transition" data-grupo-cab="operacao" aria-expanded="true" title="Clique para recolher ou abrir"><span class="text-base">📦</span><span class="grupo-nome flex-1 text-left">Operação</span><span class="grupo-qtd hidden text-[10px] font-bold rounded-full px-1.5 py-0.5 bg-surface text-inkmute border border-line"></span><span class="grupo-seta text-xs text-inkmute transition-transform">▾</span></button>
                 <div class="grupo-itens space-y-1">
                 <button onclick="mudarAba('dashboard')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn ativo-nav" data-aba="dashboard"><span class="text-lg">📊</span><span class="whitespace-nowrap label-texto font-medium">Visão geral</span></button>
                 <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="inserir-impressao"><span class="text-lg">🚀</span><span class="whitespace-nowrap label-texto font-medium">Impressões</span></button>
@@ -660,7 +659,7 @@
                 <button onclick="mudarAba('revenda')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="revenda"><span class="text-lg">🏷️</span><span class="whitespace-nowrap label-texto font-medium">Revenda</span></button>
                 </div></div>
                 <div class="grupo-menu space-y-1" data-grupo="recursos">
-                <button type="button" class="grupo-cab label-texto w-full flex items-center justify-between px-3 pt-4 pb-1 text-[10px] font-bold uppercase tracking-wider text-inkmute/70 hover:text-ink" data-grupo-cab="recursos" aria-expanded="true"><span>Recursos</span><span class="grupo-seta text-[11px] transition-transform">▾</span></button>
+                <button type="button" class="grupo-cab label-texto w-full flex items-center gap-2 px-3 py-2 mt-3 rounded-xl text-sm font-bold text-ink bg-surface2/70 hover:bg-surface2 border border-line/70 transition" data-grupo-cab="recursos" aria-expanded="true" title="Clique para recolher ou abrir"><span class="text-base">🧰</span><span class="grupo-nome flex-1 text-left">Recursos</span><span class="grupo-qtd hidden text-[10px] font-bold rounded-full px-1.5 py-0.5 bg-surface text-inkmute border border-line"></span><span class="grupo-seta text-xs text-inkmute transition-transform">▾</span></button>
                 <div class="grupo-itens space-y-1">
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos"><span class="text-lg">🧵</span><span class="whitespace-nowrap label-texto font-medium">Estoque</span></button>
                 <button onclick="mudarAba('maquinas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="maquinas"><span class="text-lg">🖨️</span><span class="whitespace-nowrap label-texto font-medium">Máquinas</span></button>
@@ -2049,7 +2048,7 @@
             document.querySelectorAll('#sidebarApp .grupo-menu').forEach(g => {
                 const r = rec.includes(g.dataset.grupo); g.classList.toggle('recolhido', r);
                 g.classList.toggle('tem-ativo', !!g.querySelector('.ativo-nav'));
-                const c = g.querySelector('.grupo-cab'); if (c) c.setAttribute('aria-expanded', String(!r));
+                const c = g.querySelector('.grupo-cab'); if (c) c.setAttribute('aria-expanded', String(!r)); const q = g.querySelector('.grupo-qtd'); if (q) q.textContent = g.querySelectorAll('.grupo-itens .item-menu-btn').length;
             });
         }
         document.querySelectorAll('#sidebarApp .grupo-cab').forEach(c => c.addEventListener('click', () => {
