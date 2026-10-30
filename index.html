@@ -4475,7 +4475,8 @@
             return Math.ceil((parseFloat(x.custo_total) || 0) * mult * 10 - 1e-9) / 10;
         }
         const brlPort = (v) => 'R$ ' + (v || 0).toFixed(2).replace('.', ',');
-        function textoPrecoModelo(m) { return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
+        const modeloSemPreco = (m) => !((parseFloat(m.pMax) || 0) > 0);
+        function textoPrecoModelo(m) { if (modeloSemPreco(m)) return '<span class="text-base font-extrabold">Sob consulta</span>'; return m.pMin === m.pMax ? brlPort(m.pMin) : `<span class="text-[10px] font-semibold text-inkmute block leading-none mb-0.5">a partir de</span>${brlPort(m.pMin)}`; }
 
         // --- MAIS VISITADOS (contador de visitas por produto) ---
         let visitasMapa = {}, visitasCarregadas = false;
@@ -4514,10 +4515,10 @@
             const total = carrinho.reduce((a, x) => a + x.preco * x.qtd, 0);
             const linhas = carrinho.length ? carrinho.map((x, k) => `<div class="flex items-center gap-3 py-2 border-b border-line/60">
                 ${x.imagem ? `<img src="${escHtml(x.imagem)}" alt="" referrerpolicy="no-referrer" class="h-14 w-14 rounded-lg object-cover bg-surface2 shrink-0">` : '<div class="h-14 w-14 rounded-lg bg-surface2 flex items-center justify-center shrink-0">🧊</div>'}
-                <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(x.nome)}</p><p class="text-[11px] text-inkmute">${x.cor ? escHtml(x.cor) + ' • ' : ''}${brlPort(x.preco)}</p></div>
+                <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(x.nome)}</p><p class="text-[11px] text-inkmute">${x.cor ? escHtml(x.cor) + ' • ' : ''}${x.preco > 0 ? brlPort(x.preco) : 'sob consulta'}</p></div>
                 <div class="flex items-center gap-1"><button type="button" data-cq="${k}" data-d="-1" class="h-7 w-7 rounded-full border border-line text-ink">−</button><span class="w-6 text-center text-sm font-bold">${x.qtd}</span><button type="button" data-cq="${k}" data-d="1" class="h-7 w-7 rounded-full border border-line text-ink">+</button></div>
                 <button type="button" data-cr="${k}" class="text-red-600 text-xs ml-1" aria-label="Remover">✕</button></div>`).join('') : '<p class="text-sm text-inkmute py-8 text-center">Seu carrinho está vazio.</p>';
-            const msg = 'Olá! Gostaria de fazer este pedido:\n' + carrinho.map(x => `• ${x.qtd}x ${x.nome}${x.cor ? ' (' + x.cor + ')' : ''} – ${brlPort(x.preco * x.qtd)}`).join('\n') + `\nTotal: ${brlPort(total)}`;
+            const msg = 'Olá! Gostaria de fazer este pedido:\n' + carrinho.map(x => `• ${x.qtd}x ${x.nome}${x.cor ? ' (' + x.cor + ')' : ''} – ${x.preco > 0 ? brlPort(x.preco * x.qtd) : 'orçamento'}`).join('\n') + `\nTotal: ${brlPort(total)}${carrinho.some(x => !(x.preco > 0)) ? ' (+ itens sob orçamento)' : ''}`;
             md.innerHTML = `<div class="bg-surface w-full sm:max-w-lg max-h-[90vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl p-5 space-y-3">
                 <div class="flex items-center justify-between"><h3 class="font-display text-lg font-bold text-ink">🛒 Seu carrinho</h3><button type="button" id="carrinhoFechar" class="h-8 w-8 rounded-full bg-surface2 text-ink" aria-label="Fechar">✕</button></div>
                 <div>${linhas}</div>
@@ -4538,7 +4539,7 @@
         }
         function botoesCompra(m, i) {
             const waNum = marcaAtual && digitosWhats(marcaAtual.whatsapp);
-            const msg = 'Olá! Tenho interesse em: ' + m.nome + (m.cores.length === 1 ? ' (cor: ' + m.cores[0].cor + ')' : '');
+            const msg = (modeloSemPreco(m) ? 'Olá! Gostaria de um orçamento de: ' : 'Olá! Tenho interesse em: ') + m.nome + (m.cores.length === 1 ? ' (cor: ' + m.cores[0].cor + ')' : '');
             const comprar = waNum
                 ? `<a href="https://wa.me/${waNum}?text=${encodeURIComponent(msg)}" target="_blank" rel="noopener" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</a>`
                 : `<button type="button" data-modelo="${i}" class="flex-1 text-center bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold py-1.5 rounded-lg">🛒 Comprar</button>`;
@@ -4664,13 +4665,13 @@
                         ${m.descricao ? `<div><p class="text-[11px] uppercase font-semibold text-inkmute mb-1">Sobre o produto</p><p class="text-sm text-ink whitespace-pre-line leading-relaxed">${escHtml(m.descricao)}</p></div>` : ''}
                         ${cores}${pecas}
                         <div class="mt-auto flex flex-col gap-2"><button type="button" id="portAddCarrinho" class="text-center border-2 border-emerald-600 text-emerald-700 hover:bg-emerald-50 font-bold py-2.5 rounded-xl">🛍️ Adicionar ao carrinho</button>
-                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">💬 Pedir pelo WhatsApp</a>` : '<p class="text-xs text-inkmute">Entre em contato com o vendedor para pedir este produto.</p>'}
+                        ${wa ? `<a id="portWhats" href="#" target="_blank" rel="noopener" class="text-center bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow">${modeloSemPreco(m) ? '💬 Pedir orçamento pelo WhatsApp' : '💬 Pedir pelo WhatsApp'}</a>` : '<p class="text-xs text-inkmute">Entre em contato com o vendedor para pedir este produto.</p>'}
                         ${marcaAtual && marcaAtual.compartilhar_produtos ? `<button type="button" id="portCompartilhar" class="text-center border border-line text-ink hover:bg-surface2 font-bold py-2.5 rounded-xl">📤 Compartilhar (post ou stories)</button>` : ''}</div>
                     </div>
                 </div></div>`;
             md.classList.remove('hidden'); document.body.style.overflow = 'hidden';
             let corSel = '';
-            const atualizarLink = () => { const a = document.getElementById('portWhats'); if (a) a.href = `https://wa.me/${wa}?text=${encodeURIComponent('Olá! Tenho interesse em: ' + m.nome + (corSel ? ' (cor: ' + corSel + ')' : ''))}`; };
+            const atualizarLink = () => { const a = document.getElementById('portWhats'); if (a) a.href = `https://wa.me/${wa}?text=${encodeURIComponent((modeloSemPreco(m) ? 'Olá! Gostaria de um orçamento de: ' : 'Olá! Tenho interesse em: ') + m.nome + (corSel ? ' (cor: ' + corSel + ')' : ''))}`; };
             atualizarLink();
             md.querySelectorAll('#portCores [data-cor]').forEach(b => b.addEventListener('click', () => { corSel = corSel === b.dataset.cor ? '' : b.dataset.cor; md.querySelectorAll('#portCores [data-cor]').forEach(x => x.classList.toggle('ativo', x.dataset.cor === corSel)); atualizarLink(); }));
             document.getElementById('portFechar').addEventListener('click', fecharModalPortfolio);
@@ -4693,7 +4694,7 @@
             const uid = uidDonoCatalogo();
             return (uid && typeof UID_LOJA !== 'undefined' && uid === UID_LOJA) ? `${location.origin}/loja/?produto=${encodeURIComponent(m.id)}` : `${location.origin}${location.pathname.replace(/\/loja\/?$/, '/')}?modo=publico&uid=${uid}&produto=${encodeURIComponent(m.id)}`;
         }
-        function precoTextoPlano(m) { return m.pMin === m.pMax ? brlPort(m.pMin) : 'a partir de ' + brlPort(m.pMin); }
+        function precoTextoPlano(m) { if (modeloSemPreco(m)) return 'sob consulta'; return m.pMin === m.pMax ? brlPort(m.pMin) : 'a partir de ' + brlPort(m.pMin); }
         function desenharCartao(ctx, o) {
             const { W, H, story, img, logo, m, marca } = o; const ts = o.ts == null ? 99 : o.ts;
             const ease = (x) => { x = Math.max(0, Math.min(1, x)); return 1 - Math.pow(1 - x, 3); };
