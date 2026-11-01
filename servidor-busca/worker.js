@@ -248,12 +248,23 @@ async function proxyImagem(url, cors) {
     if (!/^https?:$/.test(alvo.protocol)) return json({ erro: 'URL inválida.' }, cors, 400);
     const h = alvo.hostname.toLowerCase();
     if (h === 'localhost' || h.endsWith('.local') || h.endsWith('.internal') || /^(127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|0\.|\[)/.test(h) || !h.includes('.')) return json({ erro: 'Endereço não permitido.' }, cors, 400);
-    const r = await fetch(alvo.toString(), { headers: { 'user-agent': UA, accept: 'image/*' }, redirect: 'follow', cf: { cacheTtl: 86400, cacheEverything: true } });
-    if (!r.ok) return json({ erro: 'Imagem indisponível.' }, cors, 502);
-    const tipo = (r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
-    if (!['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(tipo)) return json({ erro: 'Não é uma imagem.' }, cors, 415);
+    const r = await fetch(alvo.toString(), { headers: { 'user-agent': UA, accept: 'image/*,*/*;q=0.8', referer: alvo.origin + '/' }, redirect: 'follow', cf: { cacheTtl: 86400, cacheEverything: true } });
+    if (!r.ok) return json({ erro: 'Imagem indisponível (' + r.status + ').' }, cors, 502);
+    const MAX = 30 * 1024 * 1024;
+    const tam = parseInt(r.headers.get('content-length') || '0', 10);
+    if (tam > MAX) return json({ erro: 'Imagem grande demais.' }, cors, 413);
+    let tipo = (r.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+    const validos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+    if (validos.includes(tipo)) return new Response(r.body, { headers: { 'content-type': tipo, 'cache-control': 'public, max-age=86400', ...cors } });
+    // Tipo ausente ou genérico (ex.: application/octet-stream): descobre pelo início do arquivo
     const buf = await r.arrayBuffer();
-    if (buf.byteLength > 8 * 1024 * 1024) return json({ erro: 'Imagem grande demais.' }, cors, 413);
+    if (buf.byteLength > MAX) return json({ erro: 'Imagem grande demais.' }, cors, 413);
+    const b = new Uint8Array(buf.slice(0, 12)); const txt = String.fromCharCode(...b);
+    if (txt.startsWith('GIF8')) tipo = 'image/gif';
+    else if (b[0] === 0x89 && txt.slice(1, 4) === 'PNG') tipo = 'image/png';
+    else if (b[0] === 0xFF && b[1] === 0xD8) tipo = 'image/jpeg';
+    else if (txt.startsWith('RIFF') && txt.slice(8, 12) === 'WEBP') tipo = 'image/webp';
+    else return json({ erro: 'Não é uma imagem.' }, cors, 415);
     return new Response(buf, { headers: { 'content-type': tipo, 'cache-control': 'public, max-age=86400', ...cors } });
   } catch (e) { return json({ erro: 'Falha ao buscar a imagem.' }, cors, 502); }
 }

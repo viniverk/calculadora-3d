@@ -4929,7 +4929,8 @@
             const fechar = () => { if (est.urlMidia) URL.revokeObjectURL(est.urlMidia); md.className = 'hidden'; md.innerHTML = ''; };
             q('shFechar').addEventListener('click', fechar); md.addEventListener('click', (e) => { if (e.target === md) fechar(); });
             const [img, logo] = await Promise.all([carregarImagemCanvas(m.imagem), carregarImagemCanvas(marca.logo_url)]);
-            if (!img && m.imagem) msg.textContent = 'Não foi possível carregar a foto do produto; o cartão será gerado sem ela.';
+            const fotoFalhou = !img && !!m.imagem;
+            if (fotoFalhou) msg.textContent = 'Não foi possível carregar a foto do produto; o cartão será gerado sem ela.';
             const pintarBotoes = () => {
                 q('shFormato').querySelectorAll('button').forEach(b => { const on = (b.dataset.f === 'story') === est.story; b.className = 'py-2 rounded-xl border ' + (on ? 'bg-emerald-600 text-white border-emerald-600' : 'border-line text-ink bg-surface2'); });
                 q('shTipo').querySelectorAll('button').forEach(b => { const on = (b.dataset.t === 'video') === est.video; b.className = 'py-2 rounded-xl border ' + (on ? 'bg-emerald-600 text-white border-emerald-600' : 'border-line text-ink bg-surface2'); });
@@ -4946,7 +4947,7 @@
                 const baseNome = (m.nome || 'produto').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'produto';
                 if (!est.video) {
                     quadro(99);
-                    try { est.blob = await new Promise((r, j) => canvas.toBlob(b => b ? r(b) : j(new Error('vazio')), 'image/jpeg', .92)); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.jpg`; msg.textContent = est.story ? 'Pronto! No Stories, o link vai no adesivo Link (veja o passo a passo abaixo).' : 'Pronto! Baixe a imagem ou envie direto pelo celular.'; }
+                    try { est.blob = await new Promise((r, j) => canvas.toBlob(b => b ? r(b) : j(new Error('vazio')), 'image/jpeg', .92)); est.nomeArq = `${baseNome}-${est.story ? 'stories' : 'post'}.jpg`; msg.textContent = (fotoFalhou ? '⚠️ A foto do produto não carregou (o link da imagem pode bloquear o uso em outros sites). ' : '') + (est.story ? 'Pronto! No Stories, o link vai no adesivo Link (veja o passo a passo abaixo).' : 'Pronto! Baixe a imagem ou envie direto pelo celular.'); }
                     catch (e) { msg.textContent = 'Não foi possível gerar a imagem (a foto do produto bloqueia o uso). Tente outra foto.'; }
                     return;
                 }
