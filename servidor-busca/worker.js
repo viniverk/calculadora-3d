@@ -213,7 +213,8 @@ async function descreverProduto(req, env, cors) {
   await cache.put(chave, new Response(String(usado + 1), { headers: { 'cache-control': 'max-age=3600' } }));
 
   const img = corpo.imagem ? await imagemBase64(String(corpo.imagem)) : null;
-  const pedido = `Nome do produto: "${nome}".${corpo.cor ? ` Cor: ${String(corpo.cor).slice(0, 40)}.` : ''}\n\nEscreva a descrição deste produto para o catálogo de uma loja. É uma peça impressa em 3D, feita em PLA ou PETG (pode citar isso de forma natural, sem afirmar qual dos dois), em português do Brasil, com até 300 caracteres, tom simpático e vendedor. Use apenas o que o nome${img ? ' e a imagem' : ''} permitem concluir: não invente medidas, materiais, preços nem garantias. Responda somente com o texto da descrição, sem aspas, título ou emojis.`;
+  const itensKit = Array.isArray(corpo.itens) ? corpo.itens.slice(0, 20).map((x) => String(x).slice(0, 80)).filter(Boolean) : [];
+  const pedido = `Nome do produto: "${nome}".${corpo.cor ? ` Cor: ${String(corpo.cor).slice(0, 40)}.` : ''}${itensKit.length ? ` É um KIT com estes itens: ${itensKit.join('; ')}.` : ''}\n\nEscreva a descrição deste produto para o catálogo de uma loja. ${itensKit.length ? 'É um kit de peças impressas em 3D, vendidas juntas (cite o que vem no kit de forma natural),' : 'É uma peça impressa em 3D,'} feita em PLA ou PETG (pode citar isso de forma natural, sem afirmar qual dos dois), em português do Brasil, com até 300 caracteres, tom simpático e vendedor. Use apenas o que o nome${img ? ' e a imagem' : ''} permitem concluir: não invente medidas, materiais, preços nem garantias. Responda somente com o texto da descrição, sem aspas, título ou emojis.`;
   let texto = '';
   try {
     if (env.GEMINI_API_KEY) {

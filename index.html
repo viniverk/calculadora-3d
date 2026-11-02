@@ -4349,7 +4349,7 @@
                     <div><label class="block text-xs font-semibold mb-1 text-ink">Nome do kit *</label><input id="kitNome" class="${inp}" placeholder="Ex: Kit Natal com 3 enfeites" value="${escHtml(proj ? proj.nome_projeto : '')}"></div>
                     <div><label class="block text-xs font-semibold mb-1 text-ink">Link da imagem <span class="text-inkmute font-normal">(vazio = foto do 1º item)</span></label><input id="kitImagem" class="${inp}" placeholder="https://..." value="${escHtml(proj && proj.imagem_base64 ? proj.imagem_base64 : '')}"></div>
                 </div>
-                <div><label class="block text-xs font-semibold mb-1 text-ink">Descrição</label><textarea id="kitDescricao" rows="2" maxlength="500" class="${inp}">${escHtml(proj ? proj.descricao || '' : '')}</textarea></div>
+                <div><div class="flex items-center justify-between gap-2 mb-1"><label class="block text-xs font-semibold text-ink">Descrição</label><button type="button" id="kitSugerirDesc" class="text-xs font-bold bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 rounded-lg">✨ Sugerir com IA</button></div><textarea id="kitDescricao" rows="2" maxlength="500" class="${inp}">${escHtml(proj ? proj.descricao || '' : '')}</textarea></div>
                 <div class="border border-line rounded-xl p-3 space-y-2">
                     <p class="text-xs font-bold uppercase text-inkmute">Itens do kit (impressões já cadastradas)</p>
                     <div class="flex gap-2 items-center"><input id="kitBusca" type="search" autocomplete="off" class="${inp} flex-1 min-w-0" placeholder="🔍 Digite o nome da peça para buscar…"><label class="text-xs text-inkmute whitespace-nowrap">Qtd</label><input id="kitQtdAdd" type="number" min="1" value="1" class="${inp} !w-16 text-center"></div>
@@ -4409,6 +4409,22 @@
             q('kitListaItens').addEventListener('click', (e) => { const b = e.target.closest('[data-ri]'); if (b) { kitItens.splice(+b.dataset.ri, 1); pintar(); } });
             q('kitListaItens').addEventListener('input', (e) => { const i = e.target.closest('[data-qi]'); if (i) { kitItens[+i.dataset.qi].qtd = Math.max(1, parseInt(i.value) || 1); const c = calc(); q('kitResumo').dataset.x = c.custo; pintar(); const again = q('kitListaItens').querySelector(`[data-qi="${i.dataset.qi}"]`); if (again) again.focus(); } });
             q('kitListaExtras').addEventListener('click', (e) => { const b = e.target.closest('[data-re]'); if (b) { kitExtras.splice(+b.dataset.re, 1); pintar(); } });
+            q('kitSugerirDesc').addEventListener('click', async () => {
+                const btn = q('kitSugerirDesc'), nome = q('kitNome').value.trim();
+                if (!nome) { alert('Preencha o nome do kit primeiro.'); q('kitNome').focus(); return; }
+                if (!kitItens.length) { alert('Adicione os itens do kit para a IA descrever o que vem nele.'); return; }
+                if (q('kitDescricao').value.trim() && !confirm('Já existe uma descrição. Substituir pela sugestão da IA?')) return;
+                const primeiro = projetosCacheLocal.find(x => x.id === kitItens[0].projeto_id), img = q('kitImagem').value.trim() || (primeiro && primeiro.imagem_base64) || '';
+                btn.disabled = true; btn.textContent = '✨ Gerando…';
+                try {
+                    const idToken = await auth.currentUser.getIdToken();
+                    const r = await fetch(SERVIDOR_BUSCA.replace(/\/$/, '') + '/descrever', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ idToken, nome, imagem: /^https?:/i.test(img) ? img : '', itens: kitItens.map(i => (i.qtd > 1 ? i.qtd + 'x ' : '') + i.nome) }) });
+                    const d = await r.json().catch(() => ({}));
+                    if (!r.ok) throw new Error(/sem IA configurada/.test(d.erro || '') ? 'A IA ainda não foi ativada no servidor.' : (d.erro || 'Falha ao gerar a descrição.'));
+                    q('kitDescricao').value = d.descricao || '';
+                } catch (e) { alert(e.message); }
+                btn.disabled = false; btn.textContent = '✨ Sugerir com IA';
+            });
             q('kitSalvar').addEventListener('click', async () => {
                 const nome = q('kitNome').value.trim(); if (!nome) return alert('Dê um nome ao kit.'); if (!kitItens.length) return alert('Adicione pelo menos um item ao kit.');
                 const c = calc(), primeiro = projetosCacheLocal.find(x => x.id === kitItens[0].projeto_id), margem = parseFloat(q('kitMargem').value) || 0;
