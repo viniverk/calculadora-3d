@@ -4513,7 +4513,7 @@
             md.innerHTML = `<div class="bg-surface w-full sm:max-w-xl max-h-[95vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl border border-line p-5 gap-3 relative">
                 <button type="button" id="shpFechar" class="absolute top-3 right-3 h-8 w-8 rounded-full bg-surface2 text-ink" aria-label="Fechar">✕</button>
                 <h3 class="font-display text-xl font-bold text-ink pr-8">🛒 Exportar para a Shopee</h3>
-                <p class="text-xs text-inkmute">Marque os produtos e baixe a planilha (nome, descrição, preço, estoque, peso, foto). Depois copie as colunas para o modelo de upload em massa do Seller Centre da Shopee.</p>
+                <p class="text-xs text-inkmute">Marque os produtos e baixe a planilha, que segue as colunas do modelo de upload em massa da Shopee. Abra o modelo, copie as linhas (sem o cabeçalho) e cole na aba “Modelo”, a partir da linha 7. Depois escolha a Categoria de cada produto e confira as dimensões (padrão 10×10×10 cm).</p>
                 <input id="shpBusca" type="search" autocomplete="off" placeholder="🔍 Buscar produto…" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm">
                 <div class="flex items-center justify-between text-xs"><label class="flex items-center gap-2 text-ink font-semibold"><input type="checkbox" id="shpTodos" class="h-4 w-4 accent-orange-500"> Marcar todos os visíveis</label><span id="shpContador" class="font-bold text-orange-600"></span></div>
                 <div id="shpLista" class="flex-1 overflow-y-auto space-y-1 border border-line rounded-lg p-1 bg-surface2 min-h-[10rem]"></div>
@@ -4534,10 +4534,18 @@
             q('shpLista').addEventListener('change', (e) => { const i = e.target.closest('[data-id]'); if (!i) return; i.checked ? sel.add(i.dataset.id) : sel.delete(i.dataset.id); q('shpContador').textContent = sel.size + ' selecionado(s)'; });
             q('shpBaixar').addEventListener('click', () => {
                 const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
-                const linhas = [['Nome do Produto', 'Descrição', 'Categoria', 'SKU', 'Preço (R$)', 'Estoque', 'Peso (g)', 'Cor', 'Link da imagem'].map(esc).join(';')];
+                // Colunas A..AD na mesma ordem da aba "Modelo" do modelo de upload em massa da Shopee (cole a partir da linha 7)
+                const cab = ['Categoria', 'Nome do Produto', 'Descrição do Produto', 'SKU principal', 'Número de Integração de Variação', 'Nome da Variação 1', 'Opção para Variação 1', 'Imagem por Variação', 'Nome da Variação 2', 'Opção para Variação 2', 'Preço', 'Estoque', 'SKU da Variação', 'Template da Tabela de Medidas', 'Imagem de Tamanhos', 'GTIN (EAN)', 'IDs de compatibilidade', 'Imagem de capa', 'Imagem do produto 1', 'Imagem do produto 2', 'Imagem do produto 3', 'Imagem do produto 4', 'Imagem do produto 5', 'Imagem do produto 6', 'Imagem do produto 7', 'Imagem do produto 8', 'Peso', 'Comprimento', 'Largura', 'Altura'];
+                const linhas = [cab.map(esc).join(';')];
                 lista.filter(p => sel.has(p.id)).forEach(p => {
-                    const cats = catsDe(p), img = /^https?:/i.test(p.imagem_base64 || '') ? p.imagem_base64 : '';
-                    linhas.push([p.nome_projeto + (p.cor ? ' - ' + p.cor : ''), (p.descricao || p.nome_projeto || '').slice(0, 3000), cats.map(c => c.s ? c.c + ' > ' + c.s : c.c).join(' | '), p.id.slice(0, 8).toUpperCase(), (parseFloat(p.preco_venda_total) || 0).toFixed(2).replace('.', ','), parseInt(p.quantidade_estoque) || 0, Math.round(parseFloat(p.peso_total_g) || 0), p.cor || '', img].map(esc).join(';'));
+                    const img = /^https?:/i.test(p.imagem_base64 || '') ? p.imagem_base64 : '', sku = 'CL3D-' + p.id.slice(0, 8).toUpperCase();
+                    const nome = (p.nome_projeto + (p.cor ? ' - ' + p.cor : '') + (p.kit ? '' : ' Impressão 3D')).slice(0, 120);
+                    let desc = (p.descricao || '').trim(); if (desc.length < 10) desc = `${p.nome_projeto}${p.cor ? ' na cor ' + p.cor : ''}. Peça impressa em 3D, produzida sob medida com acabamento cuidadoso.`;
+                    const kg = Math.max(0.05, Math.round((parseFloat(p.peso_total_g) || 0) + 50) / 1000); // peso da peça + ~50 g de embalagem, em kg
+                    const l = new Array(cab.length).fill('');
+                    l[1] = nome; l[2] = desc.slice(0, 5000); l[3] = sku; l[10] = Math.max(1, parseFloat(p.preco_venda_total) || 0).toFixed(2).replace('.', ','); l[11] = parseInt(p.quantidade_estoque) || 0; l[12] = sku; l[17] = img;
+                    l[26] = kg.toFixed(3).replace('.', ','); l[27] = 10; l[28] = 10; l[29] = 10;
+                    linhas.push(l.map(esc).join(';'));
                 });
                 if (linhas.length === 1) return alert('Marque pelo menos um produto.');
                 const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a');
