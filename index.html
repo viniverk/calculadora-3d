@@ -2646,16 +2646,24 @@
                     else statusHtml = badge('Aguardando PIX', 'bg-amber-100 text-amber-700') + (sit.jaUsouTrial ? '<span class="block text-[10px] text-inkmute mt-1">teste já usado antes</span>' : '');
                     if (u.banido) statusHtml += ' ' + badge('Bloqueado', 'bg-red-500/15 text-red-600');
                     const jaTemAlgo = ativoPlano || sit.tipo === 'expirado';
-                    const acoesAcesso = (ehAdm || euMesmo) ? '' : `
-                        <div class="flex items-center gap-1.5 flex-wrap">
-                            <select id="plano-${u.id}" class="text-xs bg-surface2 border border-line rounded px-1.5 py-1 text-ink">
-                                <option value="mensal">Mensal (+1 mês)</option>
-                                <option value="trimestral">Trimestral (+3 meses)</option>
-                                <option value="anual">Anual (+12 meses)</option>
-                                <option value="vitalicio">Vitalício (manual)</option>
+                    const opt = (v, t) => `<option value="${v}">${t}</option>`;
+                    const acoesAcesso = euMesmo ? '<span class="text-xs text-inkmute">Sua conta</span>' : `
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <select onchange="mudarStatusUsuario('${u.id}', this)" aria-label="Alterar status" class="text-xs bg-surface2 border border-line rounded px-2 py-1.5 text-ink font-semibold">
+                                ${opt('', 'Alterar status…')}
+                                ${ehAdm ? '' : `<optgroup label="Acesso">
+                                    ${opt('plano:mensal', (jaTemAlgo ? '🔄 Renovar' : '✅ Liberar') + ' — Mensal (+1 mês)')}
+                                    ${opt('plano:trimestral', (jaTemAlgo ? '🔄 Renovar' : '✅ Liberar') + ' — Trimestral (+3 meses)')}
+                                    ${opt('plano:anual', (jaTemAlgo ? '🔄 Renovar' : '✅ Liberar') + ' — Anual (+12 meses)')}
+                                    ${opt('plano:vitalicio', '✅ Liberar — Vitalício')}
+                                    ${ativoPlano ? opt('revogar', '⏳ Revogar acesso (aguardando PIX)') : ''}
+                                </optgroup>`}
+                                <optgroup label="Situação">
+                                    ${opt('banir', u.banido ? '✅ Desbloquear' : '⛔ Bloquear')}
+                                    ${opt('role', ehAdm ? '👤 Tornar usuário comum' : '🛡️ Tornar administrador')}
+                                </optgroup>
                             </select>
-                            <button onclick="liberarAcessoUsuario('${u.id}')" class="text-xs font-bold text-green-600 hover:underline">${jaTemAlgo ? '🔄 Renovar' : '✅ Liberar'}</button>
-                            ${ativoPlano ? `<button onclick="revogarAcessoUsuario('${u.id}')" class="text-xs text-amber-600 hover:underline">Revogar</button>` : ''}
+                            <button type="button" onclick="excluirUsuario('${u.id}')" class="text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 rounded px-2 py-1.5">🗑️ Excluir</button>
                         </div>`;
                     const tel = u.telefone_digitos ? `<a href="https://wa.me/55${u.telefone_digitos}" target="_blank" rel="noopener" class="text-xs text-green-600 hover:underline">📱 ${u.telefone || u.telefone_digitos}</a>` : '<span class="text-xs text-inkmute">sem telefone</span>';
                     return `
@@ -2669,10 +2677,6 @@
                         <td class="p-3">
                             <div class="flex flex-col gap-2">
                                 ${acoesAcesso}
-                                <div class="flex gap-3 flex-wrap">
-                                    <button onclick="alternarRoleUsuario('${u.id}', '${u.role}')" class="text-xs text-teal2 hover:underline">${ehAdm ? 'Remover admin' : 'Tornar admin'}</button>
-                                    <button onclick="alternarBanimentoUsuario('${u.id}', ${!!u.banido})" class="text-xs ${u.banido ? 'text-emerald-600' : 'text-red-600'} hover:underline">${u.banido ? 'Desbloquear' : 'Bloquear'}</button>
-                                </div>
                             </div>
                         </td>
                     </tr>`;
@@ -2684,9 +2688,9 @@
             }
         }
 
-        window.liberarAcessoUsuario = async function(id) {
+        window.liberarAcessoUsuario = async function(id, planoEscolhido) {
             if (id === usuarioAtual.uid) return alert('Você não pode alterar o próprio acesso.');
-            const plano = document.getElementById('plano-' + id).value;
+            const plano = planoEscolhido || document.getElementById('plano-' + id).value;
             const u = (window.__usuariosAdmin || {})[id] || {};
             let expira = null;
             if (plano !== 'vitalicio') {
@@ -2702,6 +2706,24 @@
                 await colecao('profiles').doc(id).update({ acesso_liberado: true, plano: plano === 'vitalicio' ? 'vitalício' : plano, acesso_expira_em: expira, acesso_liberado_em: new Date().toISOString() });
                 carregarAdminUsuarios();
             } catch (error) { alert(error.message); }
+        };
+
+        window.mudarStatusUsuario = async function(id, sel) {
+            const v = sel.value; sel.value = ''; if (!v) return;
+            const u = (window.__usuariosAdmin || {})[id] || {}, nome = u.nome_completo || u.email || 'este usuário';
+            if (v.startsWith('plano:')) { if (confirm(`Aplicar o plano ${v.slice(6)} para ${nome}?`)) await liberarAcessoUsuario(id, v.slice(6)); }
+            else if (v === 'revogar') await revogarAcessoUsuario(id);
+            else if (v === 'banir') { if (confirm(`${u.banido ? 'Desbloquear' : 'Bloquear'} ${nome}?`)) await alternarBanimentoUsuario(id, !!u.banido); }
+            else if (v === 'role') { if (confirm(`${u.role === 'admin' ? 'Remover' : 'Dar'} permissão de administrador de ${nome}?`)) await alternarRoleUsuario(id, u.role); }
+        };
+
+        window.excluirUsuario = async function(id) {
+            if (id === usuarioAtual.uid) return alert('Você não pode excluir a própria conta.');
+            const u = (window.__usuariosAdmin || {})[id] || {};
+            if (!confirm(`EXCLUIR o usuário ${u.nome_completo || ''} (${u.email || id})?\n\nO cadastro dele é removido da lista e ele perde o acesso. Os dados de produção dele ficam guardados no banco. Esta ação não pode ser desfeita.`)) return;
+            if (!confirm('Confirma mesmo a exclusão?')) return;
+            try { await colecao('profiles').doc(id).delete(); carregarAdminUsuarios(); }
+            catch (error) { alert(/permission/i.test(error.message) ? 'Sem permissão para excluir. Publique as regras novas do Firestore (arquivo firestore.rules) e tente de novo.' : error.message); }
         };
 
         window.revogarAcessoUsuario = async function(id) {

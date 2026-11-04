@@ -74,6 +74,7 @@ service cloud.firestore {
       allow create: if logado() && request.auth.uid == uid &&
         (ehDonoSistema() || perfilNovoOk(request.resource.data));
       // O próprio usuário só pode preencher nome/telefone de um perfil antigo que ainda não os tem
+      allow delete: if ehAdmin() && request.auth.uid != uid;
       allow update: if ehAdmin() ||
         (logado() && request.auth.uid == uid &&
          !('telefone_digitos' in resource.data) &&
