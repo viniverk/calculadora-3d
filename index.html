@@ -843,6 +843,7 @@
                 <button type="button" role="tab" data-subaba="adicionar" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap">➕ Adicionar Projeto</button>
                 <button type="button" role="tab" data-subaba="projetos" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap">📋 Projetos Cadastrados</button>
                 <button type="button" id="btnCriarKit" class="flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap border border-emerald-600 text-emerald-700 hover:bg-emerald-50">📦 Criar Kit</button>
+                <button type="button" id="btnShopee" class="hidden flex-1 sm:flex-none px-4 py-2.5 rounded-lg text-sm font-bold whitespace-nowrap border border-orange-500 text-orange-600 hover:bg-orange-50">🛒 Exportar p/ Shopee</button>
             </div>
             <div id="impVisao" class="xl:col-span-3 flex flex-wrap gap-2">
                 <button type="button" id="impTabImprimir" class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-emerald-600 text-white">📋 Lista de projetos</button>
@@ -2419,9 +2420,9 @@
             }
 
             if (perfil && perfil.role === 'admin') {
-                abaAdminBtn.classList.remove('hidden');
+                abaAdminBtn.classList.remove('hidden'); document.getElementById('btnShopee').classList.remove('hidden');
             } else {
-                abaAdminBtn.classList.add('hidden');
+                abaAdminBtn.classList.add('hidden'); document.getElementById('btnShopee').classList.add('hidden');
             }
             return true;
         }
@@ -4500,6 +4501,51 @@
             });
         }
         document.getElementById('btnCriarKit').addEventListener('click', () => abrirModalKit(null));
+
+        // --- EXPORTAR PRODUTOS PARA A SHOPEE (somente administrador): escolhe os produtos e baixa uma planilha CSV ---
+        function abrirModalShopee() {
+            if (!perfilAtual || perfilAtual.role !== 'admin') return;
+            let md = document.getElementById('shopeeModal');
+            if (!md) { md = document.createElement('div'); md.id = 'shopeeModal'; document.body.appendChild(md); }
+            md.className = 'fixed inset-0 z-[85] bg-black/60 flex items-end sm:items-center justify-center p-0 sm:p-4';
+            const lista = [...projetosCacheLocal].sort((a, b) => String(a.nome_projeto || '').localeCompare(String(b.nome_projeto || ''), 'pt-BR'));
+            const sel = new Set();
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-xl max-h-[95vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl border border-line p-5 gap-3 relative">
+                <button type="button" id="shpFechar" class="absolute top-3 right-3 h-8 w-8 rounded-full bg-surface2 text-ink" aria-label="Fechar">✕</button>
+                <h3 class="font-display text-xl font-bold text-ink pr-8">🛒 Exportar para a Shopee</h3>
+                <p class="text-xs text-inkmute">Marque os produtos e baixe a planilha (nome, descrição, preço, estoque, peso, foto). Depois copie as colunas para o modelo de upload em massa do Seller Centre da Shopee.</p>
+                <input id="shpBusca" type="search" autocomplete="off" placeholder="🔍 Buscar produto…" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm">
+                <div class="flex items-center justify-between text-xs"><label class="flex items-center gap-2 text-ink font-semibold"><input type="checkbox" id="shpTodos" class="h-4 w-4 accent-orange-500"> Marcar todos os visíveis</label><span id="shpContador" class="font-bold text-orange-600"></span></div>
+                <div id="shpLista" class="flex-1 overflow-y-auto space-y-1 border border-line rounded-lg p-1 bg-surface2 min-h-[10rem]"></div>
+                <div class="flex justify-end gap-2"><button type="button" id="shpCancelar" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="shpBaixar" class="px-5 py-2 rounded-lg bg-orange-500 text-white text-sm font-bold">⬇️ Baixar planilha</button></div>
+            </div>`;
+            const q = (id) => document.getElementById(id), fechar = () => { md.className = 'hidden'; md.innerHTML = ''; };
+            q('shpFechar').addEventListener('click', fechar); q('shpCancelar').addEventListener('click', fechar);
+            const norm = (t) => String(t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            const visiveis = () => { const t = norm(q('shpBusca').value).trim(); return lista.filter(p => !t || norm(p.nome_projeto + ' ' + (p.cor || '')).includes(t)); };
+            const pintar = () => {
+                const v = visiveis();
+                q('shpLista').innerHTML = v.length ? v.map(p => `<label class="flex items-center gap-2 rounded-lg px-2 py-1.5 bg-surface cursor-pointer hover:bg-orange-50"><input type="checkbox" data-id="${p.id}" class="h-4 w-4 accent-orange-500" ${sel.has(p.id) ? 'checked' : ''}>${p.imagem_base64 ? `<img src="${escHtml(p.imagem_base64)}" alt="" loading="lazy" class="h-10 w-10 rounded-md object-cover shrink-0">` : '<span class="h-10 w-10 rounded-md bg-surface2 flex items-center justify-center shrink-0">🧩</span>'}<span class="flex-1 min-w-0"><span class="block text-sm font-semibold text-ink truncate">${p.kit ? '📦 ' : ''}${escHtml(p.nome_projeto)}${p.cor ? ' — ' + escHtml(p.cor) : ''}</span><span class="block text-xs text-inkmute">${brl(parseFloat(p.preco_venda_total) || 0)} • ${parseInt(p.quantidade_estoque) || 0} em estoque</span></span></label>`).join('') : '<p class="text-xs text-inkmute italic p-2">Nenhum produto encontrado.</p>';
+                q('shpContador').textContent = sel.size + ' selecionado(s)'; q('shpTodos').checked = v.length > 0 && v.every(p => sel.has(p.id));
+            };
+            pintar();
+            q('shpBusca').addEventListener('input', pintar);
+            q('shpTodos').addEventListener('change', (e) => { visiveis().forEach(p => e.target.checked ? sel.add(p.id) : sel.delete(p.id)); pintar(); });
+            q('shpLista').addEventListener('change', (e) => { const i = e.target.closest('[data-id]'); if (!i) return; i.checked ? sel.add(i.dataset.id) : sel.delete(i.dataset.id); q('shpContador').textContent = sel.size + ' selecionado(s)'; });
+            q('shpBaixar').addEventListener('click', () => {
+                const esc = (v) => '"' + String(v == null ? '' : v).replace(/"/g, '""').replace(/\r?\n/g, ' ') + '"';
+                const linhas = [['Nome do Produto', 'Descrição', 'Categoria', 'SKU', 'Preço (R$)', 'Estoque', 'Peso (g)', 'Cor', 'Link da imagem'].map(esc).join(';')];
+                lista.filter(p => sel.has(p.id)).forEach(p => {
+                    const cats = catsDe(p), img = /^https?:/i.test(p.imagem_base64 || '') ? p.imagem_base64 : '';
+                    linhas.push([p.nome_projeto + (p.cor ? ' - ' + p.cor : ''), (p.descricao || p.nome_projeto || '').slice(0, 3000), cats.map(c => c.s ? c.c + ' > ' + c.s : c.c).join(' | '), p.id.slice(0, 8).toUpperCase(), (parseFloat(p.preco_venda_total) || 0).toFixed(2).replace('.', ','), parseInt(p.quantidade_estoque) || 0, Math.round(parseFloat(p.peso_total_g) || 0), p.cor || '', img].map(esc).join(';'));
+                });
+                if (linhas.length === 1) return alert('Marque pelo menos um produto.');
+                const blob = new Blob(['﻿' + linhas.join('\r\n')], { type: 'text/csv;charset=utf-8' }), a = document.createElement('a');
+                a.href = URL.createObjectURL(blob); a.download = 'produtos-shopee.csv'; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+                fechar();
+            });
+        }
+        document.getElementById('btnShopee').addEventListener('click', abrirModalShopee);
 
         // --- DESCONTO AUTOMÁTICO DE ESTOQUE ---
         const CORTE_DESCONTO_ESTOQUE = '2026-10-27T18:00:00.000Z';
