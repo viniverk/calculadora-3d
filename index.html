@@ -1670,12 +1670,25 @@
                 <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700"></p>
                 <button onclick="carregarAdminUsuarios()" class="text-xs bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink font-bold px-3 py-1.5 rounded-lg">🔄 Atualizar lista</button>
             </div>
+            <div class="flex flex-wrap items-center gap-2 mb-3">
+                <input id="admBusca" type="search" oninput="carregarAdminUsuarios(true)" placeholder="🔍 Buscar nome, e-mail ou telefone" class="text-sm bg-surface2 border border-line rounded-lg px-3 py-1.5 text-ink flex-1 min-w-[12rem]">
+                <select id="admFiltroStatus" onchange="carregarAdminUsuarios(true)" class="text-sm bg-surface2 border border-line rounded-lg px-2 py-1.5 text-ink">
+                    <option value="">Todos os status</option>
+                    <option value="plano">Liberado (plano)</option>
+                    <option value="trial">Teste grátis</option>
+                    <option value="pendente">Aguardando PIX</option>
+                    <option value="expirado">Plano expirado</option>
+                    <option value="trial_expirado">Teste acabou</option>
+                    <option value="admin">Admin</option>
+                    <option value="banido">Bloqueado</option>
+                </select>
+            </div>
             <div class="overflow-x-auto">
                 <table class="w-full min-w-max text-sm text-left text-ink">
                     <thead class="bg-surface2 text-inkmute uppercase text-xs">
                         <tr>
-                            <th class="p-3">Usuário</th>
-                            <th class="p-3">Status</th>
+                            <th class="p-3"><button type="button" onclick="ordenarAdminUsuarios('nome')" class="uppercase font-bold hover:text-ink">Usuário <span id="setaAdmNome"></span></button></th>
+                            <th class="p-3"><button type="button" onclick="ordenarAdminUsuarios('status')" class="uppercase font-bold hover:text-ink">Status <span id="setaAdmStatus"></span></button></th>
                             <th class="p-3">Ações</th>
                         </tr>
                     </thead>
@@ -2613,22 +2626,36 @@
             window.location.href = window.location.origin + window.location.pathname;
         });
 
-        async function carregarAdminUsuarios() {
+        let admOrdem = { campo: 'status', dir: 1 };
+        window.ordenarAdminUsuarios = function(campo) { admOrdem = { campo, dir: admOrdem.campo === campo ? -admOrdem.dir : 1 }; carregarAdminUsuarios(true); };
+        async function carregarAdminUsuarios(usarCache) {
             const tbody = document.getElementById('tabelaAdminUsuarios');
             const diag = document.getElementById('diagAdmin');
             if (diag) { diag.classList.remove('hidden'); diag.className = 'text-[10px] text-inkmute font-mono2 w-full'; diag.innerText = `v2026.10.21-c • conta: ${usuarioAtual.email} • role: ${perfilAtual ? perfilAtual.role : '?'} • acesso: ${perfilAtual ? perfilAtual.acesso_liberado : '?'}`; }
             try {
                 tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
-                const snap = await colecao('profiles').get();
-                const data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc');
+                let data;
+                if (usarCache === true && window.__listaAdmin) data = window.__listaAdmin.slice();
+                else { const snap = await colecao('profiles').get(); data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc'); window.__listaAdmin = data.slice(); }
                 window.__usuariosAdmin = {}; data.forEach(u => { window.__usuariosAdmin[u.id] = u; });
                 if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
 
                 const semAcesso = (u) => ['pendente', 'expirado', 'trial_expirado'].includes(situacaoAcesso(u).tipo);
-                data.sort((x, y) => semAcesso(y) - semAcesso(x)); // pendentes/expirados primeiro
                 const pendentes = data.filter(semAcesso).length;
                 const resumo = document.getElementById('resumoAdminUsuarios');
                 if (resumo) resumo.innerText = `${data.length} usuário(s) • ` + (pendentes > 0 ? `${pendentes} sem acesso (aguardando PIX/renovação)` : 'nenhum aguardando liberação');
+                // filtro por status e busca
+                const fSt = (document.getElementById('admFiltroStatus') || {}).value || '', termo = ((document.getElementById('admBusca') || {}).value || '').trim().toLowerCase();
+                const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+                data = data.filter(u => (!fSt || (fSt === 'banido' ? !!u.banido : situacaoAcesso(u).tipo === fSt)) && (!termo || norm([u.nome_completo, u.email, u.telefone, u.telefone_digitos].join(' ')).includes(norm(termo))));
+                // ordenação pelos títulos (Usuário / Status)
+                const ordemSt = { pendente: 0, expirado: 1, trial_expirado: 2, trial: 3, plano: 4, admin: 5 };
+                const chave = (u) => admOrdem.campo === 'nome' ? norm(u.nome_completo || u.email) : ((u.banido ? -1 : 0) + (ordemSt[situacaoAcesso(u).tipo] ?? 9));
+                data.sort((x, y) => { const a = chave(x), b = chave(y); return (a < b ? -1 : a > b ? 1 : norm(x.nome_completo || x.email).localeCompare(norm(y.nome_completo || y.email))) * admOrdem.dir; });
+                const seta = admOrdem.dir === 1 ? '▲' : '▼';
+                const sn = document.getElementById('setaAdmNome'), ss = document.getElementById('setaAdmStatus');
+                if (sn) sn.textContent = admOrdem.campo === 'nome' ? seta : '↕'; if (ss) ss.textContent = admOrdem.campo === 'status' ? seta : '↕';
+                if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário com esse filtro.</td></tr>'; return; }
 
                 tbody.innerHTML = data.map(u => {
                     const sit = situacaoAcesso(u);
