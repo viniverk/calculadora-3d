@@ -654,7 +654,7 @@
                 <button onclick="mudarAba('dashboard')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn ativo-nav" data-aba="dashboard"><span class="text-lg">📊</span><span class="whitespace-nowrap label-texto font-medium">Visão geral</span></button>
                 <button onclick="mudarAba('inserir-impressao')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="inserir-impressao"><span class="text-lg">🚀</span><span class="whitespace-nowrap label-texto font-medium">Impressões</span></button>
                 <button onclick="mudarAba('pedidos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="pedidos"><span class="text-lg">📋</span><span class="whitespace-nowrap label-texto font-medium">Pedidos e Fila</span></button>
-                <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas"><span class="text-lg">💰</span><span class="whitespace-nowrap label-texto font-medium">Vendas</span></button>
+                <button onclick="mudarAba('vendas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="vendas"><span class="text-lg">💰</span><span class="whitespace-nowrap label-texto font-medium">Vendas/Orçamento</span></button>
                 <button onclick="mudarAba('portfolio-cliente')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="portfolio-cliente"><span class="text-lg">🖼️</span><span class="whitespace-nowrap label-texto font-medium">Portfólio</span></button>
                 <button onclick="mudarAba('revenda')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="revenda"><span class="text-lg">🏷️</span><span class="whitespace-nowrap label-texto font-medium">Revenda</span></button>
                 </div></div>
@@ -754,7 +754,7 @@
                     <p class="text-sm text-inkmute">Precisa lançar um projeto novo ou registrar uma venda?</p>
                     <div class="flex gap-2 mt-3 flex-wrap">
                         <button onclick="mudarAba('inserir-impressao')" class="text-xs font-bold btn-cta py-2 px-3 rounded-lg">🚀 Novo Projeto</button>
-                        <button onclick="mudarAba('vendas')" class="text-xs font-bold bg-surface2 border border-line text-ink py-2 px-3 rounded-lg hover:border-teal2 transition">💰 Nova Venda</button>
+                        <button onclick="mudarAba('vendas')" class="text-xs font-bold bg-surface2 border border-line text-ink py-2 px-3 rounded-lg hover:border-teal2 transition">💰 Venda / Orçamento</button>
                     </div>
                 </div>
             </div>
@@ -1407,7 +1407,11 @@
         </div>
 
         <div id="view-vendas" class="aba-conteudo grid grid-cols-1 lg:grid-cols-3 gap-6 hidden">
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit lg:col-span-1 space-y-4">
+            <div class="lg:col-span-3 flex gap-1 bg-surface2 p-1 rounded-xl w-full sm:w-fit border border-line">
+                <button type="button" id="modoVendaRapida" class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold">⚡ Venda rápida</button>
+                <button type="button" id="modoOrcamento" class="flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold">📄 Orçamento</button>
+            </div>
+            <div id="cardVendaRapida" class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit lg:col-span-1 space-y-4">
                 <h2 class="font-display text-xl font-semibold text-emerald-600 border-b border-line pb-2">Venda rápida</h2>
                 <p class="text-[11px] text-inkmute -mt-2">Para vender na hora, sem pedido (balcão, feira, marketplace). Pedidos de clientes com prazo ficam em <button type="button" onclick="mudarAba('pedidos')" class="text-sky-600 font-semibold underline">Pedidos e Fila</button> e viram venda quando você marca como entregue.</p>
                 <div>
@@ -1451,7 +1455,7 @@
                 </button>
             </div>
 
-            <div class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit lg:col-span-2 space-y-6">
+            <div id="colHistoricoVendas" class="bg-surface p-6 rounded-xl shadow-sm border border-line h-fit lg:col-span-2 space-y-6">
                 <h2 class="font-display text-xl font-semibold text-teal-600 border-b border-line pb-2">Histórico de Movimentação Financeira</h2>
                 <div id="listaVendasEfetuadas" class="space-y-2 max-h-[380px] overflow-y-auto pr-1">
                     <p class="text-inkmute/60 text-sm italic">Nenhum faturamento registrado.</p>
@@ -1470,6 +1474,42 @@
                         <span class="block text-[9px] uppercase font-bold text-emerald-600">Lucro Líquido Real</span>
                         <span id="totLiquido" class="text-lg font-black text-green-600 font-mono2">R$ 0,00</span>
                     </div>
+                </div>
+            </div>
+            <div id="cardOrcamento" class="hidden lg:col-span-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="lg:col-span-2 bg-surface p-6 rounded-xl shadow-sm border border-line space-y-4 h-fit">
+                    <h2 class="font-display text-xl font-semibold text-emerald-600 border-b border-line pb-2">Orçamento <span id="orcNumeroTitulo" class="text-inkmute text-sm font-normal"></span></h2>
+                    <p class="text-[11px] text-inkmute -mt-2">Monte a lista, gere o PDF com a logo da sua marca e envie ao cliente. Todos os produtos aparecem aqui, inclusive os ocultos do Portfólio.</p>
+                    <div class="grid sm:grid-cols-2 gap-3">
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">Nome do cliente *</label><input id="orcCliente" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="Ex: Maria Silva"></div>
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">WhatsApp do cliente</label><input id="orcTelefone" inputmode="tel" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="(47) 99999-9999"></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-1 text-ink">Adicionar produto</label>
+                        <div class="flex gap-2">
+                            <div class="relative flex-1 min-w-0"><input type="text" id="orcBusca" autocomplete="off" placeholder="🔍 Pesquisar produto pelo nome..." class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm"><div id="orcLista" class="hidden absolute left-0 right-0 top-full mt-1 z-20 max-h-72 overflow-y-auto rounded-xl border border-line bg-surface shadow-xl"></div></div>
+                            <button type="button" id="orcAvulso" class="px-3 rounded-lg border border-line text-ink text-xs font-bold whitespace-nowrap hover:bg-surface2">＋ Item avulso</button>
+                        </div>
+                    </div>
+                    <div id="orcItens" class="space-y-2"></div>
+                    <div class="grid sm:grid-cols-4 gap-3">
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">Desconto (R$)</label><input id="orcDesconto" type="number" min="0" step="0.01" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="0,00"></div>
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">Frete / entrega (R$)</label><input id="orcFrete" type="number" min="0" step="0.01" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="0,00"></div>
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">Validade (dias)</label><input id="orcValidade" type="number" min="1" value="7" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm"></div>
+                        <div><label class="block text-xs font-semibold mb-1 text-ink">Prazo de entrega</label><input id="orcPrazo" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="Ex: 5 dias úteis"></div>
+                    </div>
+                    <div><label class="block text-xs font-semibold mb-1 text-ink">Observações (aparecem no PDF)</label><textarea id="orcObs" rows="2" maxlength="400" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm" placeholder="Ex: Pagamento via Pix. Cores sob consulta."></textarea></div>
+                    <div id="orcTotais" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900 space-y-1"></div>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" id="orcBtnZap" class="flex-1 min-w-[12rem] bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-xl text-sm">💬 Enviar PDF pelo WhatsApp</button>
+                        <button type="button" id="orcBtnPdf" class="flex-1 min-w-[9rem] border border-emerald-600 text-emerald-700 font-bold py-2.5 rounded-xl text-sm hover:bg-emerald-50">📄 Baixar PDF</button>
+                        <button type="button" id="orcBtnSalvar" class="flex-1 min-w-[9rem] border border-line text-ink font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">💾 Salvar</button>
+                        <button type="button" id="orcBtnNovo" class="px-4 border border-line text-inkmute font-bold py-2.5 rounded-xl text-sm hover:bg-surface2">Novo</button>
+                    </div>
+                </div>
+                <div class="bg-surface p-6 rounded-xl shadow-sm border border-line space-y-3 h-fit">
+                    <h2 class="font-display text-xl font-semibold text-teal-600 border-b border-line pb-2">Orçamentos salvos</h2>
+                    <div id="orcSalvos" class="space-y-2 max-h-[34rem] overflow-y-auto pr-1"><p class="text-inkmute/60 text-sm italic">Nenhum orçamento salvo.</p></div>
                 </div>
             </div>
         </div>
@@ -1977,7 +2017,7 @@
         // --- FOLHA "MAIS", BOTÃO + E CARTÕES RECOLHÍVEIS (CELULAR) ---
         const ITENS_MAIS = [
             ['dashboard', '📊', 'Início'], ['calculadora', '🧮', 'Calcular'], ['inserir-impressao', '🖨️', 'Projetos'],
-            ['pedidos', '📋', 'Pedidos'], ['vendas', '💰', 'Vendas'], ['portfolio-cliente', '🖼️', 'Catálogo'], ['revenda', '🏷️', 'Revenda'],
+            ['pedidos', '📋', 'Pedidos'], ['vendas', '💰', 'Vendas/Orçam.'], ['portfolio-cliente', '🖼️', 'Catálogo'], ['revenda', '🏷️', 'Revenda'],
             ['filamentos', '🧵', 'Estoque'], ['maquinas', '⚙️', 'Máquinas'], ['buscador', '🔎', 'Buscar modelos'], ['marca', '🎨', 'Minha marca']
         ];
         let abaAtualMobile = 'calculadora';
@@ -2844,9 +2884,207 @@
 
         // --- MÓDULO FINANCEIRO: VENDAS ---
         function carregarJanelaVendas() {
+            orcAoAbrirAba();
             carregarDropdownProjetosVenda();
             carregarVendasEfetuadas();
         }
+
+        // --- VENDAS / ORÇAMENTO: alterna entre venda rápida e orçamento (PDF com a logo da marca + envio por WhatsApp) ---
+        let orcItens = [], orcEditId = null, orcNumero = null, orcSalvosLista = [], orcCriadoEm = null;
+        const orcQ = (id) => document.getElementById(id);
+        const fmtR = (v) => 'R$ ' + (v || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }).replace(/ /g, ' ');
+        function definirModoVenda(m) {
+            const o = m === 'orcamento';
+            orcQ('cardVendaRapida').classList.toggle('hidden', o); orcQ('colHistoricoVendas').classList.toggle('hidden', o); orcQ('cardOrcamento').classList.toggle('hidden', !o);
+            [['modoVendaRapida', !o], ['modoOrcamento', o]].forEach(([id, on]) => { orcQ(id).className = 'flex-1 sm:flex-none px-5 py-2 rounded-lg text-sm font-bold ' + (on ? 'bg-emerald-600 text-white shadow' : 'text-inkmute hover:text-ink'); });
+            if (o) { carregarOrcamentos(); renderOrc(); carregarJsPdf().catch(() => {}); if (!marcaAtual) carregarMarca().catch(() => {}); }
+            try { sessionStorage.setItem('modoVenda', m); } catch (e) {}
+        }
+        orcQ('modoVendaRapida').addEventListener('click', () => definirModoVenda('rapida'));
+        orcQ('modoOrcamento').addEventListener('click', () => definirModoVenda('orcamento'));
+        function orcAoAbrirAba() { definirModoVenda(modoVendaAtualSalvo()); }
+        function modoVendaAtualSalvo() { try { return sessionStorage.getItem('modoVenda') === 'orcamento' ? 'orcamento' : 'rapida'; } catch (e) { return 'rapida'; } }
+
+        function orcTotais() {
+            const sub = orcItens.reduce((a, i) => a + i.qtd * i.preco, 0), d = Math.min(sub, Math.max(0, parseFloat(orcQ('orcDesconto').value) || 0)), f = Math.max(0, parseFloat(orcQ('orcFrete').value) || 0);
+            return { sub, d, f, total: sub - d + f };
+        }
+        function orcAtualizarTotais() {
+            const t = orcTotais(), ln = (a, b, g) => `<p class="flex justify-between gap-3"><span>${a}</span><span class="${g ? 'font-bold text-base' : ''}">${b}</span></p>`;
+            orcQ('orcTotais').innerHTML = ln('Subtotal', fmtR(t.sub)) + (t.d > 0 ? ln('Desconto', '− ' + fmtR(t.d)) : '') + (t.f > 0 ? ln('Frete / entrega', fmtR(t.f)) : '') + '<div class="border-t border-emerald-200 my-1"></div>' + ln('Total', fmtR(t.total), true);
+            orcItens.forEach((it, ix) => { const e = document.querySelector(`[data-os="${ix}"]`); if (e) e.textContent = fmtR(it.qtd * it.preco); });
+        }
+        function miniOrc(it) { return it.imagem ? `<img src="${escHtml(it.imagem)}" alt="" loading="lazy" class="h-12 w-12 rounded-lg object-cover bg-surface2 border border-line shrink-0">` : '<div class="h-12 w-12 rounded-lg bg-surface2 border border-line flex items-center justify-center shrink-0 text-lg">🧩</div>'; }
+        function renderOrc() {
+            const box = orcQ('orcItens');
+            box.innerHTML = orcItens.length ? orcItens.map((it, ix) => `<div class="flex items-center gap-2 bg-surface2 rounded-xl p-2 border border-line">${miniOrc(it)}
+                <div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${escHtml(it.nome)}</p><p class="text-[11px] text-inkmute">${it.preco > 0 ? '' : '<span class="text-amber-600 font-bold">defina o valor</span> • '}subtotal <span data-os="${ix}">${fmtR(it.qtd * it.preco)}</span></p></div>
+                <div class="text-center"><label class="block text-[10px] text-inkmute">Qtd</label><input type="number" min="1" value="${it.qtd}" data-oq="${ix}" class="w-14 bg-surface p-1 rounded border border-line text-center text-sm"></div>
+                <div class="text-center"><label class="block text-[10px] text-inkmute">Valor un.</label><input type="number" min="0" step="0.01" value="${it.preco}" data-op="${ix}" class="w-20 bg-surface p-1 rounded border border-line text-center text-sm"></div>
+                <button type="button" data-or="${ix}" class="text-red-600 font-bold px-1" aria-label="Remover">✕</button></div>`).join('') : '<p class="text-xs text-inkmute italic">Nenhum produto adicionado. Pesquise acima.</p>';
+            orcAtualizarTotais();
+        }
+        orcQ('orcItens').addEventListener('input', (e) => {
+            const q = e.target.closest('[data-oq]'), p = e.target.closest('[data-op]');
+            if (q) orcItens[+q.dataset.oq].qtd = Math.max(1, parseInt(q.value) || 1);
+            if (p) orcItens[+p.dataset.op].preco = Math.max(0, parseFloat(p.value) || 0);
+            orcAtualizarTotais();
+        });
+        orcQ('orcItens').addEventListener('click', (e) => { const r = e.target.closest('[data-or]'); if (r) { orcItens.splice(+r.dataset.or, 1); renderOrc(); } });
+        ['orcDesconto', 'orcFrete'].forEach(id => orcQ(id).addEventListener('input', orcAtualizarTotais));
+        function orcAdicionar(it) { const ja = it.projeto_id && orcItens.find(x => x.projeto_id === it.projeto_id); if (ja) ja.qtd += 1; else orcItens.push(it); renderOrc(); }
+        function renderizarListaOrc() {
+            const termo = semAcento(orcQ('orcBusca').value.trim()), box = orcQ('orcLista');
+            const lista = [...projetosCacheLocal].sort((a, b) => rotuloProjeto(a).localeCompare(rotuloProjeto(b), 'pt-BR', { sensitivity: 'base' })).filter(p => !termo || semAcento(rotuloProjeto(p)).includes(termo));
+            box.innerHTML = lista.length ? lista.map(p => `<button type="button" data-id="${p.id}" class="w-full flex items-center gap-3 px-3 py-2 text-left hover:bg-surface2 border-b border-line/50 last:border-0">${miniaturaProjeto(p, 'h-12 w-12')}
+                <span class="min-w-0 flex-1"><span class="block text-sm font-semibold text-ink truncate">${p.kit ? '📦 ' : ''}${escHtml(p.nome_projeto)}</span><span class="block text-[11px] text-inkmute truncate">${p.cor ? '🎨 ' + escHtml(p.cor) + ' • ' : ''}${(parseInt(p.quantidade_estoque) || 0) > 0 ? parseInt(p.quantidade_estoque) + ' em estoque' : 'sem estoque'}${p.visibilidade_portfolio === 'esconder' ? ' • oculto no Portfólio' : ''}</span></span>
+                <span class="font-mono2 text-xs font-bold text-emerald-700 whitespace-nowrap">${(parseFloat(p.preco_venda_total) || 0) > 0 ? fmtR(parseFloat(p.preco_venda_total)) : 'sem valor'}</span></button>`).join('') : '<p class="px-3 py-4 text-sm text-inkmute text-center">Nenhum produto encontrado.</p>';
+            box.classList.remove('hidden');
+            box.querySelectorAll('button[data-id]').forEach(b => b.addEventListener('mousedown', (e) => {
+                e.preventDefault(); const p = projetosCacheLocal.find(x => x.id === b.dataset.id); if (!p) return;
+                orcAdicionar({ projeto_id: p.id, nome: rotuloProjeto(p), qtd: 1, preco: parseFloat(p.preco_venda_total) || 0, imagem: p.imagem_base64 || '' });
+                orcQ('orcBusca').value = ''; box.classList.add('hidden');
+            }));
+        }
+        orcQ('orcBusca').addEventListener('focus', renderizarListaOrc); orcQ('orcBusca').addEventListener('input', renderizarListaOrc);
+        orcQ('orcBusca').addEventListener('keydown', (e) => { if (e.key === 'Escape') orcQ('orcLista').classList.add('hidden'); });
+        orcQ('orcBusca').addEventListener('blur', () => setTimeout(() => orcQ('orcLista').classList.add('hidden'), 150));
+        orcQ('orcAvulso').addEventListener('click', () => {
+            const nome = (prompt('Nome do item avulso (ex: Personalização, Pintura):') || '').trim(); if (!nome) return;
+            const preco = parseFloat(String(prompt('Valor unitário (R$):', '0') || '0').replace(',', '.')) || 0;
+            orcAdicionar({ projeto_id: '', nome, qtd: 1, preco, imagem: '' });
+        });
+
+        function orcLimpar() {
+            orcItens = []; orcEditId = null; orcNumero = null; orcCriadoEm = null;
+            ['orcCliente', 'orcTelefone', 'orcDesconto', 'orcFrete', 'orcPrazo', 'orcObs'].forEach(id => orcQ(id).value = ''); orcQ('orcValidade').value = 7;
+            orcQ('orcNumeroTitulo').textContent = ''; renderOrc();
+        }
+        orcQ('orcBtnNovo').addEventListener('click', () => { if (orcItens.length && !confirm('Limpar o orçamento atual e começar um novo?')) return; orcLimpar(); });
+        function orcDados() {
+            const t = orcTotais();
+            return { numero: orcNumero, cliente: orcQ('orcCliente').value.trim(), telefone: orcQ('orcTelefone').value.trim(), itens: orcItens.map(i => ({ ...i })), desconto: t.d, frete: t.f, total: t.total, validade_dias: Math.max(1, parseInt(orcQ('orcValidade').value) || 7), prazo: orcQ('orcPrazo').value.trim(), obs: orcQ('orcObs').value.trim(), criado_em: orcCriadoEm || new Date().toISOString() };
+        }
+        function orcValidar() {
+            if (!orcQ('orcCliente').value.trim()) { alert('Informe o nome do cliente.'); orcQ('orcCliente').focus(); return false; }
+            if (!orcItens.length) { alert('Adicione pelo menos um produto ao orçamento.'); return false; }
+            return true;
+        }
+        async function carregarOrcamentos() {
+            try { const snap = await colecao('orcamentos_3d').where('user_id', '==', usuarioAtual.uid).get(); orcSalvosLista = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc'); }
+            catch (e) { orcSalvosLista = []; }
+            renderOrcSalvos();
+        }
+        function renderOrcSalvos() {
+            const box = orcQ('orcSalvos');
+            box.innerHTML = orcSalvosLista.length ? orcSalvosLista.map(o => `<div class="border border-line rounded-xl p-3 bg-surface2 space-y-1">
+                <div class="flex justify-between gap-2"><span class="text-sm font-bold text-ink truncate">Nº ${String(o.numero || 0).padStart(4, '0')} • ${escHtml(o.cliente || '')}</span><span class="text-sm font-bold text-emerald-700 whitespace-nowrap">${fmtR(o.total)}</span></div>
+                <p class="text-[11px] text-inkmute">${new Date(o.criado_em || o.created_at).toLocaleDateString('pt-BR')} • ${(o.itens || []).length} item(ns)</p>
+                <div class="flex gap-3 text-xs font-bold"><button type="button" data-abrir="${o.id}" class="text-sky-600">Abrir / reenviar</button><button type="button" data-excluir="${o.id}" class="text-red-600">Excluir</button></div></div>`).join('') : '<p class="text-inkmute/60 text-sm italic">Nenhum orçamento salvo.</p>';
+        }
+        orcQ('orcSalvos').addEventListener('click', async (e) => {
+            const a = e.target.closest('[data-abrir]'), x = e.target.closest('[data-excluir]');
+            if (a) {
+                const o = orcSalvosLista.find(v => v.id === a.dataset.abrir); if (!o) return;
+                orcEditId = o.id; orcNumero = o.numero || null; orcCriadoEm = o.criado_em || o.created_at; orcItens = (o.itens || []).map(i => ({ ...i }));
+                orcQ('orcCliente').value = o.cliente || ''; orcQ('orcTelefone').value = o.telefone || ''; orcQ('orcDesconto').value = o.desconto || ''; orcQ('orcFrete').value = o.frete || ''; orcQ('orcValidade').value = o.validade_dias || 7; orcQ('orcPrazo').value = o.prazo || ''; orcQ('orcObs').value = o.obs || '';
+                orcQ('orcNumeroTitulo').textContent = `• Nº ${String(o.numero || 0).padStart(4, '0')}`; renderOrc(); orcQ('orcCliente').scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            if (x) { if (!confirm('Excluir este orçamento?')) return; try { await colecao('orcamentos_3d').doc(x.dataset.excluir).delete(); if (orcEditId === x.dataset.excluir) orcLimpar(); await carregarOrcamentos(); } catch (er) { alert(er.message); } }
+        });
+        async function salvarOrcamento(silencioso) {
+            if (!orcValidar()) return false;
+            if (!orcNumero) orcNumero = orcSalvosLista.reduce((m, o) => Math.max(m, parseInt(o.numero) || 0), 0) + 1;
+            const d = orcDados();
+            try {
+                if (orcEditId) await colecao('orcamentos_3d').doc(orcEditId).update(d);
+                else { const ref = await colecao('orcamentos_3d').add({ ...d, user_id: usuarioAtual.uid, created_at: new Date().toISOString() }); orcEditId = ref.id; }
+                orcCriadoEm = d.criado_em; orcQ('orcNumeroTitulo').textContent = `• Nº ${String(orcNumero).padStart(4, '0')}`;
+                await carregarOrcamentos(); if (!silencioso) alert(`Orçamento nº ${orcNumero} salvo.`); return true;
+            } catch (e) {
+                if (!silencioso) alert(/permission/i.test(e.message) ? 'Sem permissão para salvar. Publique as regras novas do Firestore (arquivo firestore.rules) e tente de novo. O PDF funciona mesmo assim.' : 'Erro ao salvar: ' + e.message);
+                return false;
+            }
+        }
+        orcQ('orcBtnSalvar').addEventListener('click', () => salvarOrcamento(false));
+
+        function carregarJsPdf() {
+            if (window.jspdf) return Promise.resolve();
+            return new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('Não consegui carregar o gerador de PDF (verifique a internet).')); document.head.appendChild(sc); });
+        }
+        async function imgParaJpeg(url, max) {
+            if (!url) return null; const im = await carregarImagemCanvas(url); if (!im || !im.naturalWidth) return null;
+            try { const k = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight)), c = document.createElement('canvas'); c.width = Math.max(1, Math.round(im.naturalWidth * k)); c.height = Math.max(1, Math.round(im.naturalHeight * k)); const x = c.getContext('2d'); x.fillStyle = '#fff'; x.fillRect(0, 0, c.width, c.height); x.drawImage(im, 0, 0, c.width, c.height); return { data: c.toDataURL('image/jpeg', 0.85), w: c.width, h: c.height }; } catch (e) { return null; }
+        }
+        function numeroOrcFmt(n) { return String(n || 0).padStart(4, '0'); }
+        async function gerarPdfOrcamento() {
+            await carregarJsPdf();
+            const d = orcDados(), marca = marcaAtual || {}, { jsPDF } = window.jspdf, pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+            const cor = /^#[0-9a-f]{6}$/i.test(marca.cor_banner || '') ? marca.cor_banner : '#047857', rgb = [1, 3, 5].map(i => parseInt(cor.slice(i, i + 2), 16));
+            const [logo, ...fotos] = await Promise.all([imgParaJpeg(marca.logo_url, 300), ...d.itens.map(i => imgParaJpeg(i.imagem, 140))]);
+            const M = 15, R = 195; let y = 14;
+            // cabeçalho
+            let xTxt = M;
+            if (logo) { const k = Math.min(40 / logo.w, 22 / logo.h), w = logo.w * k, h = logo.h * k; pdf.addImage(logo.data, 'JPEG', M, y, w, h); xTxt = M + w + 5; }
+            pdf.setTextColor(17, 24, 39); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(16); pdf.text(marca.nome || 'Orçamento', xTxt, y + 8);
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(90, 98, 110);
+            const contato = [marca.whatsapp ? 'WhatsApp: ' + marca.whatsapp : '', marca.instagram ? '@' + String(marca.instagram).replace(/^@/, '') : ''].filter(Boolean).join('   •   '); if (contato) pdf.text(contato, xTxt, y + 14);
+            pdf.setFont('helvetica', 'bold'); pdf.setFontSize(18); pdf.setTextColor(rgb[0], rgb[1], rgb[2]); pdf.text('ORÇAMENTO', R, y + 7, { align: 'right' });
+            pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(90, 98, 110);
+            const dt = new Date(d.criado_em), val = new Date(dt.getTime() + d.validade_dias * 86400000);
+            pdf.text(`Nº ${numeroOrcFmt(d.numero)}   •   ${dt.toLocaleDateString('pt-BR')}`, R, y + 13, { align: 'right' }); pdf.text(`Válido até ${val.toLocaleDateString('pt-BR')}`, R, y + 18, { align: 'right' });
+            y = 42; pdf.setFillColor(rgb[0], rgb[1], rgb[2]); pdf.rect(M, y, R - M, 1.4, 'F'); y += 9;
+            pdf.setTextColor(17, 24, 39); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(10); pdf.text('Cliente:', M, y); pdf.setFont('helvetica', 'normal'); pdf.text(d.cliente, M + 17, y);
+            if (d.telefone) { pdf.setFont('helvetica', 'bold'); pdf.text('WhatsApp:', 110, y); pdf.setFont('helvetica', 'normal'); pdf.text(d.telefone, 130, y); }
+            y += 9;
+            const cab = () => { pdf.setFillColor(rgb[0], rgb[1], rgb[2]); pdf.rect(M, y, R - M, 8, 'F'); pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(9); pdf.text('Produto', M + 3, y + 5.4); pdf.text('Qtd', 128, y + 5.4, { align: 'center' }); pdf.text('Valor un.', 156, y + 5.4, { align: 'right' }); pdf.text('Subtotal', R - 3, y + 5.4, { align: 'right' }); y += 8; };
+            cab();
+            d.itens.forEach((it, ix) => {
+                const h = 17; if (y + h > 262) { pdf.addPage(); y = 18; cab(); }
+                if (ix % 2) { pdf.setFillColor(246, 247, 249); pdf.rect(M, y, R - M, h, 'F'); }
+                const f = fotos[ix]; let xn = M + 3;
+                if (f) { const bs = 13, k = Math.min(bs / f.w, bs / f.h); pdf.addImage(f.data, 'JPEG', M + 2, y + (h - f.h * k) / 2, f.w * k, f.h * k); xn = M + 2 + bs + 3; }
+                pdf.setTextColor(17, 24, 39); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9.5);
+                const linhas = pdf.splitTextToSize(it.nome, 128 - 14 - xn).slice(0, 2); pdf.text(linhas, xn, y + (linhas.length > 1 ? 6.2 : 9.6));
+                pdf.text(String(it.qtd), 128, y + 9.6, { align: 'center' }); pdf.text(fmtR(it.preco), 156, y + 9.6, { align: 'right' }); pdf.setFont('helvetica', 'bold'); pdf.text(fmtR(it.qtd * it.preco), R - 3, y + 9.6, { align: 'right' });
+                pdf.setDrawColor(225, 228, 233); pdf.line(M, y + h, R, y + h); y += h;
+            });
+            // totais
+            if (y > 235) { pdf.addPage(); y = 18; }
+            y += 7; const sub = d.itens.reduce((a, i) => a + i.qtd * i.preco, 0);
+            const lin = (t, v, neg) => { pdf.setFont('helvetica', 'normal'); pdf.setFontSize(10); pdf.setTextColor(90, 98, 110); pdf.text(t, 150, y, { align: 'right' }); pdf.setTextColor(17, 24, 39); pdf.text((neg ? '- ' : '') + fmtR(v), R - 3, y, { align: 'right' }); y += 6; };
+            lin('Subtotal', sub); if (d.desconto > 0) lin('Desconto', d.desconto, true); if (d.frete > 0) lin('Frete / entrega', d.frete);
+            pdf.setFillColor(rgb[0], rgb[1], rgb[2]); pdf.roundedRect(110, y - 1, R - 110, 11, 2, 2, 'F'); pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12); pdf.text('TOTAL', 115, y + 6.5); pdf.text(fmtR(d.total), R - 4, y + 6.5, { align: 'right' }); y += 18;
+            // condições
+            const notas = [d.prazo ? 'Prazo de entrega: ' + d.prazo : '', `Orçamento válido por ${d.validade_dias} dia(s), até ${val.toLocaleDateString('pt-BR')}.`, d.obs].filter(Boolean);
+            pdf.setTextColor(60, 66, 76); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
+            notas.forEach(n => { const ls = pdf.splitTextToSize(n, R - M); if (y + ls.length * 4.5 > 282) { pdf.addPage(); y = 18; } pdf.text(ls, M, y); y += ls.length * 4.5 + 1.5; });
+            pdf.setFontSize(8); pdf.setTextColor(140, 146, 156); pdf.text('Obrigado pela preferência!' + (marca.nome ? '  •  ' + marca.nome : ''), 105, 290, { align: 'center' });
+            const nomeArq = `Orcamento-${numeroOrcFmt(d.numero)}-${semAcento(d.cliente).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cliente'}.pdf`;
+            return { blob: pdf.output('blob'), nome: nomeArq, dados: d, validade: val };
+        }
+        async function prepararPdf(btn, rotulo) {
+            if (!orcValidar()) return null; btn.disabled = true; btn.textContent = 'Gerando…';
+            try { if (!orcNumero) { await salvarOrcamento(true); if (!orcNumero) orcNumero = orcSalvosLista.reduce((m, o) => Math.max(m, parseInt(o.numero) || 0), 0) + 1; } else await salvarOrcamento(true); return await gerarPdfOrcamento(); }
+            catch (e) { alert('Não foi possível gerar o PDF: ' + e.message); return null; }
+            finally { btn.disabled = false; btn.textContent = rotulo; }
+        }
+        function baixarBlob(blob, nome) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = nome; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); }
+        orcQ('orcBtnPdf').addEventListener('click', async () => { const r = await prepararPdf(orcQ('orcBtnPdf'), '📄 Baixar PDF'); if (r) baixarBlob(r.blob, r.nome); });
+        orcQ('orcBtnZap').addEventListener('click', async () => {
+            const btn = orcQ('orcBtnZap'), rotulo = '💬 Enviar PDF pelo WhatsApp', movel = /Android|iPhone|iPad/i.test(navigator.userAgent);
+            if (!orcValidar()) return;
+            const janela = movel ? null : window.open('about:blank', '_blank');   // abre já, para o navegador não bloquear o pop-up
+            const r = await prepararPdf(btn, rotulo); if (!r) { if (janela) janela.close(); return; }
+            const d = r.dados, marca = marcaAtual || {}, tel = digitosWhats(d.telefone);
+            const msg = `Olá, ${d.cliente.split(' ')[0]}! Segue o orçamento nº ${numeroOrcFmt(d.numero)}${marca.nome ? ' da ' + marca.nome : ''}:\n\n` + d.itens.map(i => `• ${i.qtd}x ${i.nome} – ${fmtR(i.qtd * i.preco)}`).join('\n') + `\n\n*Total: ${fmtR(d.total)}*\nVálido até ${r.validade.toLocaleDateString('pt-BR')}.\n(PDF em anexo)`;
+            const arquivo = new File([r.blob], r.nome, { type: 'application/pdf' });
+            if (movel && navigator.canShare && navigator.canShare({ files: [arquivo] })) { try { await navigator.share({ files: [arquivo], text: msg, title: 'Orçamento' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
+            baixarBlob(r.blob, r.nome);
+            const url = `https://wa.me/${tel || ''}?text=${encodeURIComponent(msg)}`;
+            if (janela) janela.location.href = url; else window.open(url, '_blank');
+            alert('O PDF foi baixado. Na conversa do WhatsApp que abriu, clique no clipe 📎 e anexe o arquivo ' + r.nome + '.');
+        });
 
         // Busca de produto (Vendas): lista A-Z com miniatura; o <select> escondido guarda o valor
         const vendaProdutoBusca = document.getElementById('vendaProdutoBusca');
@@ -3471,7 +3709,7 @@
             { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: informe peso e tempo (ou carregue um arquivo .3mf) e veja o custo, o preço para revenda e para o consumidor, e o valor em cada canal (Shopee, Mercado Livre...).' },
             { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Dá para salvar o projeto antes de lançar as peças e voltar a editar depois. Para peças de várias cores, marque “Projeto multicolorido”: adicione cada filamento com o peso e informe o tempo total do projeto só no final. Em “Projetos Cadastrados” fica a lista de todos os seus projetos, com busca, ordenação e filtros (portfólio, estoque, já impressos, status e categoria). Cada projeto tem seu botão Imprimir: informe a quantidade e a cor da impressão e confirme, que soma ao estoque pronto daquela cor (o Portfólio mostra as cores em estoque, sem precisar duplicar o projeto) e desconta o filamento. Ali também ficam Editar, Duplicar e Excluir, e o botão “Histórico de impressões”, onde você filtra por data, vê quantidade, material e valor gasto e pode editar cada impressão (quantidade, data, impressora e cor). Se trocar o filamento de um projeto já impresso, o estoque é reajustado. Imprime várias peças iguais de uma vez? Em “Peças por impressão (na mesa)” informe a quantidade e lance o peso e o tempo da mesa inteira: o app divide e mostra o custo por peça, que baixa conforme você enche a mesa. Também dá para montar um kit: o botão “📦 Criar Kit” (no topo) junta várias impressões, soma custos extras (embalagem, caixa, cartão…), calcula o valor de venda e revenda e deixa você escolher se o kit aparece no Portfólio. O kit entra em Vendas e Revenda como um produto e, ao vender, baixa o estoque de cada item.' },
             { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
-            { aba: 'vendas', titulo: '6. Vendas', texto: 'Lance vendas rápidas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra. Se o produto tem estoque em mais de uma cor, escolha a cor vendida e a baixa é feita naquela cor.' },
+            { aba: 'vendas', titulo: '6. Vendas / Orçamento', texto: 'Escolha no topo entre Venda rápida e Orçamento. No Orçamento você monta a lista de produtos (inclusive os ocultos do Portfólio), ajusta valores, desconto e frete, e gera o PDF com a sua logo para enviar ao cliente pelo WhatsApp. Na venda rápida, lance vendas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra. Se o produto tem estoque em mais de uma cor, escolha a cor vendida e a baixa é feita naquela cor. A lista de produtos mostra todos, inclusive os ocultos do Portfólio.' },
             { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. As categorias ficam no topo (no celular, o botão “Categorias” abre um menu por cima da tela) e o carrossel “Mais visitados” passa sozinho. A ordem padrão mostra primeiro as novidades e depois os mais visitados; alterne também a visualização (Grade, Lista ou Compacta). Produto sem valor aparece como “Sob consulta” e o cliente pede o orçamento pelo WhatsApp. Se liberar em Minha marca, o cliente compartilha o produto em post, stories ou vídeo. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
             { aba: 'revenda', titulo: '8. Revenda', texto: 'A mesma lista do Portfólio, mas com o valor de revenda. No fim do formulário do projeto, ao lado do valor de venda, você informa o “Valor de revenda” (se deixar em branco, o app estima pelo custo × o multiplicador de revenda da aba Calcular). É de uso interno: esta aba não tem link público.' },
             { aba: 'buscador', titulo: '9. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez, veja as imagens dos modelos e salve o que achou como projeto.' },
