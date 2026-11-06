@@ -4037,6 +4037,26 @@
             </div>`;
         }
 
+        // Aba "Entregues / vendidos": lista com a foto do produto vendido
+        function fotoLinhaVendido(itens) {
+            const fotos = itens.map(it => { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; return pr && pr.imagem_base64 ? pr.imagem_base64 : ''; });
+            const f = fotos.find(Boolean), mais = itens.length > 1 ? `<span class="absolute -bottom-1 -right-1 bg-ink text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 leading-none">+${itens.length - 1}</span>` : '';
+            return `<div class="relative shrink-0">${f ? `<img src="${escHtml(f)}" alt="" loading="lazy" class="h-16 w-16 rounded-xl object-cover bg-surface2 border border-line">` : '<div class="h-16 w-16 rounded-xl bg-surface2 border border-line flex items-center justify-center text-2xl">🧩</div>'}${mais}</div>`;
+        }
+        function linhaEntregue(o) {
+            if (o._venda) {
+                const preco = parseFloat(o.preco_venda_final) || 0, lucro = parseFloat(o.lucro_liquido) || 0;
+                return `<div class="bg-surface rounded-2xl border border-line p-3 shadow-sm flex items-center gap-3">${fotoLinhaVendido([{ projeto_id: o.projeto_id }])}
+                    <div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(o.nome_projeto || 'Produto')}</p><p class="text-xs text-inkmute truncate">👤 ${escHtml(o.cliente || 'Cliente Geral')} • ${fmtData(o.data_venda)} • ${NOME_CANAL[o.canal_venda] || 'Venda direta'}</p></div>
+                    <div class="text-right shrink-0"><p class="font-mono2 text-sm font-bold text-ink">${brl(preco)}</p><p class="text-[11px] ${lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro ${brl(lucro)}</p><button onclick="mudarAba('vendas')" class="text-[11px] text-sky-600 font-semibold">Ver venda →</button></div></div>`;
+            }
+            const itens = itensDoPedido(o), tt = totaisItens(itens), total = tt.vendas, pago = valorPagoPedido(o, total), falta = Math.max(0, total - pago);
+            const resumo = itens.map(it => `${it.quantidade}x ${escHtml(it.nome)}`).join(' • ');
+            return `<div class="bg-surface rounded-2xl border border-line p-3 shadow-sm flex items-center gap-3">${fotoLinhaVendido(itens)}
+                <div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(o.cliente)}</p><p class="text-xs text-ink truncate">${resumo}</p><p class="text-[11px] text-inkmute truncate">Entregue em ${fmtData(o.data_entrega || o.created_at)}${o.tipo_pagamento ? ' • ' + escHtml(o.tipo_pagamento) : ''} • ${falta <= 0 ? '<span class="text-emerald-700 font-semibold">Pago</span>' : '<span class="text-amber-700 font-semibold">falta ' + brl(falta) + '</span>'}</p></div>
+                <div class="text-right shrink-0"><p class="font-mono2 text-sm font-bold text-ink">${brl(total)}</p><p class="text-[11px] ${tt.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro ${brl(tt.lucro)}</p><button onclick="excluirPedido('${o.id}')" class="text-[11px] text-red-600">Excluir</button></div></div>`;
+        }
+
         function renderizarPedidos() {
             const ativos = pedidosCache.filter(o => STATUS_ATIVOS.includes(o.status));
             let atras = 0, receber = 0, minutos = 0;
@@ -4055,9 +4075,12 @@
             else lista = [...pedidosCache, ...vendasSemPedido.map(v => ({ ...v, _venda: true }))].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
 
             if (!lista.length) {
+                listaPedidos.className = 'grid grid-cols-1 gap-3';
                 listaPedidos.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-10 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Clique em <strong>+ Novo pedido</strong> para começar.' : 'Nada por aqui ainda.') + '</div>';
                 return;
             }
+            listaPedidos.className = filtroPedidos === 'entregues' ? 'flex flex-col gap-2' : 'grid grid-cols-1 xl:grid-cols-2 gap-3';
+            if (filtroPedidos === 'entregues') { listaPedidos.innerHTML = lista.map(linhaEntregue).join(''); return; }
             listaPedidos.innerHTML = lista.map((o, i) => {
                 if (o._venda) return cartaoVendaDireta(o);
                 const itens = itensDoPedido(o), tt = totaisItens(itens), total = tt.vendas;
