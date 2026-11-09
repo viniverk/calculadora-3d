@@ -1069,8 +1069,14 @@
                             <p class="text-[11px] text-inkmute mt-1">Em branco: custo × multiplicador de revenda (aba Calcular).</p>
                         </div>
                     </div>
+                    <div class="flex items-center gap-2 flex-wrap bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                        <label for="simMargem" class="text-sm font-bold text-ink">Simular margem de lucro (%)</label>
+                        <input type="number" id="simMargem" min="0" step="5" value="100" class="w-24 bg-surface p-1.5 rounded border border-emerald-300 text-center font-bold text-ink focus:outline-none focus:border-emerald-600">
+                        <span id="simLucro" class="text-xs text-emerald-800"></span>
+                        <span class="text-[11px] text-inkmute w-full">Digite a margem e o valor de venda é preenchido sozinho (custo + margem). Você ainda pode ajustar o valor à mão.</span>
+                    </div>
                     <div class="grid sm:grid-cols-2 gap-2">
-                        <button type="button" id="sugDireta" class="text-left rounded-lg border border-line bg-surface hover:border-emerald-500 px-3 py-2 transition"><span class="block text-[11px] text-inkmute">Sugerido • Venda direta (margem 100%)</span><span id="sugDiretaValor" class="font-mono2 font-bold text-emerald-700">R$ 0,00</span></button>
+                        <button type="button" id="sugDireta" class="text-left rounded-lg border border-line bg-surface hover:border-emerald-500 px-3 py-2 transition"><span id="sugDiretaRot" class="block text-[11px] text-inkmute">Sugerido • Venda direta (margem 100%)</span><span id="sugDiretaValor" class="font-mono2 font-bold text-emerald-700">R$ 0,00</span></button>
                         <div class="rounded-lg border border-line bg-surface px-3 py-2">
                             <div class="flex items-center justify-between gap-2"><span class="text-[11px] text-inkmute">Sugerido • Venda marketplace</span><select id="sugCanal" class="text-[11px] bg-surface2 border border-line rounded px-1.5 py-0.5 text-ink"><option value="shopee">Shopee</option><option value="ml_classico">ML Clássico</option><option value="ml_premium">ML Premium</option></select></div>
                             <button type="button" id="sugMarket" class="font-mono2 font-bold text-emerald-700 hover:underline text-left"><span id="sugMarketValor">R$ 0,00</span></button>
@@ -4792,11 +4798,20 @@
             document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
             atualizarSugestoesPreco();
         }
+        function margemSimulada() { const v = parseFloat(String(document.getElementById('simMargem').value).replace(',', '.')); return isNaN(v) || v < 0 ? 100 : Math.round(v * 100) / 100; }
+        document.getElementById('simMargem').addEventListener('input', () => {
+            const mg = margemSimulada(); projMargemPorcentagem.value = mg;
+            const r = atualizarSugestoesPreco(); projPrecoVenda.value = r.direta > 0 ? r.direta.toFixed(2) : '';
+            atualizarAcumuladoresMaster();
+        });
         function atualizarSugestoesPreco() {
             let custoPecas = 0; pecasProjetoAtual.forEach(p => { custoPecas += p.custo_calculado; }); custoPecas /= pecasPorMesa();
             const custo = custoPecas + num(configCustos.custo_fixo_projeto, 0);
-            const direta = custo * 2;                               // margem 100% sobre o custo
-            const mkt = precoParaCanal(custo * 2, document.getElementById('sugCanal').value);   // mesmo lucro, já pagando as taxas do canal
+            const mg = margemSimulada();
+            const direta = custo * (1 + mg / 100);                  // custo + margem simulada
+            const mkt = precoParaCanal(direta, document.getElementById('sugCanal').value);   // mesmo lucro, já pagando as taxas do canal
+            document.getElementById('sugDiretaRot').innerText = `Sugerido • Venda direta (margem ${mg}%)`;
+            document.getElementById('simLucro').innerText = custo > 0 ? `Custo ${brl(custo)} → lucro de ${brl(direta - custo)} por unidade` : '';
             document.getElementById('sugDiretaValor').innerText = brl(direta);
             document.getElementById('sugMarketValor').innerText = brl(mkt);
             const soma = pecasProjetoAtual.reduce((a, pc) => a + (pc.preco_venda || 0), 0);
@@ -4804,8 +4819,8 @@
             document.getElementById('sugSomaValor').innerText = brl(soma);
             return { direta, mkt, soma };
         }
-        document.getElementById('sugDireta').addEventListener('click', () => { projMargemPorcentagem.value = 100; projCanalVenda.value = 'direta'; projPrecoVenda.value = atualizarSugestoesPreco().direta.toFixed(2); });
-        document.getElementById('sugMarket').addEventListener('click', () => { projMargemPorcentagem.value = 100; projCanalVenda.value = document.getElementById('sugCanal').value; projPrecoVenda.value = atualizarSugestoesPreco().mkt.toFixed(2); });
+        document.getElementById('sugDireta').addEventListener('click', () => { projMargemPorcentagem.value = margemSimulada(); projCanalVenda.value = 'direta'; projPrecoVenda.value = atualizarSugestoesPreco().direta.toFixed(2); });
+        document.getElementById('sugMarket').addEventListener('click', () => { projMargemPorcentagem.value = margemSimulada(); projCanalVenda.value = document.getElementById('sugCanal').value; projPrecoVenda.value = atualizarSugestoesPreco().mkt.toFixed(2); });
         document.getElementById('sugSoma').addEventListener('click', () => { projPrecoVenda.value = atualizarSugestoesPreco().soma.toFixed(2); });
         document.getElementById('sugCanal').addEventListener('change', atualizarSugestoesPreco);
         projCanalVenda.addEventListener('change', atualizarAcumuladoresMaster);
@@ -5181,6 +5196,7 @@
 
         function limparFormularioProjeto() {
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
+            document.getElementById('simMargem').value = 100;
             projNome.value = ''; projPrecoVenda.value = ''; projPrecoRevenda.value = ''; projCor.value = ''; definirCatsForm(null); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
             projImagemUrl.value = ''; projLink3mf.value = ''; projOcultarPortfolio.checked = false; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; document.getElementById('projPecasMesa').value = 1; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
@@ -5196,7 +5212,7 @@
             const proj = projetosCacheLocal.find(p => p.id === id); if (!proj) return alert('Não localizado.');
             idProjetoEmEdicao = proj.id; projNome.value = proj.nome_projeto; projCor.value = proj.cor || ''; definirCatsForm(proj); projDescricao.value = proj.descricao || ''; projPrecoVenda.value = proj.preco_manual ? proj.preco_venda_total : ''; projPrecoRevenda.value = proj.revenda_manual ? proj.preco_revenda_total : ''; projMaquina.value = proj.maquina_id || ''; 
             projStatus.value = proj.status || 'Aguardando Impressão'; projDataConclusao.value = proj.data_conclusao || ''; 
-            projMargemPorcentagem.value = proj.margem_lucro_porcentagem != null ? proj.margem_lucro_porcentagem : projMargemPorcentagem.value; projImagemUrl.value = proj.imagem_base64 || '';
+            projMargemPorcentagem.value = proj.margem_lucro_porcentagem != null ? proj.margem_lucro_porcentagem : projMargemPorcentagem.value; document.getElementById('simMargem').value = proj.margem_lucro_porcentagem != null ? proj.margem_lucro_porcentagem : 100; projImagemUrl.value = proj.imagem_base64 || '';
             projOcultarPortfolio.checked = proj.visibilidade_portfolio === 'esconder';
             projQuantidadeEstoque.value = parseInt(proj.quantidade_estoque) || 0;
             projCanalVenda.value = (proj.canal_venda && NOME_CANAL[proj.canal_venda]) ? proj.canal_venda : 'direta';
