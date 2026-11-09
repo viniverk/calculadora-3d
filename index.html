@@ -723,6 +723,10 @@
                 <h2 class="font-display text-2xl font-bold text-ink">Visão Geral</h2>
                 <p class="text-sm text-inkmute mt-1">Resumo rápido da sua operação de impressão 3D.</p>
             </div>
+            <section aria-label="O que fazer hoje">
+                <div class="flex items-center justify-between gap-2 mb-2"><h3 class="font-display text-lg font-bold text-ink">☀️ O que fazer hoje</h3><button type="button" onclick="atualizarHoje()" class="text-xs text-teal2 hover:underline">Atualizar</button></div>
+                <div id="dashHoje" class="grid grid-cols-1 lg:grid-cols-2 gap-3"><p class="text-sm text-inkmute">Carregando…</p></div>
+            </section>
             <div id="dashPedidosAviso" class="hidden bg-orange-50 border border-orange-200 text-sm text-ink rounded-xl px-4 py-3"></div>
 
             <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
@@ -2328,6 +2332,53 @@
         try { const salvo = localStorage.getItem('histPainel'); if (salvo) trocarPainelHist(salvo); } catch (e) {}
         document.getElementById('dashPeriodo').addEventListener('change', renderizarHistoricoDashboard);
 
+
+        // --- PAINEL "O QUE FAZER HOJE" (Visão Geral) ---
+        function hojeCartao(icone, titulo, qtd, linhas, cor) {
+            return `<div class="bg-surface rounded-2xl border ${cor || 'border-line'} p-4 shadow-sm"><div class="flex items-center justify-between mb-2"><p class="font-bold text-ink text-sm">${icone} ${titulo}</p><span class="text-xs font-bold px-2 py-0.5 rounded-full bg-surface2 text-ink">${qtd}</span></div><div class="space-y-2">${linhas.join('')}</div></div>`;
+        }
+        function hojeLinha(texto, sub, botoes) {
+            return `<div class="flex items-center gap-2 flex-wrap"><div class="min-w-0 flex-1"><p class="text-sm font-semibold text-ink truncate">${texto}</p>${sub ? `<p class="text-[11px] text-inkmute truncate">${sub}</p>` : ''}</div><div class="flex gap-1.5 shrink-0">${botoes || ''}</div></div>`;
+        }
+        const hojeBtn = (rotulo, onclick, forte) => `<button type="button" onclick="${onclick}" class="text-xs font-bold px-3 py-1.5 rounded-lg ${forte ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'border border-line text-ink hover:bg-surface2'}">${rotulo}</button>`;
+        window.hojeImprimir = async function(id) {
+            if (!projetosCacheLocal.some(x => x.id === id)) { try { await carregarProjetos3d(); } catch (e) {} }
+            abrirImprimirProjeto(id);
+        };
+        window.hojeMarcarPronto = async function(id) { await avancarPedido(id, 'Pronto'); };
+        async function atualizarHoje(pedidosPre) {
+            const box = document.getElementById('dashHoje'); if (!box || !usuarioAtual) return;
+            try {
+                let pedidos = pedidosPre;
+                if (!pedidos) { const sp = await colecao('pedidos_3d').where('user_id', '==', usuarioAtual.uid).get(); pedidos = snapshotParaArray(sp) || []; }
+                let orcs = []; try { const so = await colecao('orcamentos_3d').where('user_id', '==', usuarioAtual.uid).get(); orcs = snapshotParaArray(so) || []; } catch (e) {}
+                const projs = projetosCacheLocal.length ? projetosCacheLocal : ((dashDados && dashDados.projetos) || []);
+                const porId = (id) => projs.find(x => x.id === id);
+                const ativos = pedidos.filter(o => o.status === 'Aguardando' || o.status === 'Imprimindo');
+                // demanda por projeto (soma dos pedidos na fila) x estoque pronto
+                const dem = {};
+                ativos.forEach(o => itensDoPedido(o).forEach(it => { if (it.projeto_id) dem[it.projeto_id] = (dem[it.projeto_id] || 0) + (parseInt(it.quantidade) || 0); }));
+                const faltas = Object.keys(dem).map(id => ({ pr: porId(id), falta: dem[id] - (parseInt((porId(id) || {}).quantidade_estoque) || 0) })).filter(x => x.pr && !x.pr.kit && x.falta > 0);
+                const prazoTxt = (o) => { const d = diasAte(o.prazo); return d === null ? '' : d < 0 ? `<span class="text-red-600 font-bold">atrasado ${-d} d</span>` : d === 0 ? '<span class="text-amber-600 font-bold">entrega hoje</span>' : `prazo ${fmtData(o.prazo)}`; };
+                const cartoes = [];
+                if (faltas.length) cartoes.push(hojeCartao('🖨️', 'Para imprimir', faltas.length, faltas.slice(0, 5).map(x => hojeLinha(escHtml(x.pr.nome_projeto), `faltam ${x.falta} para os pedidos na fila`, hojeBtn('Imprimir', `hojeImprimir('${x.pr.id}')`, true)))));
+                const prontos = pedidos.filter(o => o.status === 'Pronto');
+                const podePronto = ativos.filter(o => itensDoPedido(o).every(it => { const pr = it.projeto_id ? porId(it.projeto_id) : null; return pr && !pr.kit && (parseInt(pr.quantidade_estoque) || 0) >= (parseInt(it.quantidade) || 0) ? true : (pr && pr.kit); }));
+                const ordPrazo = (a, b) => String(a.prazo || '9999').localeCompare(String(b.prazo || '9999'));
+                const linhasEntrega = [...prontos.sort(ordPrazo).map(o => hojeLinha(escHtml(o.cliente || 'Cliente'), `Pronto • ${prazoTxt(o) || 'sem prazo'}`, hojeBtn('Entregar', `entregarPedido('${o.id}')`, true))),
+                    ...podePronto.sort(ordPrazo).map(o => hojeLinha(escHtml(o.cliente || 'Cliente'), `Já tem estoque • ${prazoTxt(o) || 'sem prazo'}`, hojeBtn('Marcar pronto', `hojeMarcarPronto('${o.id}')`)))];
+                if (linhasEntrega.length) cartoes.push(hojeCartao('📦', 'Para entregar', linhasEntrega.length, linhasEntrega.slice(0, 5)));
+                const agora = Date.now();
+                const orcPend = orcs.filter(o => { const t = new Date(o.criado_em || o.created_at || 0).getTime(); const dias = (agora - t) / 86400000; return t && dias >= 2 && dias <= (parseInt(o.validade_dias) || 7); }).sort((a, b) => String(a.created_at || '').localeCompare(String(b.created_at || '')));
+                if (orcPend.length) cartoes.push(hojeCartao('📝', 'Orçamentos sem resposta', orcPend.length, orcPend.slice(0, 4).map(o => { const tel = digitosWhats(o.telefone || ''); const dias = Math.floor((agora - new Date(o.criado_em || o.created_at).getTime()) / 86400000); const msg = encodeURIComponent(`Olá${o.cliente ? ', ' + o.cliente : ''}! Tudo bem? Passando para saber se você viu o orçamento nº ${o.numero || ''} (${fmtR(o.total || 0)}). Posso ajudar com algo?`); return hojeLinha(escHtml(o.cliente || 'Cliente'), `${fmtR(o.total || 0)} • enviado há ${dias} dias`, tel ? `<a href="https://wa.me/${tel}?text=${msg}" target="_blank" rel="noopener" class="text-xs font-bold px-3 py-1.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">WhatsApp</a>` : hojeBtn('Ver', "mudarAba('vendas')")); })));
+                const baixos = (filamentosCache || []).filter(i => { const at = parseFloat(i.peso_atual_g) || 0, tot = parseFloat(i.peso_total_g) || 0; return tot > 0 && (at / tot <= 0.15 || at < 100); }).sort((a, b) => (parseFloat(a.peso_atual_g) || 0) - (parseFloat(b.peso_atual_g) || 0));
+                if (baixos.length) cartoes.push(hojeCartao('🧵', 'Filamento acabando', baixos.length, baixos.slice(0, 5).map(i => hojeLinha(`<span class="inline-block h-3 w-3 rounded-full align-middle mr-1.5 border border-black/20" style="background:${corDoFilamento(i)}"></span>${escHtml(i.nome || i.tipo || 'Filamento')}${i.cor && i.cor !== i.nome ? ' ' + escHtml(i.cor) : ''}`, `restam ${Math.round(parseFloat(i.peso_atual_g) || 0)} g de ${Math.round(parseFloat(i.peso_total_g) || 0)} g`, hojeBtn('Estoque', "mudarAba('filamentos')"))), 'border-amber-300'));
+                const atras = ativos.filter(o => { const d = diasAte(o.prazo); return d !== null && d < 0; });
+                box.innerHTML = cartoes.length ? cartoes.join('') : '<div class="lg:col-span-2 bg-emerald-50 border border-emerald-200 rounded-2xl p-4 text-sm text-emerald-900">✅ Tudo em dia: nenhum pedido esperando impressão ou entrega, e o filamento está em bom nível.</div>';
+                if (atras.length) box.insertAdjacentHTML('afterbegin', `<div class="lg:col-span-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2 text-sm text-red-800">⚠️ <strong>${atras.length}</strong> pedido(s) com o prazo vencido. <button type="button" onclick="mudarAba('pedidos')" class="underline font-semibold">Ver pedidos</button></div>`);
+            } catch (e) { console.error('hoje', e); box.innerHTML = '<p class="text-sm text-inkmute">Não foi possível montar o resumo agora.</p>'; }
+        }
+
         async function carregarDashboard() {
             const [projSnap, vendSnap, estSnap] = await Promise.all([
                 colecao('projetos_3d').where('user_id', '==', usuarioAtual.uid).get(),
@@ -2351,7 +2402,7 @@
 
             dashDados = { projetos: projetos || [], vendas: vendas || [] };
             try { renderizarHistoricoDashboard(); } catch (e) { console.error('histórico', e); }
-            atualizarAvisoPedidosDashboard();
+            atualizarHoje();
 
             atualizarTabelaEstoqueDashboard();
         }
@@ -3713,13 +3764,13 @@
             { aba: 'maquinas', titulo: '1. Cadastre sua impressora', texto: 'Comece por aqui: escolha o modelo da sua impressora na lista (Elegoo, Creality, Bambu Lab...) e veja a ilustração dela. Informe valor, vida útil e potência: o app calcula o custo por hora de máquina. Mais abaixo ficam os custos do negócio (energia, mão de obra, manutenção).' },
             { aba: 'filamentos', titulo: '2. Estoque de filamentos', texto: 'Cadastre seus rolos com preço, peso e a cor (escolha o tom na paleta e veja o rolo colorido). O custo por grama vem daqui e o estoque é abatido a cada impressão. Filtre o histórico e alterne entre Cards, Lista e Miniaturas.' },
             { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: informe peso e tempo (ou carregue um arquivo .3mf) e veja o custo, o preço para revenda e para o consumidor, e o valor em cada canal (Shopee, Mercado Livre...).' },
-            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Dá para salvar o projeto antes de lançar as peças e voltar a editar depois. Para peças de várias cores, marque “Projeto multicolorido”: adicione cada filamento com o peso e informe o tempo total do projeto só no final. Em “Projetos Cadastrados” fica a lista de todos os seus projetos em linhas (foto, custo, estoque pronto e se já foi impresso; o próximo a imprimir fica com borda verde), com atalhos “Todos / Nunca impressos / Sem estoque”, busca, ordenação e filtros (portfólio, estoque, já impressos, status e categoria). Você ainda pode trocar para Grade ou Compacta. Cada projeto tem seu botão Imprimir: informe a quantidade e a cor da impressão e confirme, que soma ao estoque pronto daquela cor (o Portfólio mostra as cores em estoque, sem precisar duplicar o projeto) e desconta o filamento. No menu “⋯” de cada projeto ficam Editar, Duplicar e Excluir, e o botão “Histórico de impressões”, onde você filtra por data, vê quantidade, material e valor gasto e pode editar cada impressão (quantidade, data, impressora e cor). Se trocar o filamento de um projeto já impresso, o estoque é reajustado. Imprime várias peças iguais de uma vez? Em “Peças por impressão (na mesa)” informe a quantidade e lance o peso e o tempo da mesa inteira: o app divide e mostra o custo por peça, que baixa conforme você enche a mesa. Também dá para montar um kit: o botão “📦 Criar Kit” (no topo) junta várias impressões, soma custos extras (embalagem, caixa, cartão…), calcula o valor de venda e revenda e deixa você escolher se o kit aparece no Portfólio. O kit entra em Vendas e Revenda como um produto e, ao vender, baixa o estoque de cada item.' },
+            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Dá para salvar o projeto antes de lançar as peças e voltar a editar depois. Para peças de várias cores, marque “Projeto multicolorido”: adicione cada filamento com o peso e informe o tempo total do projeto só no final. Em “Projetos Cadastrados” fica a lista de todos os seus projetos em linhas (foto, custo, estoque pronto e se já foi impresso; o próximo a imprimir fica com borda verde), com atalhos “Todos / Nunca impressos / Sem estoque”, busca, ordenação e filtros (portfólio, estoque, já impressos, status e categoria). Você ainda pode trocar para Grade ou Compacta. Cada projeto tem seu botão Imprimir: ajuste a quantidade com − e +, escolha a cor, veja quanto sobra de filamento (ex.: 640 g → 340 g) e se o produto passa a “Em estoque” no catálogo, e confirme, que soma ao estoque pronto daquela cor (o Portfólio mostra as cores em estoque, sem precisar duplicar o projeto) e desconta o filamento. No menu “⋯” de cada projeto ficam Editar, Duplicar e Excluir, e o botão “Histórico de impressões”, onde você filtra por data, vê quantidade, material e valor gasto e pode editar cada impressão (quantidade, data, impressora e cor). Se trocar o filamento de um projeto já impresso, o estoque é reajustado. Imprime várias peças iguais de uma vez? Em “Peças por impressão (na mesa)” informe a quantidade e lance o peso e o tempo da mesa inteira: o app divide e mostra o custo por peça, que baixa conforme você enche a mesa. Também dá para montar um kit: o botão “📦 Criar Kit” (no topo) junta várias impressões, soma custos extras (embalagem, caixa, cartão…), calcula o valor de venda e revenda e deixa você escolher se o kit aparece no Portfólio. O kit entra em Vendas e Revenda como um produto e, ao vender, baixa o estoque de cada item.' },
             { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
             { aba: 'vendas', titulo: '6. Vendas / Orçamento', texto: 'Escolha no topo entre Venda rápida e Orçamento. No Orçamento você monta a lista de produtos (inclusive os ocultos do Portfólio), ajusta valores, desconto e frete, e gera o PDF com a sua logo para enviar ao cliente pelo WhatsApp. Na venda rápida, lance vendas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra. Se o produto tem estoque em mais de uma cor, escolha a cor vendida e a baixa é feita naquela cor. A lista de produtos mostra todos, inclusive os ocultos do Portfólio.' },
             { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. As categorias ficam no topo (no celular, o botão “Categorias” abre um menu por cima da tela) e o carrossel “Mais visitados” passa sozinho. A ordem padrão mostra primeiro as novidades e depois os mais visitados; alterne também a visualização (Grade, Lista ou Compacta). Produto sem valor aparece como “Sob consulta” e o cliente pede o orçamento pelo WhatsApp. Se liberar em Minha marca, o cliente compartilha o produto em post, stories ou vídeo. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
             { aba: 'revenda', titulo: '8. Revenda', texto: 'A mesma lista do Portfólio, mas com o valor de revenda. No fim do formulário do projeto, ao lado do valor de venda, você informa o “Valor de revenda” (se deixar em branco, o app estima pelo custo × o multiplicador de revenda da aba Calcular). É de uso interno: esta aba não tem link público.' },
             { aba: 'buscador', titulo: '9. Buscar modelos', texto: 'Pesquise STL e 3MF em várias bibliotecas de uma vez, veja as imagens dos modelos e salve o que achou como projeto.' },
-            { aba: 'dashboard', titulo: '10. Visão geral', texto: 'Faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
+            { aba: 'dashboard', titulo: '10. Visão geral', texto: 'No topo, “O que fazer hoje” mostra o que precisa da sua atenção: peças que faltam imprimir para os pedidos (com botão Imprimir), pedidos prontos para entregar, orçamentos enviados sem resposta (com botão de WhatsApp) e filamento acabando. Abaixo ficam faturamento, lucro, peças mais vendidas, horas de máquina e estoque, com gráficos que você alterna pelos botões.' },
             { aba: 'marca', titulo: '11. Minha marca', texto: 'Coloque nome, logo, WhatsApp e Instagram. Eles aparecem no topo do seu catálogo público, e você escolhe a cor desse topo. Marque também "Permitir compartilhar produtos" para que clientes gerem post, stories ou vídeo com foto e preço e o link de compra para o seu Instagram.' },
             { centro: true, final: true, titulo: 'Tudo pronto! 🚀', texto: 'Sugestão de ordem: cadastre a máquina, depois os filamentos, cadastre seus projetos e registre as impressões em Impressões. Para rever este guia, use “Tour guiado” no menu. Seu cadastro, plano e vencimento ficam no card com o seu nome, no fim do menu (é por lá também que você sai da conta).' }
         ];
@@ -4028,6 +4079,7 @@
             } catch (e) { vendasSemPedido = []; }
             preencherListasPedido();
             renderizarPedidos();
+            try { atualizarHoje(pedidosCache); } catch (e) {}
         }
 
         function cartaoVendaDireta(v) {
@@ -5728,6 +5780,14 @@
             const energia = horas * h.energia, desgaste = horas * h.desgaste, mao = horas * h.mao;
             return { g, horas, filamento, energia, desgaste, mao, total: filamento + energia + desgaste + mao, maq };
         }
+        function filamentoAntesDepois(p, q) {
+            const cons = consumoPorChaveDe(p.pecas, q);
+            return Object.keys(cons).map(ch => {
+                const lotes = (filamentosCache || []).filter(i => `${(i.fabricante || 'Desconhecido').trim()} | ${i.tipo} | ${(i.cor || 'Incolor').trim()}`.toLowerCase() === ch);
+                const antes = lotes.reduce((a, i) => a + (parseFloat(i.peso_atual_g) || 0), 0);
+                return { nome: ch.split(' | ').slice(1).join(' '), g: cons[ch], antes, depois: antes - cons[ch], achou: lotes.length > 0 };
+            });
+        }
         function atualizarResumoImp(id) {
             const p = projetosCacheLocal.find(x => x.id === id); if (!p) return;
             const q = Math.max(1, parseInt(document.getElementById('impQtd').value) || 1);
@@ -5735,13 +5795,17 @@
             const c = custoImpressaoProjeto(p, document.getElementById('impMaquina').value);
             const ln = (t, v, forte) => `<p class="flex justify-between gap-3"><span>${t}</span><span class="${forte ? 'font-bold' : ''}">${v}</span></p>`;
             const hh = c.horas * q, hm = Math.floor(hh), mm = Math.round((hh - hm) * 60);
+            const fil = filamentoAntesDepois(p, q);
+            const linhasFil = fil.length ? fil.map(f => f.achou ? ln(`Filamento ${escHtml(f.nome)}`, `<b class="${f.depois < 0 ? 'text-red-600' : ''}">${Math.round(f.antes)} g → ${Math.round(f.depois)} g</b>`) + (f.depois < 0 ? `<p class="text-[11px] text-red-600">Faltam ${Math.round(-f.depois)} g no estoque desse filamento (vai zerar).</p>` : '') : ln(`Filamento ${escHtml(f.nome)}`, `<b>-${Math.round(f.g)} g</b> <span class="text-[11px] text-amber-700">(não achei no estoque)</span>`)).join('')
+                : ln('Filamento', `<b>${(c.g * q).toFixed(0)} g</b> <span class="text-[11px] text-inkmute">(preço padrão, não sai do estoque)</span>`);
+            const noCatalogo = p.visibilidade_portfolio !== 'esconder' ? (est === 0 ? '<p class="text-xs font-semibold text-emerald-800 bg-emerald-100 rounded-lg px-2 py-1.5 mt-1">🛍️ Catálogo: passa de <b>Sob encomenda</b> para <b>Em estoque</b></p>' : '<p class="text-xs text-emerald-800 mt-1">🛍️ Catálogo: continua <b>Em estoque</b></p>') : '';
             document.getElementById('impResumo').innerHTML =
-                ln('Filamento descontado do estoque', `<b>${(c.g * q).toFixed(0)} g</b>`) +
+                linhasFil +
                 ln('Tempo de impressão', `<b>${hm}h${String(mm).padStart(2, '0')}</b>`) +
                 ln('Estoque pronto', `<b>${est} → ${est + q}</b>`) +
-                `<div class="border-t border-emerald-200 my-1"></div>` +
-                ln('Filamento', brl(c.filamento * q)) + ln('Energia', brl(c.energia * q)) + (c.desgaste > 0 ? ln('Desgaste da impressora', brl(c.desgaste * q)) : '') + (c.mao > 0 ? ln('Mão de obra', brl(c.mao * q)) : '') +
-                ln('Custo desta impressão', `<b>${brl(c.total * q)}</b>`, true);
+                ln('Custo desta impressão', `<b>${brl(c.total * q)}</b>`, true) + noCatalogo +
+                `<details class="mt-1"><summary class="text-[11px] text-emerald-800 cursor-pointer">Ver detalhe do custo</summary><div class="pt-1 space-y-1">` + ln('Filamento', brl(c.filamento * q)) + ln('Energia', brl(c.energia * q)) + (c.desgaste > 0 ? ln('Desgaste da impressora', brl(c.desgaste * q)) : '') + (c.mao > 0 ? ln('Mão de obra', brl(c.mao * q)) : '') + `</div></details>`;
+            const bt = document.getElementById('impConfirmar'); if (bt) bt.textContent = `Registrar ${q} impressão${q === 1 ? '' : 'ões'}`;
         }
         function impOpcoesMaquina(p) {
             const sel = (p.maquina_id && maquinasCache.some(m => m.id === p.maquina_id)) ? p.maquina_id : ((maquinasCache.find(m => m.padrao) || {}).id || '');
@@ -5752,14 +5816,17 @@
             const m = document.getElementById('impModal');
             m.innerHTML = `<div class="bg-surface rounded-2xl p-6 w-full max-w-md space-y-4 shadow-xl border border-line">
                 <div class="flex items-center gap-3">${miniaturaProjeto(p, 'h-14 w-14')}<div class="min-w-0"><h3 class="font-display text-lg font-bold text-ink truncate">Imprimir: ${escHtml(p.nome_projeto)}</h3><p class="text-xs text-inkmute">${parseFloat(p.peso_total_g) || 0} g por unidade</p></div></div>
-                <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1 text-ink">Quantas unidades?</label><input type="number" id="impQtd" min="1" step="1" value="1" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-lg font-bold text-center"></div>
+                <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1 text-ink">Quantas unidades?</label><div class="flex items-stretch"><button type="button" id="impMenos" aria-label="Diminuir" class="w-11 rounded-l-lg border border-line bg-surface2 text-ink text-xl font-bold hover:bg-emerald-50">−</button><input type="number" id="impQtd" min="1" step="1" value="1" class="min-w-0 w-full bg-surface2 p-2 border-y border-line text-ink text-lg font-bold text-center"><button type="button" id="impMais" aria-label="Aumentar" class="w-11 rounded-r-lg border border-line bg-surface2 text-ink text-xl font-bold hover:bg-emerald-50">+</button></div></div>
                 <div><label class="block text-xs font-semibold mb-1 text-ink">Data</label><input type="date" id="impData" value="${new Date().toISOString().slice(0, 10)}" class="w-full bg-surface2 p-2 rounded border border-line text-ink"></div></div>
                 <div><label class="block text-xs font-semibold mb-1 text-ink">Impressora usada <span class="text-inkmute font-normal">(o custo é calculado por ela)</span></label><select id="impMaquina" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm">${impOpcoesMaquina(p)}</select></div>
                 <div><label class="block text-xs font-semibold mb-1 text-ink">Cor desta impressão <span class="text-inkmute font-normal">(aparece no Portfólio)</span></label><input type="text" id="impCor" list="impCoresLista" value="${escHtml(p.cor || '')}" placeholder="Ex: Preto, Vermelho, Azul…" class="w-full bg-surface2 p-2 rounded border border-line text-ink text-sm"><datalist id="impCoresLista">${[...new Set([...(filamentosCache || []).map(i => (i.cor || '').trim()), ...estoquePorCor(p).map(x => x.cor), (p.cor || '').trim()].filter(Boolean))].map(c => `<option value="${escHtml(c)}">`).join('')}</datalist>${estoquePorCor(p).length ? `<p class="text-[11px] text-inkmute mt-1">Em estoque: ${estoquePorCor(p).filter(x => x.qtd > 0).map(x => escHtml(x.cor) + ' (' + x.qtd + ')').join(', ') || 'nenhuma cor ainda'}</p>` : ''}</div>
                 <div id="impResumo" class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-sm text-emerald-900 space-y-1"></div>
-                <div class="flex justify-end gap-2"><button type="button" onclick="fecharImprimirProjeto()" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="impConfirmar" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold">Registrar impressão</button></div></div>`;
+                <div class="flex justify-end gap-2"><button type="button" onclick="fecharImprimirProjeto()" class="px-4 py-2 rounded-lg border border-line text-ink text-sm font-semibold">Cancelar</button><button type="button" id="impConfirmar" class="px-5 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold">Registrar 1 impressão</button></div></div>`;
             m.classList.remove('hidden'); m.classList.add('flex');
-            document.getElementById('impQtd').addEventListener('input', () => atualizarResumoImp(id));
+            const impQ = document.getElementById('impQtd');
+            document.getElementById('impMenos').addEventListener('click', () => { impQ.value = Math.max(1, (parseInt(impQ.value) || 1) - 1); atualizarResumoImp(id); });
+            document.getElementById('impMais').addEventListener('click', () => { impQ.value = (parseInt(impQ.value) || 0) + 1; atualizarResumoImp(id); });
+            impQ.addEventListener('input', () => atualizarResumoImp(id));
             document.getElementById('impMaquina').addEventListener('change', () => atualizarResumoImp(id));
             document.getElementById('impConfirmar').addEventListener('click', () => confirmarImprimirProjeto(id));
             atualizarResumoImp(id);
@@ -5791,6 +5858,7 @@
             } catch (e) { alert('Falha ao registrar a impressão: ' + e.message); btn.disabled = false; return; }
             fecharImprimirProjeto();
             await carregarProjetos3d();
+            try { atualizarHoje(); } catch (e) {}
             alert(`${q} unidade(s) de "${p.nome_projeto}" registradas. Estoque atualizado.`);
         }
 
