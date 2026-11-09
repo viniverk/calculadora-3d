@@ -1432,6 +1432,18 @@
         </div>
 
         <div id="view-marca" class="aba-conteudo grid grid-cols-1 lg:grid-cols-2 gap-6 hidden">
+            <div class="lg:col-span-2 bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-2xl p-4 sm:p-5">
+                <h2 class="font-display text-base font-bold text-ink">🛍️ O link da sua loja</h2>
+                <p class="text-xs text-inkmute mt-0.5">É o seu catálogo público: seus clientes veem os produtos e pedem pelo WhatsApp. Cole na bio do Instagram, no WhatsApp Business ou envie direto.</p>
+                <div class="flex flex-col sm:flex-row gap-2 mt-3">
+                    <input id="lojaLinkTxt" type="text" readonly onclick="this.select()" class="ped-inp flex-1 min-w-0 text-sm" value="">
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" id="lojaLinkCopiar" onclick="copiarLinkLoja()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold">📋 Copiar</button>
+                        <a id="lojaLinkAbrir" href="#" target="_blank" rel="noopener" class="px-4 py-2 rounded-lg border border-emerald-600 text-emerald-700 hover:bg-emerald-50 text-sm font-bold">Abrir</a>
+                        <a id="lojaLinkZap" href="#" target="_blank" rel="noopener" class="px-4 py-2 rounded-lg border border-line bg-surface text-ink hover:bg-surface2 text-sm font-bold">Enviar no WhatsApp</a>
+                    </div>
+                </div>
+            </div>
             <div class="bg-surface p-5 rounded-2xl shadow-sm border border-line h-fit space-y-3">
                 <h2 class="font-display text-lg font-bold text-ink border-b border-line pb-2">Minha marca</h2>
                 <p class="text-xs text-inkmute">Aparece no topo do seu catálogo público e gera o botão de WhatsApp nos modelos.</p>
@@ -1767,6 +1779,7 @@
             <div class="flex items-center justify-between gap-2 mb-4 mt-1">
                 <p id="diagAdmin" class="hidden"></p>
                 <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700"></p>
+                <button id="btnCarregarUso" onclick="carregarUsoAdmin()" class="text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg">📊 Carregar uso</button>
                 <button onclick="carregarAdminUsuarios()" class="text-xs bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink font-bold px-3 py-1.5 rounded-lg">🔄 Atualizar lista</button>
             </div>
             <div id="admCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-2"></div>
@@ -2024,6 +2037,20 @@
             carregarMarca(uidCatalogoPublico);
         }
 
+        function linkLojaDe(uid) {
+            return (uid === UID_LOJA) ? `${location.origin}/loja/` : `${location.origin}${location.pathname.replace(/\/loja\/?$/, '/')}?modo=publico&uid=${uid}`;
+        }
+        function preencherLinkLoja() {
+            const el = document.getElementById('lojaLinkTxt'); if (!el || !usuarioAtual) return;
+            const l = linkLojaDe(usuarioAtual.uid); el.value = l;
+            document.getElementById('lojaLinkAbrir').href = l;
+            document.getElementById('lojaLinkZap').href = 'https://wa.me/?text=' + encodeURIComponent('Conheça meu catálogo: ' + l);
+        }
+        window.copiarLinkLoja = async function() {
+            const el = document.getElementById('lojaLinkTxt'), b = document.getElementById('lojaLinkCopiar');
+            try { await navigator.clipboard.writeText(el.value); b.textContent = '✓ Copiado!'; } catch (e) { el.select(); b.textContent = 'Copie com Ctrl+C'; }
+            setTimeout(() => { b.textContent = '📋 Copiar'; }, 2200);
+        };
         function copiarLinkPublico() {
             const linkCompleto = `${window.location.origin}${window.location.pathname}?modo=publico&uid=${usuarioAtual.uid}`;
             navigator.clipboard.writeText(linkCompleto).then(() => {
@@ -2229,6 +2256,7 @@
             if (abaDestino === 'dashboard') carregarDashboard();
             if (abaDestino === 'calculadora') { carregarModelos(); preencherMaquinasCalc(); calcularAbaBase(); }
             if (abaDestino === 'inserir-impressao') carregarProjetos3d();
+            if (abaDestino === 'marca') preencherLinkLoja();
             if (abaDestino === 'portfolio-cliente') renderizerPortfolioCliente();
             if (abaDestino === 'revenda') renderizarRevenda();
             if (abaDestino === 'vendas') carregarJanelaVendas();
@@ -2865,7 +2893,7 @@
                 data = data.filter(u => (!fSt || (fSt === 'banido' ? !!u.banido : situacaoAcesso(u).tipo === fSt)) && (!termo || norm([u.nome_completo, u.email, u.telefone, u.telefone_digitos].join(' ')).includes(norm(termo))));
                 // ordenação pelos títulos (Usuário / Status)
                 const ordemSt = { pendente: 0, expirado: 1, trial_expirado: 2, trial: 3, plano: 4, admin: 5 };
-                const chave = (u) => admOrdem.campo === 'nome' ? norm(u.nome_completo || u.email) : admOrdem.campo === 'uso' ? -(usoDe(u) ? new Date(usoDe(u).ultimo_acesso || 0).getTime() : 0) : ((u.banido ? -1 : 0) + (ordemSt[situacaoAcesso(u).tipo] ?? 9));
+                const chave = (u) => admOrdem.campo === 'nome' ? norm(u.nome_completo || u.email) : admOrdem.campo === 'uso' ? -Math.max(usoDe(u) ? new Date(usoDe(u).ultimo_acesso || 0).getTime() : 0, ((window.__usoCalc || {})[u.id] || {}).ult || 0) : ((u.banido ? -1 : 0) + (ordemSt[situacaoAcesso(u).tipo] ?? 9));
                 data.sort((x, y) => { const a = chave(x), b = chave(y); return (a < b ? -1 : a > b ? 1 : norm(x.nome_completo || x.email).localeCompare(norm(y.nome_completo || y.email))) * admOrdem.dir; });
                 const seta = admOrdem.dir === 1 ? '▲' : '▼';
                 const sn = document.getElementById('setaAdmNome'), ss = document.getElementById('setaAdmStatus'), su = document.getElementById('setaAdmUso'); if (su) su.textContent = admOrdem.campo === 'uso' ? seta : '↕';
@@ -2922,9 +2950,10 @@
                             <span class="text-xs text-inkmute block">${u.email}</span>
                             ${tel}
                             ${linkCobranca(u, sit)}
+                            <a href="${linkLojaDe(u.id)}" target="_blank" rel="noopener" class="block text-[11px] text-blue-600 hover:underline mt-1">🛍️ Ver loja pública</a>
                         </td>
                         <td class="p-3">${statusHtml}</td>
-                        <td class="p-3 text-xs">${usoHtml(usoDe(u))}</td>
+                        <td class="p-3 text-xs">${usoHtml(usoDe(u), (window.__usoCalc || {})[u.id])}</td>
                         <td class="p-3">
                             <div class="flex flex-col gap-2">
                                 ${acoesAcesso}
@@ -2962,10 +2991,29 @@
             if (!iso) return '—'; const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
             return d <= 0 ? 'hoje' : d === 1 ? 'ontem' : 'há ' + d + ' dias';
         }
-        function usoHtml(x) {
-            if (!x) return '<span class="text-inkmute">sem dados ainda</span>';
-            return `<span class="block font-semibold text-ink">${relDias(x.ultimo_acesso)}</span><span class="block text-[10px] text-inkmute whitespace-nowrap">${x.n_projetos || 0} projetos • ${x.n_impressoes || 0} impressões • ${x.n_vendas || 0} vendas</span>`;
+        function usoHtml(x, c) {
+            if (!x && !c) return '<span class="text-inkmute">clique em “Carregar uso”</span>';
+            const t = Math.max(x && x.ultimo_acesso ? new Date(x.ultimo_acesso).getTime() : 0, c && c.ult ? c.ult : 0);
+            const n = (k) => (c ? c[k] : x ? x[k] : 0) || 0;
+            const nunca = c && !c.ult && !(x && x.ultimo_acesso);
+            return `<span class="block font-semibold ${nunca ? 'text-amber-600' : 'text-ink'}">${nunca ? 'sem atividade' : (x && x.ultimo_acesso && new Date(x.ultimo_acesso).getTime() >= t ? 'acesso ' : 'atividade ') + relDias(new Date(t).toISOString())}</span><span class="block text-[10px] text-inkmute whitespace-nowrap">${n('n_projetos')} projetos • ${n('n_impressoes')} impressões • ${n('n_vendas')} vendas${c ? ' • ' + (c.n_pedidos || 0) + ' pedidos • ' + (c.n_orcamentos || 0) + ' orçam.' : ''}</span>`;
         }
+        window.carregarUsoAdmin = async function() {
+            const b = document.getElementById('btnCarregarUso'); b.disabled = true; b.textContent = '⏳ Carregando…';
+            try {
+                const [sp, sv, sd, so] = await Promise.all(['projetos_3d', 'vendas_3d', 'pedidos_3d', 'orcamentos_3d'].map(c => colecao(c).get()));
+                const m = {}; const g = (id) => m[id] || (m[id] = { n_projetos: 0, n_impressoes: 0, n_vendas: 0, n_pedidos: 0, n_orcamentos: 0, ult: 0 });
+                const t = (v) => { const d = dataDeCampo(v); const x = d ? d.getTime() : (typeof v === 'string' ? new Date(v).getTime() : 0); return isNaN(x) ? 0 : x; };
+                const marca = (r, ...campos) => { campos.forEach(cp => { const x = t(r[cp]); if (x > r.__g.ult) r.__g.ult = x; }); };
+                (snapshotParaArray(sp) || []).forEach(x => { if (!x.user_id) return; const r = g(x.user_id); r.n_projetos++; r.n_impressoes += parseInt(x.total_impresso) || 0; marca({ ...x, __g: r }, 'created_at', 'ultima_impressao', 'data_conclusao'); (x.historico_impressoes || []).forEach(h => marca({ ...h, __g: r }, 'em', 'data')); });
+                (snapshotParaArray(sv) || []).forEach(x => { if (!x.user_id) return; const r = g(x.user_id); r.n_vendas++; marca({ ...x, __g: r }, 'created_at', 'data_venda', 'data'); });
+                (snapshotParaArray(sd) || []).forEach(x => { if (!x.user_id) return; const r = g(x.user_id); r.n_pedidos++; marca({ ...x, __g: r }, 'created_at', 'data_entrega'); });
+                (snapshotParaArray(so) || []).forEach(x => { if (!x.user_id) return; const r = g(x.user_id); r.n_orcamentos++; marca({ ...x, __g: r }, 'created_at', 'criado_em'); });
+                window.__usoCalc = m;
+                carregarAdminUsuarios(true);
+            } catch (e) { alert((/permission/i.test(e.message) ? 'Sem permissão para ler os dados dos usuários. Publique as regras novas do Firestore (arquivo firestore.rules) e tente de novo.\n\n' : '') + e.message); }
+            b.disabled = false; b.textContent = '📊 Carregar uso';
+        };
         function msgCobranca(u, sit) {
             const nome = String(u.nome_completo || '').trim().split(/\s+/)[0] || '';
             const oi = `Olá${nome ? ', ' + nome : ''}! Aqui é do Cliente 3D. `;
