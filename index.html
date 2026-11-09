@@ -1110,6 +1110,7 @@
                     <button type="button" data-pil="todos">Todos</button>
                     <button type="button" data-pil="naoImpresso">Nunca impressos</button>
                     <button type="button" data-pil="semEstoque">Sem estoque</button>
+                    <button type="button" data-pil="kits">📦 Kits</button>
                 </div>
                 <div id="listaProjetosSalvos" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
             </div>
@@ -5017,13 +5018,15 @@
                 g.querySelectorAll('button').forEach(b => { const on = b.dataset.v === est; b.className = 'flex-1 text-center whitespace-nowrap px-2 py-1.5 ' + (on ? 'bg-emerald-600 text-white' : 'bg-surface2 text-ink'); });
             });
         }
+        let soKits = false;
         function pintarPilulas() {
-            const atual = filtrosProj.has('naoImpresso') ? 'naoImpresso' : filtrosProj.has('semEstoque') ? 'semEstoque' : 'todos';
+            const atual = soKits ? 'kits' : filtrosProj.has('naoImpresso') ? 'naoImpresso' : filtrosProj.has('semEstoque') ? 'semEstoque' : 'todos';
             document.querySelectorAll('#projPilulas button').forEach(b => { b.className = 'px-4 py-2 rounded-full text-xs font-bold border transition ' + (b.dataset.pil === atual ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-surface text-ink border-line hover:bg-surface2'); });
         }
         document.getElementById('projPilulas').addEventListener('click', (e) => {
             const b = e.target.closest('button[data-pil]'); if (!b) return;
             ['naoImpresso', 'jaImpresso', 'semEstoque', 'comEstoque'].forEach(k => filtrosProj.delete(k));
+            soKits = b.dataset.pil === 'kits';
             if (b.dataset.pil === 'naoImpresso') filtrosProj.add('naoImpresso'); else if (b.dataset.pil === 'semEstoque') filtrosProj.add('semEstoque');
             document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = filtrosProj.has(c.dataset.fp); });
             pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados();
@@ -5040,7 +5043,7 @@
         document.getElementById('selectFiltroCategoriaProj').addEventListener('change', () => { atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('btnFiltrosProj').addEventListener('click', (e) => { e.stopPropagation(); document.getElementById('painelFiltrosProj').classList.toggle('hidden'); });
         document.getElementById('fecharFiltrosProj').addEventListener('click', () => document.getElementById('painelFiltrosProj').classList.add('hidden'));
-        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); selectFiltroStatusPortfolio.value = 'Todos'; document.getElementById('selectFiltroCategoriaProj').value = ''; pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
+        document.getElementById('limparFiltrosProj').addEventListener('click', () => { filtrosProj.clear(); soKits = false; document.querySelectorAll('#painelFiltrosProj [data-fp]').forEach(c => { c.checked = false; }); selectFiltroStatusPortfolio.value = 'Todos'; document.getElementById('selectFiltroCategoriaProj').value = ''; pintarTriFiltros(); atualizarBadgeFiltrosProj(); renderizarProjetosOrdenados(); });
         document.getElementById('painelFiltrosProj').addEventListener('click', (e) => e.stopPropagation());
         document.getElementById('painelFiltrosProj').addEventListener('click', (e) => {
             const b = e.target.closest('[data-seg] button'); if (!b) return;
@@ -5062,8 +5065,9 @@
             const criterio = selectOrdenacaoPortfolio.value;
             const filtroStatus = selectFiltroStatusPortfolio.value;
             const termoBusca = buscaProjetoNome.value.trim().toLowerCase();
+            document.querySelectorAll('#projPilulas [data-pil="kits"]').forEach(b => { b.textContent = '📦 Kits (' + projetosCacheLocal.filter(p => p.kit).length + ')'; });
             let projetosOrdenados = filtroStatus === 'Todos' ? [...projetosCacheLocal] : projetosCacheLocal.filter(p => p.status === filtroStatus);
-            projetosOrdenados = projetosOrdenados.filter(passaFiltrosProj);
+            projetosOrdenados = projetosOrdenados.filter(passaFiltrosProj).filter(p => soKits ? p.kit : !p.kit);
             if (termoBusca) { projetosOrdenados = projetosOrdenados.filter(p => (p.nome_projeto || '').toLowerCase().includes(termoBusca)); }
             atualizarFiltroMaquinas();
             const filtroMaq = selectFiltroMaquinaPortfolio.value;
