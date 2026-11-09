@@ -1769,6 +1769,8 @@
                 <p id="resumoAdminUsuarios" class="text-xs font-bold text-amber-700"></p>
                 <button onclick="carregarAdminUsuarios()" class="text-xs bg-surface2 hover:bg-[#E3E6EB] border border-line text-ink font-bold px-3 py-1.5 rounded-lg">🔄 Atualizar lista</button>
             </div>
+            <div id="admCards" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 mb-2"></div>
+            <p id="admCardsExtra" class="text-xs text-inkmute mb-3"></p>
             <div class="flex flex-wrap items-center gap-2 mb-3">
                 <input id="admBusca" type="search" oninput="carregarAdminUsuarios(true)" placeholder="🔍 Buscar nome, e-mail ou telefone" class="text-sm bg-surface2 border border-line rounded-lg px-3 py-1.5 text-ink flex-1 min-w-[12rem]">
                 <select id="admFiltroStatus" onchange="carregarAdminUsuarios(true)" class="text-sm bg-surface2 border border-line rounded-lg px-2 py-1.5 text-ink">
@@ -1788,6 +1790,7 @@
                         <tr>
                             <th class="p-3"><button type="button" onclick="ordenarAdminUsuarios('nome')" class="uppercase font-bold hover:text-ink">Usuário <span id="setaAdmNome"></span></button></th>
                             <th class="p-3"><button type="button" onclick="ordenarAdminUsuarios('status')" class="uppercase font-bold hover:text-ink">Status <span id="setaAdmStatus"></span></button></th>
+                            <th class="p-3"><button type="button" onclick="ordenarAdminUsuarios('uso')" class="uppercase font-bold hover:text-ink">Uso <span id="setaAdmUso"></span></button></th>
                             <th class="p-3">Ações</th>
                         </tr>
                     </thead>
@@ -2508,6 +2511,7 @@
             try { renderizarHistoricoDashboard(); } catch (e) { console.error('histórico', e); }
             atualizarHoje();
             atualizarPrimeirosPassos(projetos || []);
+            registrarUso(projetos, vendas);
 
             atualizarTabelaEstoqueDashboard();
         }
@@ -2841,29 +2845,32 @@
             const diag = document.getElementById('diagAdmin');
             if (diag) { diag.classList.remove('hidden'); diag.className = 'text-[10px] text-inkmute font-mono2 w-full'; diag.innerText = `v2026.10.21-c • conta: ${usuarioAtual.email} • role: ${perfilAtual ? perfilAtual.role : '?'} • acesso: ${perfilAtual ? perfilAtual.acesso_liberado : '?'}`; }
             try {
-                tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-inkmute text-xs italic">Carregando usuários...</td></tr>';
                 let data;
                 if (usarCache === true && window.__listaAdmin) data = window.__listaAdmin.slice();
                 else { const snap = await colecao('profiles').get(); data = ordenarPor(snapshotParaArray(snap), 'created_at', 'desc'); window.__listaAdmin = data.slice(); }
                 window.__usuariosAdmin = {}; data.forEach(u => { window.__usuariosAdmin[u.id] = u; });
-                if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
+                if (usarCache !== true || !window.__usoAdmin) { window.__usoAdmin = {}; try { const so = await colecao('uso_usuarios').get(); (snapshotParaArray(so) || []).forEach(x => { window.__usoAdmin[x.id] = x; }); } catch (e) { window.__usoAdminErro = true; } }
+                const usoDe = (u) => (window.__usoAdmin || {})[u.id] || null;
+                if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-inkmute text-xs italic">Nenhum usuário encontrado.</td></tr>'; return; }
 
                 const semAcesso = (u) => ['pendente', 'expirado', 'trial_expirado'].includes(situacaoAcesso(u).tipo);
                 const pendentes = data.filter(semAcesso).length;
                 const resumo = document.getElementById('resumoAdminUsuarios');
                 if (resumo) resumo.innerText = `${data.length} usuário(s) • ` + (pendentes > 0 ? `${pendentes} sem acesso (aguardando PIX/renovação)` : 'nenhum aguardando liberação');
+                renderizarCartoesAdmin(data);
                 // filtro por status e busca
                 const fSt = (document.getElementById('admFiltroStatus') || {}).value || '', termo = ((document.getElementById('admBusca') || {}).value || '').trim().toLowerCase();
                 const norm = (t) => String(t || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
                 data = data.filter(u => (!fSt || (fSt === 'banido' ? !!u.banido : situacaoAcesso(u).tipo === fSt)) && (!termo || norm([u.nome_completo, u.email, u.telefone, u.telefone_digitos].join(' ')).includes(norm(termo))));
                 // ordenação pelos títulos (Usuário / Status)
                 const ordemSt = { pendente: 0, expirado: 1, trial_expirado: 2, trial: 3, plano: 4, admin: 5 };
-                const chave = (u) => admOrdem.campo === 'nome' ? norm(u.nome_completo || u.email) : ((u.banido ? -1 : 0) + (ordemSt[situacaoAcesso(u).tipo] ?? 9));
+                const chave = (u) => admOrdem.campo === 'nome' ? norm(u.nome_completo || u.email) : admOrdem.campo === 'uso' ? -(usoDe(u) ? new Date(usoDe(u).ultimo_acesso || 0).getTime() : 0) : ((u.banido ? -1 : 0) + (ordemSt[situacaoAcesso(u).tipo] ?? 9));
                 data.sort((x, y) => { const a = chave(x), b = chave(y); return (a < b ? -1 : a > b ? 1 : norm(x.nome_completo || x.email).localeCompare(norm(y.nome_completo || y.email))) * admOrdem.dir; });
                 const seta = admOrdem.dir === 1 ? '▲' : '▼';
-                const sn = document.getElementById('setaAdmNome'), ss = document.getElementById('setaAdmStatus');
+                const sn = document.getElementById('setaAdmNome'), ss = document.getElementById('setaAdmStatus'), su = document.getElementById('setaAdmUso'); if (su) su.textContent = admOrdem.campo === 'uso' ? seta : '↕';
                 if (sn) sn.textContent = admOrdem.campo === 'nome' ? seta : '↕'; if (ss) ss.textContent = admOrdem.campo === 'status' ? seta : '↕';
-                if (!data.length) { tbody.innerHTML = '<tr><td colspan="3" class="p-3 text-inkmute text-xs italic">Nenhum usuário com esse filtro.</td></tr>'; return; }
+                if (!data.length) { tbody.innerHTML = '<tr><td colspan="4" class="p-3 text-inkmute text-xs italic">Nenhum usuário com esse filtro.</td></tr>'; return; }
 
                 tbody.innerHTML = data.map(u => {
                     const sit = situacaoAcesso(u);
@@ -2899,7 +2906,14 @@
                                 </optgroup>
                             </select>
                             <button type="button" onclick="excluirUsuario('${u.id}')" class="text-xs font-bold text-red-600 hover:bg-red-50 border border-red-200 rounded px-2 py-1.5">🗑️ Excluir</button>
-                        </div>`;
+                        </div>
+                        ${ehAdm ? '' : `<div class="flex items-center gap-1.5 flex-wrap">
+                            <span class="text-[10px] text-inkmute font-bold uppercase">PIX recebido:</span>
+                            <button type="button" onclick="registrarPixUsuario('${u.id}','mensal')" class="text-[11px] font-bold border border-green-300 text-green-700 hover:bg-green-50 rounded px-2 py-1">Mensal</button>
+                            <button type="button" onclick="registrarPixUsuario('${u.id}','trimestral')" class="text-[11px] font-bold border border-green-300 text-green-700 hover:bg-green-50 rounded px-2 py-1">Trim.</button>
+                            <button type="button" onclick="registrarPixUsuario('${u.id}','anual')" class="text-[11px] font-bold border border-green-300 text-green-700 hover:bg-green-50 rounded px-2 py-1">Anual</button>
+                            ${sit.tipo === 'plano' ? '' : `<button type="button" onclick="estenderTesteUsuario('${u.id}')" class="text-[11px] font-bold border border-sky-300 text-sky-700 hover:bg-sky-50 rounded px-2 py-1">⏱️ Estender teste</button>`}
+                        </div>`}`;
                     const tel = u.telefone_digitos ? `<a href="https://wa.me/55${u.telefone_digitos}" target="_blank" rel="noopener" class="text-xs text-green-600 hover:underline">📱 ${u.telefone || u.telefone_digitos}</a>` : '<span class="text-xs text-inkmute">sem telefone</span>';
                     return `
                     <tr>
@@ -2907,8 +2921,10 @@
                             <span class="text-ink font-semibold block">${u.nome_completo || '(sem nome)'}${euMesmo ? ' <span class="text-[10px] text-inkmute font-normal">(você)</span>' : ''}</span>
                             <span class="text-xs text-inkmute block">${u.email}</span>
                             ${tel}
+                            ${linkCobranca(u, sit)}
                         </td>
                         <td class="p-3">${statusHtml}</td>
+                        <td class="p-3 text-xs">${usoHtml(usoDe(u))}</td>
                         <td class="p-3">
                             <div class="flex flex-col gap-2">
                                 ${acoesAcesso}
@@ -2919,8 +2935,74 @@
             } catch (error) {
                 const dica = (error.code === 'permission-denied' || /permission/i.test(error.message))
                     ? ' — Publique as regras novas do Firestore (arquivo firestore.rules) e saia/entre de novo com o e-mail do administrador.' : '';
-                tbody.innerHTML = `<tr><td colspan="3" class="p-3 text-red-600 text-xs">Erro ao carregar usuários: ${error.message}${dica}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="4" class="p-3 text-red-600 text-xs">Erro ao carregar usuários: ${error.message}${dica}</td></tr>`;
             }
+        }
+
+
+        // --- ADMIN: cartões-resumo, uso, cobrança ---
+        const PLANOS_TXT = 'Mensal R$ 19,90 • Trimestral R$ 49,90 • Anual R$ 149,00 (R$ 12,42/mês). Pagamento por PIX, chave: viniciosv@gmail.com';
+        function renderizarCartoesAdmin(todos) {
+            const box = document.getElementById('admCards'); if (!box) return;
+            const cont = { trial: 0, trial_expirado: 0, plano: 0, expirado: 0, pendente: 0, banido: 0 };
+            const agora = Date.now(), dia = 86400000; let n1 = 0, n7 = 0, n30 = 0, vencem = 0, testesFim = 0;
+            todos.forEach(u => {
+                const sit = situacaoAcesso(u); if (sit.tipo in cont) cont[sit.tipo]++; if (u.banido) cont.banido++;
+                const cr = dataDeCampo(u.created_at); if (cr) { const d = agora - cr.getTime(); if (d <= dia) n1++; if (d <= 7 * dia) n7++; if (d <= 30 * dia) n30++; }
+                if (sit.tipo === 'plano' && sit.dias != null && sit.dias <= 7) vencem++;
+                if (sit.tipo === 'trial' && sit.dias <= 2) testesFim++;
+            });
+            const cartao = (v, rot, cor, n) => `<button type="button" onclick="filtrarAdminStatus('${v}')" class="text-left bg-surface2 hover:bg-surface border border-line rounded-xl px-3 py-2 transition"><p class="font-mono2 text-xl font-bold ${cor}">${n}</p><p class="text-[10px] uppercase font-bold text-inkmute">${rot}</p></button>`;
+            box.innerHTML = cartao('trial', 'Em teste', 'text-sky-600', cont.trial) + cartao('trial_expirado', 'Teste acabou', 'text-amber-600', cont.trial_expirado) + cartao('plano', 'Liberados', 'text-green-600', cont.plano) + cartao('expirado', 'Plano expirado', 'text-red-600', cont.expirado) + cartao('pendente', 'Aguardando PIX', 'text-amber-600', cont.pendente) + cartao('banido', 'Bloqueados', 'text-red-600', cont.banido);
+            const ex = document.getElementById('admCardsExtra');
+            if (ex) ex.innerHTML = `Novos cadastros: <b>${n1}</b> hoje • <b>${n7}</b> em 7 dias • <b>${n30}</b> em 30 dias &nbsp;|&nbsp; Planos vencendo em até 7 dias: <b class="${vencem ? 'text-red-600' : ''}">${vencem}</b> &nbsp;|&nbsp; Testes acabando em até 2 dias: <b class="${testesFim ? 'text-amber-600' : ''}">${testesFim}</b>` + (window.__usoAdminErro ? '<br><span class="text-amber-700">Uso dos usuários indisponível: publique as regras novas do Firestore (firestore.rules).</span>' : '');
+        }
+        window.filtrarAdminStatus = function(v) { const sel = document.getElementById('admFiltroStatus'); sel.value = sel.value === v ? '' : v; carregarAdminUsuarios(true); };
+        function relDias(iso) {
+            if (!iso) return '—'; const d = Math.floor((Date.now() - new Date(iso).getTime()) / 86400000);
+            return d <= 0 ? 'hoje' : d === 1 ? 'ontem' : 'há ' + d + ' dias';
+        }
+        function usoHtml(x) {
+            if (!x) return '<span class="text-inkmute">sem dados ainda</span>';
+            return `<span class="block font-semibold text-ink">${relDias(x.ultimo_acesso)}</span><span class="block text-[10px] text-inkmute whitespace-nowrap">${x.n_projetos || 0} projetos • ${x.n_impressoes || 0} impressões • ${x.n_vendas || 0} vendas</span>`;
+        }
+        function msgCobranca(u, sit) {
+            const nome = String(u.nome_completo || '').trim().split(/\s+/)[0] || '';
+            const oi = `Olá${nome ? ', ' + nome : ''}! Aqui é do Cliente 3D. `;
+            const fim = ` Planos: ${PLANOS_TXT}. Qualquer dúvida é só responder aqui. 🙂`;
+            if (sit.tipo === 'trial') return oi + `Seu teste grátis termina em ${sit.dias} dia${sit.dias === 1 ? '' : 's'}. Para continuar usando sem perder seus dados, é só escolher um plano.` + fim;
+            if (sit.tipo === 'trial_expirado') return oi + 'Seu teste de 5 dias terminou. Gostou do app? Seus dados continuam guardados e é só ativar um plano para voltar a usar.' + fim;
+            if (sit.tipo === 'expirado') return oi + `Seu plano venceu em ${sit.exp ? sit.exp.toLocaleDateString('pt-BR') : ''}. Para renovar é rapidinho.` + fim;
+            if (sit.tipo === 'plano') return oi + `Seu plano vence em ${sit.dias} dia${sit.dias === 1 ? '' : 's'} (${sit.exp ? sit.exp.toLocaleDateString('pt-BR') : ''}). Quer renovar?` + fim;
+            return oi + 'Vi que você criou sua conta, mas o acesso ainda não foi liberado. Posso ajudar a começar?' + fim;
+        }
+        function linkCobranca(u, sit) {
+            if (!u.telefone_digitos || sit.tipo === 'admin' || u.banido || (sit.tipo === 'plano' && (sit.dias == null || sit.dias > 7))) return '';
+            const rot = sit.tipo === 'trial' ? 'Lembrar do teste' : sit.tipo === 'plano' ? 'Lembrar de renovar' : sit.tipo === 'pendente' ? 'Falar com o usuário' : 'Cobrar no WhatsApp';
+            return `<a href="https://wa.me/55${u.telefone_digitos}?text=${encodeURIComponent(msgCobranca(u, sit))}" target="_blank" rel="noopener" class="inline-block mt-1 text-[11px] font-bold text-white bg-green-600 hover:bg-green-700 rounded px-2 py-1">💬 ${rot}</a>`;
+        }
+        window.registrarPixUsuario = async function(id, plano) {
+            const u = (window.__usuariosAdmin || {})[id] || {}, nome = u.nome_completo || u.email || 'este usuário';
+            const val = { mensal: 'R$ 19,90 (+1 mês)', trimestral: 'R$ 49,90 (+3 meses)', anual: 'R$ 149,00 (+12 meses)' }[plano];
+            if (confirm(`Registrar PIX de ${val} para ${nome}? O acesso é liberado e o vencimento soma o período.`)) await liberarAcessoUsuario(id, plano);
+        };
+        window.estenderTesteUsuario = async function(id) {
+            const u = (window.__usuariosAdmin || {})[id] || {};
+            const r = prompt(`Estender o teste de ${u.nome_completo || u.email} por quantos dias?`, '3'); if (r === null) return;
+            const n = Math.max(1, Math.min(30, parseInt(r, 10) || 0)); if (!n) return alert('Informe um número de dias.');
+            const atual = dataDeCampo(u.trial_expira_em); const base = atual && atual.getTime() > Date.now() ? atual : new Date();
+            try { await colecao('profiles').doc(id).update({ trial_expira_em: firebase.firestore.Timestamp.fromDate(new Date(base.getTime() + n * 86400000)) }); carregarAdminUsuarios(); }
+            catch (e) { alert(e.message); }
+        };
+        // Registra o uso do próprio usuário (para o painel do admin): no máx. a cada 30 min
+        async function registrarUso(projetos, vendas) {
+            try {
+                if (!usuarioAtual) return;
+                const ch = 'c3d_uso_' + usuarioAtual.uid, ag = Date.now();
+                if (ag - (parseInt(localStorage.getItem(ch)) || 0) < 30 * 60000) return;
+                await colecao('uso_usuarios').doc(usuarioAtual.uid).set({ ultimo_acesso: new Date().toISOString(), n_projetos: (projetos || []).length, n_vendas: (vendas || []).length, n_impressoes: (projetos || []).reduce((a, x) => a + (parseInt(x.total_impresso) || 0), 0) });
+                localStorage.setItem(ch, String(ag));
+            } catch (e) { /* regras ainda não publicadas: ignora */ }
         }
 
         window.liberarAcessoUsuario = async function(id, planoEscolhido) {

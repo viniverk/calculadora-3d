@@ -149,6 +149,14 @@ service cloud.firestore {
       allow update, delete: if ehDono(resource.data) && temAcesso();
     }
 
+    // Uso do app por usuário (último acesso e contagens): cada um grava o próprio; só o admin lê todos
+    match /uso_usuarios/{uid} {
+      allow read: if logado() && (request.auth.uid == uid || ehAdmin());
+      allow create, update: if logado() && request.auth.uid == uid &&
+        request.resource.data.keys().hasOnly(['ultimo_acesso', 'n_projetos', 'n_vendas', 'n_impressoes']);
+      allow delete: if ehAdmin();
+    }
+
     // Máquinas (impressoras) do usuário
     match /maquinas_3d/{id} {
       allow read: if ehDono(resource.data) && temAcesso();
