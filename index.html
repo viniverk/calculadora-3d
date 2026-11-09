@@ -191,7 +191,7 @@
         #navInferior { display: none; }
         @media (max-width: 767px) {
             body:has(#mobileTopBar:not(.hidden):not([style*="none"])) #navInferior { display: grid; }
-            #navInferior { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; grid-template-columns: repeat(5, 1fr);
+            #navInferior { position: fixed; left: 0; right: 0; bottom: 0; z-index: 25; grid-template-columns: repeat(4, 1fr);
                 background: rgb(var(--c-surface)); border-top: 1px solid rgb(var(--c-line)); padding: 4px 4px calc(4px + env(safe-area-inset-bottom));
                 box-shadow: 0 -8px 24px -16px rgba(15,23,42,.35); }
             #navInferior button { display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 6px 2px; border-radius: 12px; font-size: 10px; font-weight: 700; color: rgb(var(--c-inkmute)); -webkit-tap-highlight-color: transparent; }
@@ -234,6 +234,7 @@
             #sheetMais .sm-fundo { position: absolute; inset: 0; background: rgba(15,23,42,.55); }
             #sheetMais .sm-painel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; overflow-y: auto; background: rgb(var(--c-surface)); color: rgb(var(--c-ink)); border-radius: 28px 28px 0 0; padding: 10px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -20px 50px -20px rgba(0,0,0,.5); }
             #sheetMais .sm-alca { width: 44px; height: 5px; border-radius: 999px; background: rgb(var(--c-line)); margin: 4px auto 14px; }
+            #sheetMais .sm-titulo { grid-column: 1 / -1; margin: 8px 2px 0; font-size: 12px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; color: rgb(var(--c-inkmute)); }
             #sheetMais .sm-grade { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
             #sheetMais .sm-item { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 6px; border-radius: 18px; background: rgb(var(--c-surface2)); border: 1px solid rgb(var(--c-line)); font-size: 13px; font-weight: 700; min-height: 80px; }
             #sheetMais .sm-item .ico { font-size: 26px; line-height: 1.1; }
@@ -260,11 +261,10 @@
     <div id="overlayMobile" class="md:hidden fixed inset-0 bg-black/60 z-10 hidden"></div>
 
     <nav id="navInferior" class="md:hidden" aria-label="Navegação principal">
-        <button type="button" data-nav="dashboard" onclick="mudarAba('dashboard')"><span class="ico">📊</span>Início</button>
-        <button type="button" data-nav="calculadora" onclick="mudarAba('calculadora')"><span class="ico">🧮</span>Calcular</button>
-        <button type="button" data-nav="inserir-impressao" onclick="mudarAba('inserir-impressao')"><span class="ico">🖨️</span>Projetos</button>
+        <button type="button" data-nav="dashboard" onclick="mudarAba('dashboard')"><span class="ico">🏠</span>Início</button>
+        <button type="button" data-nav="inserir-impressao" data-alt="filamentos maquinas calculadora buscador" onclick="mudarAba('inserir-impressao')"><span class="ico">🖨️</span>Imprimir</button>
+        <button type="button" data-nav="vendas" data-alt="revenda" onclick="mudarAba('vendas')"><span class="ico">💰</span>Vender</button>
         <button type="button" data-nav="pedidos" onclick="mudarAba('pedidos')"><span class="ico">📋</span>Pedidos</button>
-        <button type="button" data-nav="mais" onclick="abrirSheetMais()"><span class="ico">☰</span>Mais</button>
     </nav>
 
     <button type="button" id="fabNovo" aria-label="Novo"><span style="font-size:26px;line-height:1">+</span><span id="fabNovoTxt">Novo</span></button>
@@ -2025,15 +2025,15 @@
         btnAbrirMenuMobile.addEventListener('click', () => { abrirSheetMais(); });
 
         // --- FOLHA "MAIS", BOTÃO + E CARTÕES RECOLHÍVEIS (CELULAR) ---
-        const ITENS_MAIS = [
-            ['dashboard', '📊', 'Início'], ['calculadora', '🧮', 'Calcular'], ['inserir-impressao', '🖨️', 'Projetos'],
-            ['pedidos', '📋', 'Pedidos'], ['vendas', '💰', 'Vendas/Orçam.'], ['portfolio-cliente', '🖼️', 'Catálogo'], ['revenda', '🏷️', 'Revenda'],
-            ['filamentos', '🧵', 'Estoque'], ['maquinas', '⚙️', 'Máquinas'], ['buscador', '🔎', 'Buscar modelos'], ['marca', '🎨', 'Minha marca']
+        const GRUPOS_MAIS = [
+            ['🖨️ Produzir', [['inserir-impressao', '🖨️', 'Impressões'], ['filamentos', '🧵', 'Estoque'], ['maquinas', '⚙️', 'Máquinas'], ['calculadora', '🧮', 'Calcular'], ['buscador', '🔎', 'Buscar modelos']]],
+            ['💰 Vender', [['vendas', '💰', 'Vendas/Orçam.'], ['pedidos', '📋', 'Pedidos'], ['revenda', '🏷️', 'Revenda']]],
+            ['🛍️ Divulgar', [['portfolio-cliente', '🖼️', 'Portfólio'], ['marca', '🎨', 'Minha marca']]]
         ];
         let abaAtualMobile = 'calculadora';
         function abrirSheetMais() {
             const g = document.getElementById('smGrade'), ac = document.getElementById('smAcoes');
-            let h = ITENS_MAIS.map(([a, i, n]) => `<button type="button" class="sm-item ${a === abaAtualMobile ? 'sm-ativo' : ''}" onclick="mudarAba('${a}')"><span class="ico">${i}</span>${n}</button>`).join('');
+            let h = `<button type="button" class="sm-item ${abaAtualMobile === 'dashboard' ? 'sm-ativo' : ''}" style="grid-column:1/-1;flex-direction:row;justify-content:center;padding:10px" onclick="mudarAba('dashboard')"><span class="ico">🏠</span>Início — o que fazer hoje</button>` + GRUPOS_MAIS.map(([t, its]) => `<p class="sm-titulo">${t}</p>` + its.map(([a, i, n]) => `<button type="button" class="sm-item ${a === abaAtualMobile ? 'sm-ativo' : ''}" onclick="mudarAba('${a}')"><span class="ico">${i}</span>${n}</button>`).join('')).join('');
             const adm = document.getElementById('abaAdminBtn');
             if (adm && !adm.classList.contains('hidden')) h += `<button type="button" class="sm-item" onclick="mudarAba('admin')"><span class="ico">🛡️</span>Usuários</button>`;
             g.innerHTML = h;
@@ -2166,7 +2166,7 @@
             document.querySelectorAll('.aba-conteudo').forEach(aba => aba.classList.add('hidden'));
             document.getElementById(`view-${abaDestino}`).classList.remove('hidden');
             fecharMenuMobile(); fecharSheetMais(); atualizarFab(abaDestino);
-            document.querySelectorAll('#navInferior button').forEach(b => b.classList.toggle('nav-ativo', b.dataset.nav === abaDestino));
+            document.querySelectorAll('#navInferior button').forEach(b => b.classList.toggle('nav-ativo', b.dataset.nav === abaDestino || (b.dataset.alt || '').split(' ').includes(abaDestino)));
 
             document.querySelectorAll('.item-menu-btn').forEach(btn => {
                 if (btn.getAttribute('data-aba') === abaDestino) {
