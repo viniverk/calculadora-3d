@@ -1,6 +1,6 @@
 // Service worker do Cliente 3D: deixa o app instalável e abre mesmo com internet ruim.
 // Estratégia: rede primeiro para a página (sempre a versão nova); cache só como reserva.
-const CACHE = 'cliente3d-v91';
+const CACHE = 'cliente3d-v92';
 const BASICO = ['./', 'icons/icon-192.png', 'icons/icon-512.png', 'icone-venda3d.png'];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(BASICO)).catch(() => {})); self.skipWaiting(); });
 self.addEventListener('activate', (e) => {
@@ -12,7 +12,9 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(req.url);
   if (url.origin !== location.origin) return; // Firebase, fontes, APIs: sempre direto da rede
   if (req.mode === 'navigate') {
-    e.respondWith(fetch(req).then((r) => { const c = r.clone(); caches.open(CACHE).then((x) => x.put('./', c)); return r; }).catch(() => caches.match('./')));
+    // só a página raiz do app vira a reserva offline (páginas como /personalizados não)
+    const ehRaiz = url.pathname === new URL('./', self.registration.scope).pathname || url.pathname.endsWith('/index.html') && url.pathname.replace(/index\.html$/, '') === new URL('./', self.registration.scope).pathname;
+    e.respondWith(fetch(req).then((r) => { if (ehRaiz) { const c = r.clone(); caches.open(CACHE).then((x) => x.put('./', c)); } return r; }).catch(() => ehRaiz ? caches.match('./') : caches.match(req)));
     return;
   }
   e.respondWith(fetch(req).then((r) => { if (r.ok) { const c = r.clone(); caches.open(CACHE).then((x) => x.put(req, c)); } return r; }).catch(() => caches.match(req)));

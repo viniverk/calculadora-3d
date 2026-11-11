@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Faça seu personalizado | Troféus, medalhas e brindes em 3D – Cliente 3D</title>
+<meta name="description" content="Monte seu troféu, medalha, placa ou brinde personalizado impresso em 3D: escolha a peça, a cor, o texto e a quantidade e peça o orçamento direto pelo WhatsApp.">
+<link rel="canonical" href="https://cliente3d.com.br/personalizados/">
+<meta property="og:title" content="Faça seu personalizado – Cliente 3D">
+<meta property="og:description" content="Troféus, medalhas, placas e brindes personalizados impressos em 3D. Monte o seu e peça o orçamento pelo WhatsApp.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://cliente3d.com.br/personalizados/">
+<meta property="og:image" content="https://cliente3d.com.br/icons/icon-512.png">
+<meta name="theme-color" content="#0b3b8f">
+<link rel="icon" href="../icons/icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+  :root { --azul:#1d4ed8; --azul-esc:#0b3b8f; --verde:#0f9d6e; --verde-esc:#0a7a55; --tinta:#0f172a; --suave:#475569; --linha:#e2e8f0; --fundo:#f8fafc; --card:#fff; --raio:18px; }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin:0; font-family:'Inter',system-ui,sans-serif; color:var(--tinta); background:var(--fundo); line-height:1.55; -webkit-text-size-adjust:100%; }
+  h1,h2,h3 { font-family:'Space Grotesk','Inter',sans-serif; line-height:1.15; margin:0; letter-spacing:-.01em; }
+  a { color:inherit; }
+  .wrap { max-width:1100px; margin:0 auto; padding:0 16px; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; border:0; cursor:pointer; font:inherit; font-weight:700; border-radius:999px; padding:14px 26px; text-decoration:none; transition:transform .15s, box-shadow .15s, background .15s; }
+  .btn:active { transform:scale(.98); }
+  .btn-verde { background:var(--verde); color:#fff; box-shadow:0 8px 20px -8px rgba(15,157,110,.7); }
+  .btn-verde:hover { background:var(--verde-esc); }
+  .btn-borda { background:#fff; color:var(--azul-esc); border:2px solid var(--azul-esc); }
+  .btn-borda:hover { background:#eff6ff; }
+  header.topo { position:sticky; top:0; z-index:20; background:rgba(255,255,255,.92); backdrop-filter:blur(8px); border-bottom:1px solid var(--linha); }
+  .topo .wrap { display:flex; align-items:center; justify-content:space-between; gap:12px; height:60px; }
+  .marca { display:flex; align-items:center; gap:10px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:18px; text-decoration:none; }
+  .marca img { height:34px; width:34px; border-radius:9px; }
+  .topo nav { display:flex; align-items:center; gap:18px; font-size:14px; font-weight:600; }
+  .topo nav a { text-decoration:none; color:var(--suave); }
+  .topo nav a:hover { color:var(--azul); }
+  @media (max-width:640px) { .topo nav .oculta-mob { display:none; } }
+  .hero { background:linear-gradient(135deg,#0b3b8f 0%,#1d4ed8 55%,#0ea5a4 130%); color:#fff; padding:56px 0 64px; position:relative; overflow:hidden; }
+  .hero::after { content:""; position:absolute; right:-120px; top:-120px; width:420px; height:420px; border-radius:50%; background:radial-gradient(circle,rgba(255,255,255,.18),transparent 65%); }
+  .hero .wrap { position:relative; z-index:1; display:grid; gap:32px; grid-template-columns:1.15fr .85fr; align-items:center; }
+  .selo { display:inline-block; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; background:rgba(255,255,255,.16); border:1px solid rgba(255,255,255,.3); padding:6px 12px; border-radius:999px; }
+  .hero h1 { font-size:clamp(30px,5vw,48px); margin:14px 0 14px; }
+  .hero p.lead { font-size:clamp(16px,2.2vw,19px); opacity:.95; max-width:34em; margin:0 0 24px; }
+  .hero .acoes { display:flex; flex-wrap:wrap; gap:12px; }
+  .hero .btn-borda { background:transparent; color:#fff; border-color:rgba(255,255,255,.8); }
+  .hero .btn-borda:hover { background:rgba(255,255,255,.12); }
+  .hero ul { list-style:none; padding:0; margin:22px 0 0; display:flex; flex-wrap:wrap; gap:8px 18px; font-size:14px; font-weight:600; }
+  .hero ul li::before { content:"✓ "; color:#7ef0c4; }
+  .hero-arte { display:flex; justify-content:center; }
+  .hero-arte svg { width:min(300px,70vw); filter:drop-shadow(0 24px 30px rgba(0,0,0,.35)); }
+  @media (max-width:820px) { .hero .wrap { grid-template-columns:1fr; } .hero-arte { order:-1; } .hero-arte svg { width:180px; } }
+  section { padding:56px 0; }
+  .titulo-sec { text-align:center; max-width:640px; margin:0 auto 32px; }
+  .titulo-sec .peq { font-size:13px; font-weight:700; color:var(--azul); letter-spacing:.08em; text-transform:uppercase; }
+  .titulo-sec h2 { font-size:clamp(24px,4vw,34px); margin-top:8px; }
+  .titulo-sec p { color:var(--suave); margin:10px 0 0; }
+  .passos { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  .passo { background:var(--card); border:1px solid var(--linha); border-radius:var(--raio); padding:22px; }
+  .passo .num { width:38px; height:38px; border-radius:50%; background:#dbeafe; color:var(--azul-esc); font-weight:800; display:flex; align-items:center; justify-content:center; margin-bottom:12px; font-family:'Space Grotesk',sans-serif; }
+  .passo h3 { font-size:18px; margin-bottom:6px; }
+  .passo p { margin:0; color:var(--suave); font-size:15px; }
+  @media (max-width:760px) { .passos { grid-template-columns:1fr; } }
+  /* configurador */
+  #montar { background:#fff; border-top:1px solid var(--linha); border-bottom:1px solid var(--linha); }
+  .conf { display:grid; grid-template-columns:1fr 380px; gap:28px; align-items:start; }
+  @media (max-width:900px) { .conf { grid-template-columns:1fr; } }
+  .bloco { background:var(--fundo); border:1px solid var(--linha); border-radius:var(--raio); padding:18px; margin-bottom:14px; }
+  .bloco > h3 { font-size:16px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .bloco > h3 span { width:24px; height:24px; border-radius:50%; background:var(--azul); color:#fff; font-size:13px; display:inline-flex; align-items:center; justify-content:center; }
+  .pecas { display:grid; grid-template-columns:repeat(auto-fill,minmax(130px,1fr)); gap:10px; }
+  .peca { background:#fff; border:2px solid var(--linha); border-radius:14px; padding:12px 8px; cursor:pointer; text-align:center; font:inherit; font-weight:600; font-size:14px; color:var(--tinta); transition:border-color .15s, box-shadow .15s; }
+  .peca svg { width:54px; height:54px; display:block; margin:0 auto 6px; }
+  .peca[aria-pressed="true"] { border-color:var(--azul); box-shadow:0 0 0 3px rgba(29,78,216,.15); }
+  .cores { display:flex; flex-wrap:wrap; gap:10px; }
+  .cor { width:40px; height:40px; border-radius:50%; border:3px solid #fff; box-shadow:0 0 0 1px var(--linha); cursor:pointer; padding:0; }
+  .cor[aria-pressed="true"] { box-shadow:0 0 0 3px var(--azul); }
+  .cor-nome { font-size:13px; color:var(--suave); margin:8px 0 0; }
+  label.campo { display:block; font-size:13px; font-weight:600; margin-bottom:12px; }
+  label.campo small { font-weight:400; color:var(--suave); }
+  .campo input[type=text], .campo input[type=date], .campo textarea { width:100%; margin-top:5px; font:inherit; font-size:16px; padding:11px 12px; border:1.5px solid var(--linha); border-radius:12px; background:#fff; color:var(--tinta); }
+  .campo input:focus, .campo textarea:focus { outline:none; border-color:var(--azul); box-shadow:0 0 0 3px rgba(29,78,216,.12); }
+  .campo textarea { resize:vertical; min-height:72px; }
+  .contador { float:right; font-weight:400; color:var(--suave); }
+  .linha2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:520px) { .linha2 { grid-template-columns:1fr; } }
+  .qtd { display:flex; align-items:stretch; margin-top:5px; max-width:200px; }
+  .qtd button { width:46px; border:1.5px solid var(--linha); background:#fff; font-size:22px; font-weight:700; cursor:pointer; color:var(--azul-esc); }
+  .qtd button:first-child { border-radius:12px 0 0 12px; } .qtd button:last-child { border-radius:0 12px 12px 0; }
+  .qtd input { width:100%; text-align:center; border:1.5px solid var(--linha); border-left:0; border-right:0; font:inherit; font-size:18px; font-weight:700; }
+  .check { display:flex; gap:10px; align-items:flex-start; font-size:14px; font-weight:500; cursor:pointer; }
+  .check input { margin-top:3px; width:18px; height:18px; accent-color:var(--azul); }
+  .previa { position:sticky; top:76px; background:linear-gradient(180deg,#eff6ff,#fff); border:1px solid #bfdbfe; border-radius:var(--raio); padding:18px; text-align:center; }
+  .previa .tela { background:#fff; border-radius:14px; border:1px dashed #bfdbfe; padding:10px; }
+  .previa svg { width:100%; max-height:300px; }
+  .resumo { text-align:left; font-size:14px; margin:14px 0; }
+  .resumo div { display:flex; justify-content:space-between; gap:12px; padding:6px 0; border-bottom:1px solid var(--linha); }
+  .resumo div span:first-child { color:var(--suave); }
+  .resumo div span:last-child { font-weight:700; text-align:right; word-break:break-word; }
+  .previa .btn { width:100%; }
+  .previa .nota { font-size:12px; color:var(--suave); margin:10px 0 0; }
+  .erro { color:#b91c1c; font-size:13px; font-weight:600; margin:8px 0 0; display:none; }
+  /* conteúdo */
+  .usos { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:14px; }
+  .uso { background:#fff; border:1px solid var(--linha); border-radius:var(--raio); padding:18px; }
+  .uso b { display:block; font-size:17px; margin:6px 0 4px; font-family:'Space Grotesk',sans-serif; }
+  .uso p { margin:0; font-size:14px; color:var(--suave); }
+  .uso .ic { font-size:28px; }
+  table.comp { width:100%; border-collapse:collapse; background:#fff; border-radius:var(--raio); overflow:hidden; border:1px solid var(--linha); font-size:14px; }
+  .comp th, .comp td { padding:12px 14px; text-align:left; border-bottom:1px solid var(--linha); vertical-align:top; }
+  .comp th { background:#f1f5f9; font-size:13px; }
+  .comp td.dest, .comp th.dest { background:#ecfdf5; font-weight:600; }
+  .rolagem { overflow-x:auto; }
+  details.faq { background:#fff; border:1px solid var(--linha); border-radius:14px; padding:0 16px; margin-bottom:10px; }
+  details.faq summary { cursor:pointer; padding:15px 0; font-weight:700; list-style:none; display:flex; justify-content:space-between; gap:12px; }
+  details.faq summary::after { content:"+"; font-size:22px; color:var(--azul); line-height:1; }
+  details.faq[open] summary::after { content:"–"; }
+  details.faq p { margin:0 0 16px; color:var(--suave); font-size:15px; }
+  .final { background:linear-gradient(135deg,#0b3b8f,#1d4ed8); color:#fff; text-align:center; border-radius:24px; padding:40px 20px; }
+  .final h2 { font-size:clamp(24px,4vw,32px); }
+  .final p { opacity:.92; margin:10px auto 22px; max-width:34em; }
+  footer { padding:32px 0 90px; color:var(--suave); font-size:13px; text-align:center; }
+  footer a { color:var(--azul); text-decoration:none; font-weight:600; }
+  .zap-flutuante { position:fixed; right:16px; bottom:16px; z-index:30; background:var(--verde); color:#fff; border-radius:999px; padding:13px 18px; font-weight:700; text-decoration:none; box-shadow:0 10px 24px -8px rgba(0,0,0,.45); display:flex; gap:8px; align-items:center; }
+  @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .btn { transition:none; } }
+</style>
+</head>
+<body>
+
+<header class="topo">
+  <div class="wrap">
+    <a class="marca" href="../"><img src="../icons/icon-192.png" alt="" width="34" height="34"> Cliente 3D</a>
+    <nav>
+      <a href="#como" class="oculta-mob">Como funciona</a>
+      <a href="#faq" class="oculta-mob">Dúvidas</a>
+      <a href="../loja/">🛍️ Loja</a>
+      <a href="#montar" class="btn btn-verde" style="padding:9px 18px;font-size:14px;color:#fff">Montar o meu</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+<div class="hero">
+  <div class="wrap">
+    <div>
+      <span class="selo">Impressão 3D sob medida</span>
+      <h1>Faça seu personalizado</h1>
+      <p class="lead">Troféus, medalhas, placas e brindes com o seu texto, a sua cor e a sua logo, impressos em 3D. Monte o seu pedido em um minuto e receba o orçamento pelo WhatsApp.</p>
+      <div class="acoes">
+        <a class="btn btn-verde" href="#montar">Montar meu personalizado</a>
+        <a class="btn btn-borda" href="#como">Como funciona</a>
+      </div>
+      <ul>
+        <li>De uma unidade a lotes para eventos</li>
+        <li>Cor, texto e logo à sua escolha</li>
+        <li>Orçamento rápido pelo WhatsApp</li>
+      </ul>
+    </div>
+    <div class="hero-arte" aria-hidden="true">
+      <svg viewBox="0 0 200 240"><defs><linearGradient id="hg" x1="0" x2="1"><stop offset="0" stop-color="#fde68a"/><stop offset=".5" stop-color="#f59e0b"/><stop offset="1" stop-color="#b45309"/></linearGradient></defs>
+        <path d="M55 30h90v50c0 28-20 48-45 48s-45-20-45-48z" fill="url(#hg)"/><path d="M55 42H28c0 30 14 44 34 46M145 42h27c0 30-14 44-34 46" fill="none" stroke="#f59e0b" stroke-width="9" stroke-linecap="round"/>
+        <rect x="90" y="126" width="20" height="38" fill="#d97706"/><rect x="62" y="160" width="76" height="16" rx="5" fill="#92400e"/><rect x="48" y="174" width="104" height="38" rx="8" fill="#1e293b"/><rect x="62" y="184" width="76" height="18" rx="4" fill="#f8fafc"/><text x="100" y="197" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-size="11" font-weight="700" fill="#1e293b">SEU TEXTO AQUI</text></svg>
+    </div>
+  </div>
+</div>
+
+<section id="como">
+  <div class="wrap">
+    <div class="titulo-sec"><span class="peq">Simples assim</span><h2>Do desenho à sua mão em 3 passos</h2></div>
+    <div class="passos">
+      <div class="passo"><div class="num">1</div><h3>Monte o seu</h3><p>Escolha o tipo de peça, a cor, o texto da plaquinha e a quantidade. Você vê a prévia na hora.</p></div>
+      <div class="passo"><div class="num">2</div><h3>Peça o orçamento</h3><p>Um toque e o pedido já vai pronto para o nosso WhatsApp. Se tiver logo ou arte, é só enviar na conversa.</p></div>
+      <div class="passo"><div class="num">3</div><h3>Aprove e receba</h3><p>Confirmamos o valor e o prazo, produzimos a sua peça e combinamos a entrega ou retirada.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="montar">
+  <div class="wrap">
+    <div class="titulo-sec"><span class="peq">Monte o seu</span><h2>Configure seu personalizado</h2><p>Não precisa saber de 3D. Preencha o que souber e a gente ajusta o resto com você.</p></div>
+    <div class="conf">
+      <form id="form" onsubmit="return false" novalidate>
+        <div class="bloco">
+          <h3><span>1</span> Que peça você quer?</h3>
+          <div class="pecas" id="pecas" role="group" aria-label="Tipo de peça"></div>
+        </div>
+        <div class="bloco">
+          <h3><span>2</span> Cor da peça</h3>
+          <div class="cores" id="cores" role="group" aria-label="Cor da peça"></div>
+          <p class="cor-nome" id="corNome"></p>
+        </div>
+        <div class="bloco">
+          <h3><span>3</span> Texto da plaquinha</h3>
+          <label class="campo">Linha principal <span class="contador" id="ct1">0/40</span>
+            <input type="text" id="txt1" maxlength="40" placeholder="Ex.: Campeão Interno 2026" autocomplete="off"></label>
+          <label class="campo">Linha de baixo <small>(opcional: nome, ano, equipe)</small> <span class="contador" id="ct2">0/40</span>
+            <input type="text" id="txt2" maxlength="40" placeholder="Ex.: Equipe Alfa" autocomplete="off"></label>
+          <label class="check"><input type="checkbox" id="logo"> <span>Tenho uma logo ou arte para colocar na peça (envio pelo WhatsApp depois do pedido)</span></label>
+        </div>
+        <div class="bloco">
+          <h3><span>4</span> Quantidade e prazo</h3>
+          <div class="linha2">
+            <label class="campo">Quantas peças?
+              <div class="qtd"><button type="button" id="menos" aria-label="Diminuir">−</button><input type="number" id="qtd" min="1" max="9999" value="1" inputmode="numeric"><button type="button" id="mais" aria-label="Aumentar">+</button></div></label>
+            <label class="campo">Precisa para quando? <small>(opcional)</small><input type="date" id="prazo"></label>
+          </div>
+        </div>
+        <div class="bloco">
+          <h3><span>5</span> Seus dados</h3>
+          <label class="campo">Seu nome<input type="text" id="nome" placeholder="Como podemos te chamar?" autocomplete="name"></label>
+          <label class="campo">Observações <small>(opcional)</small><textarea id="obs" placeholder="Altura desejada, ideia de formato, para que evento é..."></textarea></label>
+        </div>
+      </form>
+
+      <aside class="previa" aria-label="Prévia do seu pedido">
+        <div class="tela"><div id="arte"></div></div>
+        <div class="resumo" id="resumo"></div>
+        <button type="button" class="btn btn-verde" id="enviar">💬 Pedir orçamento no WhatsApp</button>
+        <p class="erro" id="erro"></p>
+        <p class="nota">A prévia é ilustrativa. O formato final é combinado com você antes de produzirmos.</p>
+      </aside>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="titulo-sec"><span class="peq">Para todo tipo de ocasião</span><h2>Onde um personalizado faz diferença</h2></div>
+    <div class="usos">
+      <div class="uso"><span class="ic">🏢</span><b>Empresas</b><p>Tempo de casa, metas batidas, lançamentos, equipe destaque do mês.</p></div>
+      <div class="uso"><span class="ic">⚽</span><b>Esportes e torneios</b><p>Campeonatos, peladas, corridas, e-sports e premiações de escolinhas.</p></div>
+      <div class="uso"><span class="ic">🎓</span><b>Formaturas e escolas</b><p>Homenagens a professores, turmas e melhores alunos.</p></div>
+      <div class="uso"><span class="ic">⛪</span><b>Igrejas e clubes</b><p>Reconhecimento de voluntários, aniversários e confraternizações.</p></div>
+      <div class="uso"><span class="ic">🎁</span><b>Brindes e lembranças</b><p>Chaveiros, placas e peças com o nome ou a marca do seu evento.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#fff;border-top:1px solid var(--linha);border-bottom:1px solid var(--linha)">
+  <div class="wrap">
+    <div class="titulo-sec"><span class="peq">Por que em 3D?</span><h2>Mais liberdade que o troféu comum</h2></div>
+    <div class="rolagem">
+      <table class="comp">
+        <thead><tr><th></th><th>Acrílico</th><th>Metal fundido</th><th class="dest">Impressão 3D</th></tr></thead>
+        <tbody>
+          <tr><td><b>Formato</b></td><td>Cortes retos e simples</td><td>Depende de molde</td><td class="dest">Formas criativas, até com a sua marca</td></tr>
+          <tr><td><b>Quantidade</b></td><td>Costuma ter pedido mínimo</td><td>Compensa só em grandes lotes</td><td class="dest">Serve para uma unidade ou para um lote</td></tr>
+          <tr><td><b>Personalização</b></td><td>Gravação limitada</td><td>Gravação sob consulta</td><td class="dest">Cor, texto e logo à escolha</td></tr>
+          <tr><td><b>Peso</b></td><td>Leve e frágil</td><td>Pesado</td><td class="dest">Leve e resistente</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap" style="max-width:800px">
+    <div class="titulo-sec"><span class="peq">Dúvidas</span><h2>Perguntas frequentes</h2></div>
+    <details class="faq"><summary>Como funciona o pedido?</summary><p>Você monta o personalizado aqui e envia o pedido pelo WhatsApp. Nós conferimos os detalhes, passamos o valor e o prazo, e só começamos a produzir depois da sua aprovação.</p></details>
+    <details class="faq"><summary>Posso pedir só uma unidade?</summary><p>Pode. Informe a quantidade que precisa, seja uma peça ou um lote para um evento, e fazemos o orçamento para esse número.</p></details>
+    <details class="faq"><summary>Como coloco minha logo?</summary><p>Marque a opção “Tenho uma logo ou arte” e, na conversa do WhatsApp, envie a imagem (PNG ou JPG; se tiver, vetor também ajuda). Nós avaliamos como aplicar na peça.</p></details>
+    <details class="faq"><summary>Quais cores existem?</summary><p>As cores da prévia são as mais pedidas. Trabalhamos com vários filamentos, então se precisar de um tom específico, escreva nas observações e confirmamos a disponibilidade.</p></details>
+    <details class="faq"><summary>Qual é o prazo?</summary><p>Depende do tamanho, da quantidade e da fila de produção. Se você tem uma data de evento, informe no campo de prazo para avisarmos logo se dá certo.</p></details>
+    <details class="faq"><summary>Vocês criam um formato exclusivo?</summary><p>Criamos sim. Escolha “Outra ideia” e conte o que imagina nas observações. Podemos modelar uma peça única para a sua marca ou ocasião.</p></details>
+    <details class="faq"><summary>O material resiste?</summary><p>As peças são impressas em filamentos resistentes, como PETG, próprios para uso e exposição. Só evite deixar dentro de carro fechado ao sol por muito tempo.</p></details>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="final">
+      <h2>Ficou com alguma dúvida?</h2>
+      <p>Fale com a gente. Ajudamos a escolher o formato, o tamanho e a quantidade certa para o seu evento.</p>
+      <a class="btn btn-verde" id="zapFinal" href="#">💬 Chamar no WhatsApp</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><b>Cliente 3D</b> · peças personalizadas impressas em 3D<br>
+    <a href="../loja/">Ver catálogo</a> · <a href="../">Conheça o app para quem tem impressora 3D</a></p>
+    <p>© <span id="ano"></span> Cliente 3D. Imagens ilustrativas.</p>
+  </div>
+</footer>
+
+<a class="zap-flutuante" id="zapFlut" href="#" aria-label="Falar no WhatsApp">💬 WhatsApp</a>
+
+<script>
+(function () {
+  var WHATS = '5547984988380';
+  var PECAS = [
+    { id: 'trofeu',  nome: 'Troféu' },
+    { id: 'medalha', nome: 'Medalha' },
+    { id: 'placa',   nome: 'Placa de homenagem' },
+    { id: 'chaveiro', nome: 'Chaveiro / brinde' },
+    { id: 'outra',   nome: 'Outra ideia' }
+  ];
+  var CORES = [
+    { n: 'Preto', h: '#1f2937' }, { n: 'Branco', h: '#f1f5f9' }, { n: 'Azul', h: '#2563eb' }, { n: 'Vermelho', h: '#dc2626' },
+    { n: 'Verde', h: '#16a34a' }, { n: 'Amarelo', h: '#facc15' }, { n: 'Laranja', h: '#f97316' }, { n: 'Rosa', h: '#ec4899' },
+    { n: 'Roxo', h: '#7c3aed' }, { n: 'Dourado', h: '#d4a017' }, { n: 'Prata', h: '#9ca3af' }
+  ];
+  var estado = { peca: 'trofeu', cor: 2, qtd: 1 };
+  var $ = function (id) { return document.getElementById(id); };
+  function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function claro(hex) { var r = parseInt(hex.substr(1, 2), 16), g = parseInt(hex.substr(3, 2), 16), b = parseInt(hex.substr(5, 2), 16); return (r * 299 + g * 587 + b * 114) / 1000 > 150; }
+  function escurece(hex, f) { var c = [1, 3, 5].map(function (i) { return Math.max(0, Math.round(parseInt(hex.substr(i, 2), 16) * f)); }); return '#' + c.map(function (v) { return ('0' + v.toString(16)).slice(-2); }).join(''); }
+
+  // desenhos (usados nos cartões e na prévia)
+  function desenho(tipo, cor, t1, t2, grande) {
+    var base = cor, esc2 = escurece(cor, .72), tx = claro(base) ? '#0f172a' : '#ffffff', placa = claro(base) ? '#1e293b' : '#f8fafc', txp = claro(base) ? '#ffffff' : '#0f172a';
+    var l1 = grande ? esc(t1 || 'Seu texto aqui') : '', l2 = grande ? esc(t2 || '') : '';
+    var fs1 = Math.max(7, Math.min(13, 150 / Math.max(8, (t1 || 'Seu texto aqui').length)));
+    var fs2 = Math.max(6, Math.min(10, 150 / Math.max(8, (t2 || '').length)));
+    var textoBase = function (cx, y1, y2, larg) {
+      return grande ? '<text x="' + cx + '" y="' + y1 + '" text-anchor="middle" font-family="Space Grotesk,Inter,sans-serif" font-weight="700" font-size="' + fs1 + '" fill="' + txp + '">' + l1 + '</text>' + (l2 ? '<text x="' + cx + '" y="' + y2 + '" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="' + fs2 + '" fill="' + txp + '" opacity=".85">' + l2 + '</text>' : '') : '';
+    };
+    var vb = '0 0 200 240', corpo = '';
+    if (tipo === 'trofeu') {
+      corpo = '<path d="M55 24h90v50c0 28-20 48-45 48S55 102 55 74z" fill="' + base + '"/><path d="M55 74c0 28 20 48 45 48V24H55z" fill="' + esc2 + '" opacity=".35"/>' +
+        '<path d="M55 36H28c0 30 14 44 34 46M145 36h27c0 30-14 44-34 46" fill="none" stroke="' + base + '" stroke-width="9" stroke-linecap="round"/>' +
+        '<rect x="90" y="120" width="20" height="36" fill="' + esc2 + '"/><rect x="62" y="154" width="76" height="16" rx="5" fill="' + base + '"/>' +
+        '<rect x="42" y="168" width="116" height="52" rx="8" fill="' + esc2 + '"/><rect x="50" y="176" width="100" height="36" rx="5" fill="' + placa + '"/>' + textoBase(100, 192, 205);
+      if (!grande) corpo = corpo.replace(/<text[\s\S]*$/, '');
+    } else if (tipo === 'medalha') {
+      corpo = '<path d="M72 8l28 70 28-70z" fill="#dc2626"/><path d="M72 8l14 0 14 70z" fill="#b91c1c"/><circle cx="100" cy="140" r="64" fill="' + esc2 + '"/><circle cx="100" cy="140" r="56" fill="' + base + '"/><circle cx="100" cy="140" r="46" fill="none" stroke="' + esc2 + '" stroke-width="3" stroke-dasharray="4 5" opacity=".7"/>' +
+        (grande ? '<text x="100" y="' + (t2 ? 138 : 144) + '" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="' + Math.min(fs1, 12) + '" fill="' + tx + '">' + l1 + '</text>' + (t2 ? '<text x="100" y="154" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="' + Math.min(fs2, 9) + '" fill="' + tx + '" opacity=".85">' + l2 + '</text>' : '') : '<text x="100" y="152" text-anchor="middle" font-size="40" fill="' + tx + '">★</text>');
+    } else if (tipo === 'placa') {
+      corpo = '<rect x="14" y="44" width="172" height="136" rx="14" fill="' + esc2 + '"/><rect x="22" y="52" width="156" height="120" rx="9" fill="' + base + '"/><rect x="30" y="60" width="140" height="104" rx="6" fill="none" stroke="' + esc2 + '" stroke-width="2" opacity=".6"/>' +
+        '<circle cx="34" cy="64" r="3" fill="' + esc2 + '"/><circle cx="166" cy="64" r="3" fill="' + esc2 + '"/><circle cx="34" cy="160" r="3" fill="' + esc2 + '"/><circle cx="166" cy="160" r="3" fill="' + esc2 + '"/>' +
+        (grande ? '<text x="100" y="' + (t2 ? 108 : 118) + '" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="' + Math.min(fs1 + 3, 16) + '" fill="' + tx + '">' + l1 + '</text>' + (t2 ? '<text x="100" y="132" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="' + fs2 + '" fill="' + tx + '" opacity=".85">' + l2 + '</text>' : '') : '<rect x="56" y="100" width="88" height="8" rx="4" fill="' + tx + '" opacity=".7"/><rect x="72" y="118" width="56" height="6" rx="3" fill="' + tx + '" opacity=".45"/>') + '<rect x="90" y="180" width="20" height="30" fill="' + esc2 + '"/><rect x="64" y="208" width="72" height="12" rx="4" fill="' + esc2 + '"/>';
+    } else if (tipo === 'chaveiro') {
+      corpo = '<circle cx="100" cy="34" r="22" fill="none" stroke="#94a3b8" stroke-width="7"/><rect x="92" y="52" width="16" height="22" rx="4" fill="#94a3b8"/><rect x="40" y="72" width="120" height="104" rx="22" fill="' + esc2 + '"/><rect x="46" y="78" width="108" height="92" rx="18" fill="' + base + '"/><circle cx="100" cy="86" r="5" fill="' + esc2 + '"/>' +
+        (grande ? '<text x="100" y="' + (t2 ? 124 : 132) + '" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="' + Math.min(fs1, 12) + '" fill="' + tx + '">' + l1 + '</text>' + (t2 ? '<text x="100" y="142" text-anchor="middle" font-family="Inter,sans-serif" font-weight="600" font-size="' + Math.min(fs2, 9) + '" fill="' + tx + '" opacity=".85">' + l2 + '</text>' : '') : '<rect x="62" y="116" width="76" height="8" rx="4" fill="' + tx + '" opacity=".7"/>');
+    } else {
+      corpo = '<path d="M100 22l22 44 48 7-35 34 8 48-43-23-43 23 8-48-35-34 48-7z" fill="' + base + '"/><path d="M100 22l22 44 48 7-35 34 8 48-43-23z" fill="' + esc2 + '" opacity=".25"/>' +
+        '<text x="100" y="212" text-anchor="middle" font-family="Space Grotesk,sans-serif" font-weight="700" font-size="' + (grande ? 14 : 12) + '" fill="#475569">' + (grande ? esc(t1 || 'Sua ideia aqui') : '') + '</text>';
+    }
+    return '<svg viewBox="' + vb + '" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Prévia da peça">' + corpo + '</svg>';
+  }
+
+  function montarPecas() {
+    $('pecas').innerHTML = PECAS.map(function (p) {
+      return '<button type="button" class="peca" data-id="' + p.id + '" aria-pressed="' + (estado.peca === p.id) + '">' + desenho(p.id, '#64748b', '', '', false) + p.nome + '</button>';
+    }).join('');
+  }
+  function montarCores() {
+    $('cores').innerHTML = CORES.map(function (c, i) {
+      return '<button type="button" class="cor" data-i="' + i + '" style="background:' + c.h + '" title="' + c.n + '" aria-label="' + c.n + '" aria-pressed="' + (estado.cor === i) + '"></button>';
+    }).join('');
+    $('corNome').textContent = 'Cor escolhida: ' + CORES[estado.cor].n;
+  }
+  function nomePeca() { return PECAS.filter(function (p) { return p.id === estado.peca; })[0].nome; }
+  function atualizar() {
+    var t1 = $('txt1').value.trim(), t2 = $('txt2').value.trim(), q = Math.max(1, parseInt($('qtd').value, 10) || 1);
+    $('ct1').textContent = $('txt1').value.length + '/40'; $('ct2').textContent = $('txt2').value.length + '/40';
+    $('arte').innerHTML = desenho(estado.peca, CORES[estado.cor].h, t1, t2, true);
+    var linhas = [['Peça', nomePeca()], ['Cor', CORES[estado.cor].n], ['Texto', t1 ? (t2 ? t1 + ' / ' + t2 : t1) : '—'], ['Quantidade', q + (q === 1 ? ' peça' : ' peças')]];
+    if ($('logo').checked) linhas.push(['Logo/arte', 'Sim, envio no WhatsApp']);
+    if ($('prazo').value) linhas.push(['Prazo', dataBr($('prazo').value)]);
+    $('resumo').innerHTML = linhas.map(function (l) { return '<div><span>' + l[0] + '</span><span>' + esc(l[1]) + '</span></div>'; }).join('');
+  }
+  function dataBr(iso) { var p = iso.split('-'); return p[2] + '/' + p[1] + '/' + p[0]; }
+
+  function mensagem() {
+    var t1 = $('txt1').value.trim(), t2 = $('txt2').value.trim(), nome = $('nome').value.trim(), obs = $('obs').value.trim(), q = Math.max(1, parseInt($('qtd').value, 10) || 1);
+    var m = ['Olá! Quero um orçamento de personalizado pelo site (cliente3d.com.br/personalizados):', '',
+      '• Peça: ' + nomePeca(), '• Cor: ' + CORES[estado.cor].n, '• Quantidade: ' + q];
+    if (t1) m.push('• Texto da placa: "' + t1 + '"' + (t2 ? ' / "' + t2 + '"' : ''));
+    if ($('prazo').value) m.push('• Preciso para: ' + dataBr($('prazo').value));
+    m.push('• Tenho logo/arte para enviar: ' + ($('logo').checked ? 'sim' : 'não'));
+    if (obs) m.push('• Observações: ' + obs);
+    if (nome) m.push('', 'Meu nome: ' + nome);
+    return m.join('\n');
+  }
+  function enviar() {
+    var erro = $('erro');
+    if (!$('nome').value.trim()) { erro.textContent = 'Informe seu nome para continuarmos.'; erro.style.display = 'block'; $('nome').focus(); return; }
+    erro.style.display = 'none';
+    window.open('https://wa.me/' + WHATS + '?text=' + encodeURIComponent(mensagem()), '_blank', 'noopener');
+  }
+
+  $('pecas').addEventListener('click', function (e) { var b = e.target.closest('.peca'); if (!b) return; estado.peca = b.dataset.id; montarPecas(); atualizar(); });
+  $('cores').addEventListener('click', function (e) { var b = e.target.closest('.cor'); if (!b) return; estado.cor = +b.dataset.i; montarCores(); atualizar(); });
+  ['txt1', 'txt2', 'qtd', 'prazo', 'logo', 'nome', 'obs'].forEach(function (id) { $(id).addEventListener('input', atualizar); $(id).addEventListener('change', atualizar); });
+  $('menos').addEventListener('click', function () { $('qtd').value = Math.max(1, (parseInt($('qtd').value, 10) || 1) - 1); atualizar(); });
+  $('mais').addEventListener('click', function () { $('qtd').value = Math.min(9999, (parseInt($('qtd').value, 10) || 0) + 1); atualizar(); });
+  $('enviar').addEventListener('click', enviar);
+  var oi = 'https://wa.me/' + WHATS + '?text=' + encodeURIComponent('Olá! Vim pelo site cliente3d.com.br/personalizados e tenho uma dúvida.');
+  $('zapFinal').href = oi; $('zapFlut').href = oi; $('zapFinal').target = '_blank'; $('zapFlut').target = '_blank'; $('zapFinal').rel = 'noopener'; $('zapFlut').rel = 'noopener';
+  $('ano').textContent = new Date().getFullYear();
+  var hoje = new Date(); hoje.setDate(hoje.getDate() + 1); $('prazo').min = hoje.toISOString().slice(0, 10);
+  montarPecas(); montarCores(); atualizar();
+})();
+</script>
+</body>
+</html>
