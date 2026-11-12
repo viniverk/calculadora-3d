@@ -986,7 +986,7 @@
                             </select>
                         </div>
                     </div>
-                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-3 items-end">
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-4 mt-3 items-end">
                         <div>
                             <label class="block text-xs font-medium mb-1 text-inkmute">Peso Utilizado (g)</label>
                             <input type="number" id="pecaPeso" value="30" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none text-sm">
@@ -999,6 +999,10 @@
                             <label class="block text-xs font-medium mb-1 text-inkmute">Minutos</label>
                             <input type="number" id="pecaTempoMinutos" value="0" class="w-full bg-surface2 p-2 rounded border border-line focus:outline-none text-sm">
                         </div>
+                        <div id="pecaQtdMesaBox" title="Quantas unidades deste componente saem na mesma impressão. Peso e tempo acima são da mesa inteira.">
+                            <label for="pecaQtdMesa" class="block text-xs font-medium mb-1 text-sky-700">🧮 Peças na mesa</label>
+                            <input type="number" id="pecaQtdMesa" min="1" step="1" value="1" class="w-full bg-surface2 p-2 rounded border border-sky-300 focus:outline-none text-sm font-bold">
+                        </div>
                         <button id="btnIncluirPeca" class="w-full bg-surface2 hover:bg-[#E3E6EB] text-sky-600 border border-sky-500/30 font-bold py-2 px-2 rounded text-sm transition">
                             + Incluir
                         </button>
@@ -1007,7 +1011,7 @@
 
                 <div class="bg-sky-50 border border-sky-200 rounded-lg p-3 flex flex-wrap items-center gap-3">
                     <div class="shrink-0"><label for="projPecasMesa" class="block text-xs font-bold text-sky-900 mb-1">🧮 Peças por impressão (na mesa)</label><input type="number" id="projPecasMesa" min="1" step="1" value="1" class="w-28 bg-white p-2 rounded border border-sky-300 text-sm text-gray-900 font-bold"></div>
-                    <p class="flex-1 min-w-[14rem] text-[11px] text-sky-900">Imprime várias iguais de uma vez? Informe quantas e lance o <b>peso e o tempo da mesa inteira</b> (como o fatiador mostra). O custo vira o <b>custo por peça</b>: o total da mesa dividido pela quantidade.</p>
+                    <p class="flex-1 min-w-[14rem] text-[11px] text-sky-900">Imprime várias iguais de uma vez? Informe quantas e lance o <b>peso e o tempo da mesa inteira</b> (como o fatiador mostra). O custo vira o <b>custo por peça</b>. Este número vale para <b>todos os componentes</b>; se cada componente sai em uma quantidade diferente, ajuste em <b>“Peças na mesa”</b> de cada um (✏️ na lista).</p>
                 </div>
 
                 <div class="bg-base/50 p-4 rounded-lg border border-line">
@@ -1939,6 +1943,7 @@
         const projQuantidadeEstoque = document.getElementById('projQuantidadeEstoque');
         const projCanalVenda = document.getElementById('projCanalVenda');
 
+        const pecaQtdMesa = document.getElementById('pecaQtdMesa');
         const pecaNome = document.getElementById('pecaNome');
         const pecaSelectFilamento = document.getElementById('pecaSelectFilamento');
         const pecaPeso = document.getElementById('pecaPeso');
@@ -4009,7 +4014,7 @@
             { aba: 'maquinas', titulo: '1. Cadastre sua impressora', texto: 'Comece por aqui: escolha o modelo da sua impressora na lista (Elegoo, Creality, Bambu Lab...) e veja a ilustração dela. Informe valor, vida útil e potência: o app calcula o custo por hora de máquina. Mais abaixo ficam os custos do negócio (energia, mão de obra, manutenção).' },
             { aba: 'filamentos', titulo: '2. Estoque de filamentos', texto: 'Cadastre seus rolos com preço, peso e a cor (escolha o tom na paleta e veja o rolo colorido). O custo por grama vem daqui e o estoque é abatido a cada impressão. Filtre o histórico e alterne entre Cards, Lista e Miniaturas.' },
             { aba: 'calculadora', titulo: '3. Calcular', texto: 'Ferramenta rápida: informe peso e tempo (ou carregue um arquivo .3mf) e veja o custo, o preço para revenda e para o consumidor, e o valor em cada canal (Shopee, Mercado Livre...).' },
-            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (peças, cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Dá para salvar o projeto antes de lançar as peças e voltar a editar depois. Para peças de várias cores, marque “Projeto multicolorido”: adicione cada filamento com o peso e informe o tempo total do projeto só no final. Em “Projetos Cadastrados” fica a lista de todos os seus projetos em linhas (foto, custo, estoque pronto e se já foi impresso; o próximo a imprimir fica com borda verde), com atalhos “Todos / Nunca impressos / Sem estoque”, busca, ordenação e filtros (portfólio, estoque, já impressos, status e categoria). Você ainda pode trocar para Grade ou Compacta. Cada projeto tem seu botão Imprimir: ajuste a quantidade com − e +, escolha a cor, veja quanto sobra de filamento (ex.: 640 g → 340 g) e se o produto passa a “Em estoque” no catálogo, e confirme, que soma ao estoque pronto daquela cor (o Portfólio mostra as cores em estoque, sem precisar duplicar o projeto) e desconta o filamento. No menu “⋯” de cada projeto ficam Editar, Duplicar e Excluir, e o botão “Histórico de impressões”, onde você filtra por data, vê quantidade, material e valor gasto e pode editar cada impressão (quantidade, data, impressora e cor). Se trocar o filamento de um projeto já impresso, o estoque é reajustado. Imprime várias peças iguais de uma vez? Em “Peças por impressão (na mesa)” informe a quantidade e lance o peso e o tempo da mesa inteira: o app divide e mostra o custo por peça, que baixa conforme você enche a mesa. Também dá para montar um kit: o botão “📦 Criar Kit” (no topo) junta várias impressões, soma custos extras (embalagem, caixa, cartão…), calcula o valor de venda e revenda e deixa você escolher se o kit aparece no Portfólio. O kit entra em Vendas e Revenda como um produto e, ao vender, baixa o estoque de cada item.' },
+            { aba: 'inserir-impressao', titulo: '4. Impressões (seus projetos)', texto: 'Esta tela tem duas abas no topo. Em “Adicionar Projeto” você cadastra o projeto (componentes, cada um com seu peso, tempo e quantas peças saem na mesa, para o custo já sair por peça; cor, categorias (o produto pode ficar em mais de uma) e subcategorias, máquina e descrição; cole o link do modelo e a imagem e o nome vêm sozinhos): ele já aparece no Portfólio como “Sob encomenda”, mesmo sem imprimir. Dá para salvar o projeto antes de lançar as peças e voltar a editar depois. Para peças de várias cores, marque “Projeto multicolorido”: adicione cada filamento com o peso e informe o tempo total do projeto só no final. Em “Projetos Cadastrados” fica a lista de todos os seus projetos em linhas (foto, custo, estoque pronto e se já foi impresso; o próximo a imprimir fica com borda verde), com atalhos “Todos / Nunca impressos / Sem estoque”, busca, ordenação e filtros (portfólio, estoque, já impressos, status e categoria). Você ainda pode trocar para Grade ou Compacta. Cada projeto tem seu botão Imprimir: ajuste a quantidade com − e +, escolha a cor, veja quanto sobra de filamento (ex.: 640 g → 340 g) e se o produto passa a “Em estoque” no catálogo, e confirme, que soma ao estoque pronto daquela cor (o Portfólio mostra as cores em estoque, sem precisar duplicar o projeto) e desconta o filamento. No menu “⋯” de cada projeto ficam Editar, Duplicar e Excluir, e o botão “Histórico de impressões”, onde você filtra por data, vê quantidade, material e valor gasto e pode editar cada impressão (quantidade, data, impressora e cor). Se trocar o filamento de um projeto já impresso, o estoque é reajustado. Imprime várias peças iguais de uma vez? Em “Peças por impressão (na mesa)” informe a quantidade e lance o peso e o tempo da mesa inteira: o app divide e mostra o custo por peça, que baixa conforme você enche a mesa. Também dá para montar um kit: o botão “📦 Criar Kit” (no topo) junta várias impressões, soma custos extras (embalagem, caixa, cartão…), calcula o valor de venda e revenda e deixa você escolher se o kit aparece no Portfólio. O kit entra em Vendas e Revenda como um produto e, ao vender, baixa o estoque de cada item.' },
             { aba: 'pedidos', titulo: '5. Pedidos e Fila', texto: 'Registre pedidos de clientes com prazo, sinal e status (aguardando, imprimindo, pronto, entregue). Ao entregar, vira venda sem digitar de novo.' },
             { aba: 'vendas', titulo: '6. Vendas / Orçamento', texto: 'Escolha no topo entre Venda rápida e Orçamento. No Orçamento você monta a lista de produtos (inclusive os ocultos do Portfólio), ajusta valores, desconto e frete, e gera o PDF com a sua logo para enviar ao cliente pelo WhatsApp. Na venda rápida, lance vendas e compare canais: preço, taxas, lucro e margem de cada um. É aqui que você vê quanto realmente sobra. Se o produto tem estoque em mais de uma cor, escolha a cor vendida e a baixa é feita naquela cor. A lista de produtos mostra todos, inclusive os ocultos do Portfólio.' },
             { aba: 'portfolio-cliente', titulo: '7. Portfólio (sua loja)', texto: 'Seu catálogo estilo loja: foto, descrição, cores e preço, com “Em estoque” ou “Sob encomenda” conforme suas impressões. As categorias ficam no topo (no celular, o botão “Categorias” abre um menu por cima da tela) e o carrossel “Mais visitados” passa sozinho. A ordem padrão mostra primeiro as novidades e depois os mais visitados; alterne também a visualização (Grade, Lista ou Compacta). Produto sem valor aparece como “Sob consulta” e o cliente pede o orçamento pelo WhatsApp. Se liberar em Minha marca, o cliente compartilha o produto em post, stories ou vídeo. O cliente adiciona produtos ao carrinho e finaliza o pedido pelo WhatsApp com a lista pronta. Copie o link público (ou use o endereço curto /loja) e compartilhe: quem abrir não precisa de login. Cada conta vê apenas o próprio portfólio.' },
@@ -4720,7 +4725,7 @@
             const custoComponente = calcPeca.total;
             
             const dadosPeca = { 
-                nome_peca: nome, peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado,
+                nome_peca: nome, pecas_mesa: Math.max(1, parseInt(pecaQtdMesa.value) || 1), peso_g: peso, tempo_h: tempoTotalH, custo_calculado: custoComponente, custo_detalhe: calcPeca.detalhe, filamento_label: textoFilamento, filamento_chave: chaveFilamentoSelecionado,
                 // valores por peça (de projetos antigos) são preservados; o valor de venda/revenda agora é definido no projeto
                 preco_venda: ((idPecaEmEdicaoIndex !== null && pecasProjetoAtual[idPecaEmEdicaoIndex]) || {}).preco_venda || 0,
                 preco_revenda: ((idPecaEmEdicaoIndex !== null && pecasProjetoAtual[idPecaEmEdicaoIndex]) || {}).preco_revenda || 0
@@ -4733,7 +4738,7 @@
             } else {
                 pecasProjetoAtual.push(dadosPeca);
             }
-            pecaNome.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0; 
+            pecaNome.value = ''; pecaTempoHoras.value = 2; pecaTempoMinutos.value = 0; pecaQtdMesa.value = pecasPorMesa();
             if (modoMulti) redistribuirTempoMulti(); else renderizarPecasDoEscopo();
         });
 
@@ -4743,15 +4748,16 @@
                 atualizarAcumuladoresMaster(); return; 
             }
             gridPecasProjeto.innerHTML = pecasProjetoAtual.map((p, index) => {
-                const totalMinsGlobal = Math.round(p.tempo_h * 60);
+                const totalMinsGlobal = Math.round(p.tempo_h * 60), nM = nDe(p, 1), minsUn = Math.round(p.tempo_h * 60 / nM);
+                const porPeca = nM > 1 ? `<span class="text-[10px] text-sky-700 block">🧮 mesa de ${nM} peças → ${Math.round(p.peso_g / nM * 10) / 10}g e ${Math.floor(minsUn / 60)}h ${minsUn % 60}m por peça</span>` : '';
                 return `
                     <div class="bg-surface p-2 rounded border border-line flex justify-between items-center">
                         <div>
                             <span class="font-bold text-sky-600 block">${p.nome_peca}</span>
-                            <span class="text-[10px] text-inkmute">${p.peso_g}g | ${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m | ${p.filamento_label.split('-')[0]}</span>
+                            <span class="text-[10px] text-inkmute">${p.peso_g}g | ${Math.floor(totalMinsGlobal / 60)}h ${totalMinsGlobal % 60}m | ${p.filamento_label.split('-')[0]}</span>${porPeca}
                         </div>
                         <div class="flex items-center gap-3">
-                            <span class="text-amber-500 font-medium" title="Custo">R$ ${p.custo_calculado.toFixed(2)}</span>${p.preco_venda > 0 ? `<span class="text-emerald-700 font-bold" title="Valor de venda (portfólio)">💲 ${p.preco_venda.toFixed(2)}</span>` : ''}${p.preco_revenda > 0 ? `<span class="text-sky-700 font-bold" title="Valor de revenda">🏷️ ${p.preco_revenda.toFixed(2)}</span>` : ''}
+                            <span class="text-amber-500 font-medium" title="${nM > 1 ? 'Custo da mesa; por peça: R$ ' + (p.custo_calculado / nM).toFixed(2) : 'Custo'}">R$ ${p.custo_calculado.toFixed(2)}${nM > 1 ? ' <small>(' + (p.custo_calculado / nM).toFixed(2) + '/peça)</small>' : ''}</span>${p.preco_venda > 0 ? `<span class="text-emerald-700 font-bold" title="Valor de venda (portfólio)">💲 ${p.preco_venda.toFixed(2)}</span>` : ''}${p.preco_revenda > 0 ? `<span class="text-sky-700 font-bold" title="Valor de revenda">🏷️ ${p.preco_revenda.toFixed(2)}</span>` : ''}
                             <div class="flex gap-2 text-sm">
                                 <button onclick="editarComponenteDoEscopo(${index})" class="text-sky-600 font-bold">✏️</button>
                                 <button onclick="removerPecaDoEscopo(${index})" class="text-red-600 font-bold">✕</button>
@@ -4763,7 +4769,7 @@
         }
 
         window.removerPecaDoEscopo = function(index) { 
-            if(idPecaEmEdicaoIndex === index) { idPecaEmEdicaoIndex = null; btnIncluirPeca.innerText = '+ Incluir'; pecaNome.value = ''; }
+            if(idPecaEmEdicaoIndex === index) { idPecaEmEdicaoIndex = null; btnIncluirPeca.innerText = '+ Incluir'; pecaNome.value = ''; pecaQtdMesa.value = pecasPorMesa(); }
             pecasProjetoAtual.splice(index, 1); if (modoMulti) redistribuirTempoMulti(); else renderizarPecasDoEscopo(); 
         };
 
@@ -4775,19 +4781,29 @@
             }
             const totalMins = Math.round(p.tempo_h * 60);
             pecaTempoHoras.value = Math.floor(totalMins / 60); pecaTempoMinutos.value = totalMins % 60;
+            pecaQtdMesa.value = nDe(p, 1);
             btnIncluirPeca.innerText = '💾 Salvar Peça'; pecaNome.focus();
         };
 
         const pecasPorMesa = () => Math.max(1, parseInt((document.getElementById('projPecasMesa') || {}).value) || 1);
         // Converte as peças do formulário (valores da MESA inteira) em valores POR PEÇA; e o contrário ao editar.
         const r4 = (v) => Math.round(v * 10000) / 10000;
-        function pecasPorUnidade(pcs, n) { return n <= 1 ? pcs : pcs.map(p => ({ ...p, peso_g: r4(p.peso_g / n), tempo_h: p.tempo_h / n, custo_calculado: p.custo_calculado / n, custo_detalhe: p.custo_detalhe ? Object.fromEntries(Object.entries(p.custo_detalhe).map(([k, v]) => [k, v / n])) : p.custo_detalhe })); }
-        function pecasDaMesa(pcs, n) { return n <= 1 ? pcs : pcs.map(p => ({ ...p, peso_g: r4(p.peso_g * n), tempo_h: p.tempo_h * n, custo_calculado: p.custo_calculado * n, custo_detalhe: p.custo_detalhe ? Object.fromEntries(Object.entries(p.custo_detalhe).map(([k, v]) => [k, v * n])) : p.custo_detalhe })); }
-        document.getElementById('projPecasMesa').addEventListener('input', () => atualizarAcumuladoresMaster());
+        const nDe = (p, padrao) => Math.max(1, parseInt(p.pecas_mesa) || parseInt(padrao) || 1);
+        const dividirDetalhe = (d, f) => d ? Object.fromEntries(Object.entries(d).map(([k, v]) => [k, v * f])) : d;
+        // cada componente tem as suas "peças na mesa" (pecas_mesa); os valores salvos são POR PEÇA e o formulário trabalha com os da MESA
+        function pecasPorUnidade(pcs, nPadrao) { return pcs.map(p => { const n = nDe(p, nPadrao); return n <= 1 ? { ...p, pecas_mesa: 1 } : { ...p, pecas_mesa: n, peso_g: r4(p.peso_g / n), tempo_h: p.tempo_h / n, custo_calculado: p.custo_calculado / n, custo_detalhe: dividirDetalhe(p.custo_detalhe, 1 / n) }; }); }
+        function pecasDaMesa(pcs, nPadrao) { return pcs.map(p => { const n = nDe(p, nPadrao); return n <= 1 ? { ...p, pecas_mesa: 1 } : { ...p, pecas_mesa: n, peso_g: r4(p.peso_g * n), tempo_h: p.tempo_h * n, custo_calculado: p.custo_calculado * n, custo_detalhe: dividirDetalhe(p.custo_detalhe, n) }; }); }
+        const custoUnitarioPecas = () => pecasProjetoAtual.reduce((a, p) => a + p.custo_calculado / nDe(p, 1), 0);
+        // o número geral aplica a todos os componentes (e vira o padrão do próximo componente)
+        document.getElementById('projPecasMesa').addEventListener('input', () => {
+            const n = pecasPorMesa(); pecasProjetoAtual.forEach(p => { p.pecas_mesa = n; });
+            if (idPecaEmEdicaoIndex === null) document.getElementById('pecaQtdMesa').value = n;
+            renderizarPecasDoEscopo();
+        });
         function atualizarAcumuladoresMaster() {
-            let tempoTotal = 0; let pesoTotal = 0; let custoPecas = 0;
-            pecasProjetoAtual.forEach(p => { tempoTotal += p.tempo_h; pesoTotal += p.peso_g; custoPecas += p.custo_calculado; });
-            const nMesa = pecasPorMesa(), custoMesa = custoPecas; custoPecas = custoPecas / nMesa;
+            let tempoTotal = 0; let pesoTotal = 0; let custoPecas = 0, algumaMesa = false;
+            pecasProjetoAtual.forEach(p => { const n = nDe(p, 1); if (n > 1) algumaMesa = true; tempoTotal += p.tempo_h / n; pesoTotal += p.peso_g / n; custoPecas += p.custo_calculado / n; });
+            pesoTotal = Math.round(pesoTotal * 10) / 10;
             const margemPorcentagem = parseFloat(projMargemPorcentagem.value) || 0;
             const fin = calcularFinanceiroProjeto(custoPecas, margemPorcentagem, projCanalVenda.value);
             const totalMinsAcumulados = Math.round(tempoTotal * 60);
@@ -4796,7 +4812,7 @@
             resumoPeso.innerText = `${pesoTotal}g`; 
             resumoCusto.innerText = `R$ ${fin.custoTotal.toFixed(2)}`; 
             resumoPrecoVenda.innerText = `R$ ${fin.preco.toFixed(2)}`;
-            const partes = [nMesa > 1 ? `Mesa com ${nMesa} peças: ${brl(custoMesa)} ÷ ${nMesa} = <strong>${brl(custoPecas)} por peça</strong>` : `Peças: ${brl(custoPecas)}`];
+            const partes = [algumaMesa ? `Cada componente dividido pelas peças da sua mesa = <strong>${brl(custoPecas)} por peça</strong>` : `Peças: ${brl(custoPecas)}`];
             if (fin.fixo > 0) partes.push(`embalagem/frete: ${brl(fin.fixo)}`);
             partes.push(`<strong class="text-amber-600">custo total: ${brl(fin.custoTotal)}</strong> — preço, canal e lucro você define na aba Vendas`);
             document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
@@ -4809,7 +4825,7 @@
             atualizarAcumuladoresMaster();
         });
         function atualizarSugestoesPreco() {
-            let custoPecas = 0; pecasProjetoAtual.forEach(p => { custoPecas += p.custo_calculado; }); custoPecas /= pecasPorMesa();
+            const custoPecas = custoUnitarioPecas();
             const custo = custoPecas + num(configCustos.custo_fixo_projeto, 0);
             const mg = margemSimulada();
             const direta = custo * (1 + mg / 100);                  // custo + margem simulada
@@ -5202,7 +5218,7 @@
             idProjetoEmEdicao = null; idPecaEmEdicaoIndex = null;
             document.getElementById('simMargem').value = 100;
             projNome.value = ''; projPrecoVenda.value = ''; projPrecoRevenda.value = ''; projCor.value = ''; definirCatsForm(null); projDescricao.value = ''; projMaquina.value = (maquinasCache.find(m => m.padrao) || {}).id || ''; projStatus.value = 'Aguardando Impressão'; projDataConclusao.value = ''; 
-            projImagemUrl.value = ''; projLink3mf.value = ''; projOcultarPortfolio.checked = false; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; document.getElementById('projPecasMesa').value = 1; atualizarAcumuladoresMaster();
+            projImagemUrl.value = ''; projLink3mf.value = ''; projOcultarPortfolio.checked = false; projQuantidadeEstoque.value = 0; projCanalVenda.value = 'direta'; document.getElementById('projPecasMesa').value = 1; pecaQtdMesa.value = 1; atualizarAcumuladoresMaster();
             if(previewContainer) previewContainer.classList.add('hidden');
             pecasProjetoAtual = []; projTempoHoras.value = 0; projTempoMin.value = 0; aplicarModoMulti(false); btnSalvarProjetoCompleto.innerText = '📁 Salvar Projeto Completo'; 
             btnCancelarEdicao.classList.add('hidden'); renderizarPecasDoEscopo();
@@ -5222,7 +5238,7 @@
             projCanalVenda.value = (proj.canal_venda && NOME_CANAL[proj.canal_venda]) ? proj.canal_venda : 'direta';
             if (proj.imagem_base64) { imgPreview.src = proj.imagem_base64; previewContainer.classList.remove('hidden'); } else { previewContainer.classList.add('hidden'); }
             projLink3mf.value = proj.nome_arquivo_3mf || '';
-            { const nm = Math.max(1, parseInt(proj.pecas_por_impressao) || 1); document.getElementById('projPecasMesa').value = nm; pecasProjetoAtual = pecasDaMesa(JSON.parse(JSON.stringify(proj.pecas || [])), nm); }
+            { const nm = Math.max(1, parseInt(proj.pecas_por_impressao) || 1); document.getElementById('projPecasMesa').value = nm; document.getElementById('pecaQtdMesa').value = nm; pecasProjetoAtual = pecasDaMesa(JSON.parse(JSON.stringify(proj.pecas || [])), nm); }
             { const T = parseFloat(proj.tempo_total_projeto_h) || 0; projTempoHoras.value = Math.floor(T); projTempoMin.value = Math.round((T - Math.floor(T)) * 60); }
             modoMulti = proj.multicolor === true; aplicarModoMulti(modoMulti);
             renderizarPecasDoEscopo();
