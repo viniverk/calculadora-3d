@@ -116,6 +116,7 @@
             border-left: 3px solid #10B981;
             color: rgb(var(--c-ink));
         }
+        .proj-nome { color: rgb(var(--c-ink)) !important; }
         #view-dashboard h2, #view-dashboard h3, #view-dashboard .text-ink, #view-pedidos h2, #view-pedidos .text-ink { color: rgb(var(--c-ink)) !important; }
         .hist-tab { white-space: nowrap; font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 999px; border: 1px solid rgb(var(--c-line)); background: rgb(var(--c-surface2)); color: rgb(var(--c-inkmute)); transition: all .15s; }
         .hist-tab:hover { filter: brightness(.96); }
@@ -5489,7 +5490,7 @@
                     const detalhe = [proj.cor ? '🎨 ' + escHtml(proj.cor) : '', proj.kit ? (proj.kit_itens || []).length + ' itens' : (proj.peso_total_g || 0) + ' g', proj.kit ? '' : `${Math.floor(t / 60)}h${String(t % 60).padStart(2, '0')} por unidade`, 'custo R$ ' + parseFloat(proj.custo_total || 0).toFixed(2).replace('.', ','), !proj.kit && !proj.maquina_id ? '⚠️ sem impressora' : ''].filter(Boolean).join(' · ');
                     return `<div class="bg-surface rounded-2xl p-3 sm:p-4 flex items-center gap-3 sm:gap-4 flex-wrap sm:flex-nowrap shadow-sm ${destaque ? 'border-2 border-emerald-600' : 'border border-line'}">
                         <div class="shrink-0 h-16 w-16 rounded-xl overflow-hidden border border-line">${thumbProj(proj, 'h-16 w-16')}</div>
-                        <div class="min-w-0 flex-1"><p class="font-bold text-base text-ink truncate">${escHtml(proj.nome_projeto)} <span class="text-[9px] ${statusClasse(proj.status)} px-1.5 py-0.5 rounded font-bold uppercase align-middle whitespace-nowrap">${escHtml(proj.status || 'Aguardando')}</span></p>
+                        <div class="min-w-0 flex-1"><p class="proj-nome font-bold text-base text-ink truncate">${escHtml(proj.nome_projeto)} <span class="text-[9px] ${statusClasse(proj.status)} px-1.5 py-0.5 rounded font-bold uppercase align-middle whitespace-nowrap">${escHtml(proj.status || 'Aguardando')}</span></p>
                             <p class="text-xs text-inkmute mt-0.5 truncate">${detalhe}</p></div>
                         ${chip}
                         <div class="w-24 text-right shrink-0"><p class="text-[11px] text-inkmute">Estoque pronto</p><p class="text-xl font-bold ${qtd === 0 && impresso ? 'text-amber-700' : 'text-ink'}">${qtd}</p></div>
