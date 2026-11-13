@@ -1038,15 +1038,15 @@
 
                 <div class="bg-base p-4 rounded-xl border border-line grid grid-cols-3 gap-4 items-center">
                     <div>
-                        <span class="block text-[10px] uppercase font-bold text-inkmute">Tempo Acumulado</span>
+                        <span id="lblResTempo" class="block text-[10px] uppercase font-bold text-inkmute">Tempo Acumulado</span>
                         <span id="resumoTempo" class="text-[1rem] font-bold text-ink font-mono2">0h 0m</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] uppercase font-bold text-inkmute">Peso Total</span>
+                        <span id="lblResPeso" class="block text-[10px] uppercase font-bold text-inkmute">Peso Total</span>
                         <span id="resumoPeso" class="text-[1rem] font-bold text-ink font-mono2">0g</span>
                     </div>
                     <div>
-                        <span class="block text-[10px] uppercase font-bold text-inkmute">Custo Total Global</span>
+                        <span id="lblResCusto" class="block text-[10px] uppercase font-bold text-inkmute">Custo Total Global</span>
                         <span id="resumoCusto" class="text-[1rem] font-bold text-gold2 font-mono2">R$ 0,00</span>
                     </div>
                     <div class="hidden">
@@ -4878,11 +4878,13 @@
             const fin = calcularFinanceiroProjeto(custoPecas, margemPorcentagem, projCanalVenda.value);
             const totalMinsAcumulados = Math.round(tempoTotal * 60);
 
+            { const sx = algumaMesa ? ' (por peça)' : ''; document.getElementById('lblResTempo').textContent = 'Tempo Acumulado' + sx; document.getElementById('lblResPeso').textContent = 'Peso Total' + sx; document.getElementById('lblResCusto').textContent = 'Custo Total Global' + sx; }
             resumoTempo.innerText = `${Math.floor(totalMinsAcumulados / 60)}h ${totalMinsAcumulados % 60}m`; 
             resumoPeso.innerText = `${pesoTotal}g`; 
             resumoCusto.innerText = `R$ ${fin.custoTotal.toFixed(2)}`; 
             resumoPrecoVenda.innerText = `R$ ${fin.preco.toFixed(2)}`;
-            const partes = [algumaMesa ? `Cada componente dividido pelas peças da sua mesa = <strong>${brl(custoPecas)} por peça</strong>` : `Peças: ${brl(custoPecas)}`];
+            const mesaPeso = pecasProjetoAtual.reduce((a, p) => a + p.peso_g, 0), mesaMin = Math.round(pecasProjetoAtual.reduce((a, p) => a + p.tempo_h, 0) * 60), mesaCusto = pecasProjetoAtual.reduce((a, p) => a + p.custo_calculado, 0);
+            const partes = [algumaMesa ? `Mesa inteira (soma dos cards acima): ${Math.round(mesaPeso * 10) / 10}g, ${Math.floor(mesaMin / 60)}h ${mesaMin % 60}m, ${brl(mesaCusto)} → dividido pelas peças de cada mesa = <strong>${brl(custoPecas)} por peça</strong>` : `Peças: ${brl(custoPecas)}`];
             if (fin.fixo > 0) partes.push(`embalagem/frete: ${brl(fin.fixo)}`);
             partes.push(`<strong class="text-amber-600">custo total: ${brl(fin.custoTotal)}</strong> — preço, canal e lucro você define na aba Vendas`);
             document.getElementById('resumoDetalheCustos').innerHTML = partes.join(' • ');
