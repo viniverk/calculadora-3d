@@ -1471,6 +1471,13 @@
                 <div><label class="ped-lbl">WhatsApp (com DDD)</label><input type="text" id="marcaWhats" placeholder="(41) 99999-9999" class="ped-inp"></div>
                 <div><label class="ped-lbl">Instagram (opcional)</label><input type="text" id="marcaInsta" placeholder="@suamarca" class="ped-inp"></div>
                 <div><label class="ped-lbl">Mensagem curta</label><input type="text" id="marcaMsg" placeholder="Peças personalizadas impressas em 3D" class="ped-inp"></div>
+                <div class="rounded-xl border border-line bg-surface2 p-3 space-y-2">
+                    <p class="text-sm font-semibold text-ink">💳 Informações de pagamento</p>
+                    <p class="text-[11px] text-inkmute">Saem no orçamento (PDF e mensagem do WhatsApp). Atenção: ficam no cadastro da marca, que é de leitura pública, como o WhatsApp.</p>
+                    <div><label class="ped-lbl">Chave PIX</label><input type="text" id="marcaPixChave" placeholder="E-mail, CPF/CNPJ, telefone ou chave aleatória" class="ped-inp"></div>
+                    <div><label class="ped-lbl">Favorecido (nome do titular)</label><input type="text" id="marcaPixNome" placeholder="Nome completo do titular da conta" class="ped-inp"></div>
+                    <div><label class="ped-lbl">Outras formas / observação (opcional)</label><input type="text" id="marcaPagObs" placeholder="Ex: Cartão em até 3x, 50% na aprovação e 50% na entrega" class="ped-inp"></div>
+                </div>
                 <div><label class="ped-lbl">Cor do topo do catálogo</label>
                     <div class="flex flex-wrap items-center gap-2" id="marcaCoresBox">
                         <input type="color" id="marcaCorBanner" value="#047857" class="h-9 w-12 rounded border border-line bg-surface2 cursor-pointer p-0.5" title="Escolher outra cor">
@@ -3369,12 +3376,18 @@
             lin('Subtotal', sub); if (d.desconto > 0) lin('Desconto', d.desconto, true); if (d.frete > 0) lin('Frete / entrega', d.frete);
             pdf.setFillColor(rgb[0], rgb[1], rgb[2]); pdf.roundedRect(110, y - 1, R - 110, 11, 2, 2, 'F'); pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(12); pdf.text('TOTAL', 115, y + 6.5); pdf.text(fmtR(d.total), R - 4, y + 6.5, { align: 'right' }); y += 18;
             // condições
-            const notas = [d.prazo ? 'Prazo de entrega: ' + d.prazo : '', `Orçamento válido por ${d.validade_dias} dia(s), até ${val.toLocaleDateString('pt-BR')}.`, d.obs].filter(Boolean);
+            const notas = [d.prazo ? 'Prazo de entrega: ' + d.prazo : '', `Orçamento válido por ${d.validade_dias} dia(s), até ${val.toLocaleDateString('pt-BR')}.`, d.obs, textoPagamento(marca, false)].filter(Boolean);
             pdf.setTextColor(60, 66, 76); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9);
             notas.forEach(n => { const ls = pdf.splitTextToSize(n, R - M); if (y + ls.length * 4.5 > 282) { pdf.addPage(); y = 18; } pdf.text(ls, M, y); y += ls.length * 4.5 + 1.5; });
             pdf.setFontSize(8); pdf.setTextColor(140, 146, 156); pdf.text('Obrigado pela preferência!' + (marca.nome ? '  •  ' + marca.nome : ''), 105, 290, { align: 'center' });
             const nomeArq = `Orcamento-${numeroOrcFmt(d.numero)}-${semAcento(d.cliente).replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'cliente'}.pdf`;
             return { blob: pdf.output('blob'), nome: nomeArq, dados: d, validade: val };
+        }
+        function textoPagamento(m, zap) {
+            m = m || {}; const l = [];
+            if (m.pix_chave) l.push(zap ? `*Pagamento via PIX*\nChave: ${m.pix_chave}${m.pix_favorecido ? '\nFavorecido: ' + m.pix_favorecido : ''}` : `Pagamento via PIX - Chave: ${m.pix_chave}${m.pix_favorecido ? '  |  Favorecido: ' + m.pix_favorecido : ''}`);
+            if (m.pagamento_obs) l.push(m.pagamento_obs);
+            return l.join(zap ? '\n' : '\n');
         }
         async function prepararPdf(btn, rotulo) {
             if (!orcValidar()) return null; btn.disabled = true; btn.textContent = 'Gerando…';
@@ -3390,7 +3403,7 @@
             const janela = movel ? null : window.open('about:blank', '_blank');   // abre já, para o navegador não bloquear o pop-up
             const r = await prepararPdf(btn, rotulo); if (!r) { if (janela) janela.close(); return; }
             const d = r.dados, marca = marcaAtual || {}, tel = digitosWhats(d.telefone);
-            const msg = `Olá, ${d.cliente.split(' ')[0]}! Segue o orçamento nº ${numeroOrcFmt(d.numero)}${marca.nome ? ' da ' + marca.nome : ''}:\n\n` + d.itens.map(i => `• ${i.qtd}x ${i.nome} – ${fmtR(i.qtd * i.preco)}`).join('\n') + `\n\n*Total: ${fmtR(d.total)}*\nVálido até ${r.validade.toLocaleDateString('pt-BR')}.\n(PDF em anexo)`;
+            const msg = `Olá, ${d.cliente.split(' ')[0]}! Segue o orçamento nº ${numeroOrcFmt(d.numero)}${marca.nome ? ' da ' + marca.nome : ''}:\n\n` + d.itens.map(i => `• ${i.qtd}x ${i.nome} – ${fmtR(i.qtd * i.preco)}`).join('\n') + `\n\n*Total: ${fmtR(d.total)}*\nVálido até ${r.validade.toLocaleDateString('pt-BR')}.${textoPagamento(marca, true) ? '\n\n' + textoPagamento(marca, true) : ''}\n\n(PDF em anexo)`;
             const arquivo = new File([r.blob], r.nome, { type: 'application/pdf' });
             if (movel && navigator.canShare && navigator.canShare({ files: [arquivo] })) { try { await navigator.share({ files: [arquivo], text: msg, title: 'Orçamento' }); return; } catch (e) { if (e && e.name === 'AbortError') return; } }
             baixarBlob(r.blob, r.nome);
@@ -4002,14 +4015,14 @@
             document.querySelectorAll('#marcaCoresBox [data-cor]').forEach(b => { const on = (b.dataset.cor || '') === corBannerSel; b.style.outline = on ? '3px solid #10b981' : 'none'; });
         }
         (() => { const box = document.getElementById('marcaCoresBox'); if (!box) return; const padrao = box.querySelector('[data-cor=""]'); CORES_BANNER.forEach(c => { const b = document.createElement('button'); b.type = 'button'; b.dataset.cor = c; b.title = c; b.className = 'h-8 w-8 rounded-full border border-line'; b.style.background = c; box.insertBefore(b, padrao); }); box.addEventListener('click', (e) => { const b = e.target.closest('[data-cor]'); if (b) definirCorBanner(b.dataset.cor); }); document.getElementById('marcaCorBanner').addEventListener('input', (e) => definirCorBanner(e.target.value)); })();
-        function preencherFormMarca() { const m = marcaAtual || {}; definirCorBanner(m.cor_banner || ''); marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; document.getElementById('marcaCompartilhar').checked = m.compartilhar_produtos === true; renderizarPreviewMarca(); }
+        function preencherFormMarca() { const m = marcaAtual || {}; definirCorBanner(m.cor_banner || ''); marcaNome.value = m.nome || ''; marcaLogo.value = m.logo_url || ''; marcaWhats.value = m.whatsapp || ''; marcaInsta.value = m.instagram || ''; marcaMsg.value = m.mensagem || ''; document.getElementById('marcaPixChave').value = m.pix_chave || ''; document.getElementById('marcaPixNome').value = m.pix_favorecido || ''; document.getElementById('marcaPagObs').value = m.pagamento_obs || ''; document.getElementById('marcaCompartilhar').checked = m.compartilhar_produtos === true; renderizarPreviewMarca(); }
         async function carregarMarca(uid) {
             try { const d = await colecao('marcas').doc(uid || usuarioAtual.uid).get(); marcaAtual = d.exists ? d.data() : null; } catch (e) { marcaAtual = null; }
             renderizarMarcaPortfolio();
             if (typeof renderizerPortfolioCliente === 'function') renderizerPortfolioCliente();
         }
         document.getElementById('btnSalvarMarca').addEventListener('click', async () => {
-            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), compartilhar_produtos: document.getElementById('marcaCompartilhar').checked, cor_banner: corBannerSel, user_id: usuarioAtual.uid };
+            const dados = { nome: marcaNome.value.trim(), logo_url: marcaLogo.value.trim(), whatsapp: marcaWhats.value.trim(), instagram: marcaInsta.value.trim(), mensagem: marcaMsg.value.trim(), pix_chave: document.getElementById('marcaPixChave').value.trim(), pix_favorecido: document.getElementById('marcaPixNome').value.trim(), pagamento_obs: document.getElementById('marcaPagObs').value.trim(), compartilhar_produtos: document.getElementById('marcaCompartilhar').checked, cor_banner: corBannerSel, user_id: usuarioAtual.uid };
             try { await colecao('marcas').doc(usuarioAtual.uid).set(dados); marcaAtual = dados; renderizarMarcaPortfolio(); renderizerPortfolioCliente(); alert('Marca salva! Ela aparece no topo do seu catálogo público.'); }
             catch (e) { alert('Erro ao salvar: ' + e.message); }
         });
