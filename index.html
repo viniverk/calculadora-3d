@@ -5856,7 +5856,14 @@
             y += 110;
             // foto do produto
             ctx.save(); rr(padX, y, imgW, imgH, 40); ctx.clip();
-            if (img) { const z = 1 + Math.min(ts, 6) * .02; const k = Math.max(imgW / img.width, imgH / img.height) * z; ctx.drawImage(img, padX + imgW / 2 - img.width * k / 2, y + imgH / 2 - img.height * k / 2, img.width * k, img.height * k); }
+            if (img) {
+                // fundo: a própria foto ampliada e desfocada; por cima, a foto inteira (sem cortar)
+                const kb = Math.max(imgW / img.width, imgH / img.height);
+                ctx.fillStyle = '#e2e8f0'; ctx.fillRect(padX, y, imgW, imgH);
+                ctx.save(); if ('filter' in ctx) ctx.filter = 'blur(28px)'; ctx.globalAlpha = .9; ctx.drawImage(img, padX + imgW / 2 - img.width * kb * 1.15 / 2, y + imgH / 2 - img.height * kb * 1.15 / 2, img.width * kb * 1.15, img.height * kb * 1.15); ctx.restore();
+                const z = 1 + Math.min(ts, 6) * .01; const k = Math.min(imgW / img.width, imgH / img.height) * z;
+                ctx.save(); rr(padX, y, imgW, imgH, 40); ctx.clip(); ctx.drawImage(img, padX + imgW / 2 - img.width * k / 2, y + imgH / 2 - img.height * k / 2, img.width * k, img.height * k); ctx.restore();
+            }
             else { ctx.fillStyle = '#e2e8f0'; ctx.fillRect(padX, y, imgW, imgH); ctx.fillStyle = '#64748b'; ctx.font = `800 120px ${FONT}`; ctx.textAlign = 'center'; ctx.fillText('🧊', W / 2, y + imgH / 2); ctx.textAlign = 'left'; }
             ctx.restore();
             // selo de estoque
