@@ -246,6 +246,7 @@
         }
         @media (display-mode: standalone) { body { overscroll-behavior-y: none; } }
 </style>
+    <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.187.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.187.0/examples/jsm/"}}</script>
 </head>
 <body class="bg-base text-ink min-h-screen font-sans flex">
 
@@ -697,6 +698,7 @@
                 <button onclick="mudarAba('filamentos')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="filamentos"><span class="text-lg">🧵</span><span class="whitespace-nowrap label-texto font-medium">Estoque</span></button>
                 <button onclick="mudarAba('maquinas')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="maquinas"><span class="text-lg">🖨️</span><span class="whitespace-nowrap label-texto font-medium">Máquinas</span></button>
                 <button onclick="mudarAba('buscador')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn" data-aba="buscador"><span class="text-lg">🔎</span><span class="whitespace-nowrap label-texto font-medium">Buscar modelos</span></button>
+                <button id="abaGerador3dBtn" onclick="mudarAba('gerador3d')" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition hover:bg-surface2 text-inkmute item-menu-btn hidden" data-aba="gerador3d"><span class="text-lg">✨</span><span class="whitespace-nowrap label-texto">Gerador 3D (IA)</span></button>
                 </div></div>
                 <div class="grupo-menu space-y-1" data-grupo="vender">
                 <button type="button" class="grupo-cab label-texto w-full flex items-center gap-2 px-3 py-2 mt-3 rounded-xl text-sm font-bold text-ink bg-surface2/70 hover:bg-surface2 border border-line/70 transition" data-grupo-cab="vender" aria-expanded="true" title="Clique para recolher ou abrir"><span class="text-base">💰</span><span class="grupo-nome flex-1 text-left">Vender</span><span class="grupo-qtd hidden text-[10px] font-bold rounded-full px-1.5 py-0.5 bg-surface text-inkmute border border-line"></span><span class="grupo-seta text-xs text-inkmute transition-transform">▾</span></button>
@@ -1320,6 +1322,8 @@
                 </div>
             </div>
         </div>
+
+        <div id="view-gerador3d" class="aba-conteudo grid grid-cols-1 gap-6 hidden"><p class="text-sm text-inkmute">Carregando o Gerador 3D…</p></div>
 
         <div id="view-buscador" class="aba-conteudo grid grid-cols-1 gap-6 hidden">
             <div class="rounded-3xl p-6 sm:p-10 text-white relative overflow-hidden" style="background:linear-gradient(135deg,#0b2b22 0%,#0f3d30 55%,#0a1f1a 100%)">
@@ -2135,7 +2139,7 @@
             const g = document.getElementById('smGrade'), ac = document.getElementById('smAcoes');
             let h = `<button type="button" class="sm-item ${abaAtualMobile === 'dashboard' ? 'sm-ativo' : ''}" style="grid-column:1/-1;flex-direction:row;justify-content:center;padding:10px" onclick="mudarAba('dashboard')"><span class="ico">🏠</span>Início — o que fazer hoje</button>` + GRUPOS_MAIS.map(([t, its]) => `<p class="sm-titulo">${t}</p>` + its.map(([a, i, n]) => `<button type="button" class="sm-item ${a === abaAtualMobile ? 'sm-ativo' : ''}" onclick="mudarAba('${a}')"><span class="ico">${i}</span>${n}</button>`).join('')).join('');
             const adm = document.getElementById('abaAdminBtn');
-            if (adm && !adm.classList.contains('hidden')) h += `<button type="button" class="sm-item" onclick="mudarAba('admin')"><span class="ico">🛡️</span>Usuários</button>`;
+            if (adm && !adm.classList.contains('hidden')) h += `<button type="button" class="sm-item" onclick="mudarAba('gerador3d')"><span class="ico">✨</span>Gerador 3D</button><button type="button" class="sm-item" onclick="mudarAba('admin')"><span class="ico">🛡️</span>Usuários</button>`;
             g.innerHTML = h;
             const inst = document.getElementById('btnInstalar');
             const bpro = document.getElementById('btnAssinarPro');
@@ -2293,6 +2297,16 @@
             if (abaDestino === 'marca') preencherFormMarca();
             if (abaDestino === 'filamentos') carregarFilamentos();
             if (abaDestino === 'admin') carregarAdminUsuarios();
+            if (abaDestino === 'gerador3d') abrirGerador3D();
+        }
+
+        // --- GERADOR 3D COM IA (somente admin): código em gerador3d/gerador.js, carregado só quando a aba abre ---
+        function abrirGerador3D() {
+            const el = document.getElementById('view-gerador3d');
+            const ehAdmin = !!(perfilAtual && perfilAtual.role === 'admin');
+            if (!ehAdmin) { el.innerHTML = '<p class="text-sm text-inkmute">Esta ferramenta é exclusiva do administrador.</p>'; return; }
+            import('./gerador3d/gerador.js?v=1').then(m => m.iniciar(el, { ehAdmin }))
+                .catch(e => { console.error(e); el.innerHTML = '<p class="text-sm text-red-600">Não consegui carregar o Gerador 3D. Verifique a internet e recarregue a página.</p>'; });
         }
 
         // --- DASHBOARD / VISÃO GERAL ---
@@ -2687,9 +2701,9 @@
             }
 
             if (perfil && perfil.role === 'admin') {
-                abaAdminBtn.classList.remove('hidden'); document.getElementById('btnShopee').classList.remove('hidden');
+                abaAdminBtn.classList.remove('hidden'); document.getElementById('btnShopee').classList.remove('hidden'); document.getElementById('abaGerador3dBtn').classList.remove('hidden');
             } else {
-                abaAdminBtn.classList.add('hidden'); document.getElementById('btnShopee').classList.add('hidden');
+                abaAdminBtn.classList.add('hidden'); document.getElementById('btnShopee').classList.add('hidden'); document.getElementById('abaGerador3dBtn').classList.add('hidden');
             }
             return true;
         }
