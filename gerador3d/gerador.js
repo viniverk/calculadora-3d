@@ -245,9 +245,11 @@ async function gerarComIA() {
             }
             if (ev.type === 'data') { dados = ev.data; break; }
         }
-        const arq = dados && dados[0];
-        const url = arq && (arq.url || arq);
-        if (!url || typeof url !== 'string') throw new Error('A IA não devolveu um arquivo.');
+        const url = acharArquivo(dados, app);
+        if (!url) {
+            console.warn('Resposta da IA', dados);
+            throw new Error('A IA não devolveu um arquivo. Resposta: ' + JSON.stringify(dados).slice(0, 300));
+        }
         aviso('📥 Baixando o modelo…');
         let r = await fetch(url);
         if (!r.ok && token) r = await fetch(url, { headers: { Authorization: 'Bearer ' + token } });
@@ -263,6 +265,29 @@ async function gerarComIA() {
     } finally {
         btn.disabled = false;
     }
+}
+
+// Procura o arquivo 3D em qualquer formato de resposta do Gradio
+// (FileData {url, path}, gr.update {value: ...}, string, listas aninhadas).
+function acharArquivo(dados, app) {
+    const raiz = String((app && app.config && (app.config.root || app.config.root_url)) || '').replace(/\/$/, '');
+    const candidatos = [];
+    (function visitar(v, prof) {
+        if (v == null || prof > 6) return;
+        if (typeof v === 'string') { candidatos.push(v); return; }
+        if (Array.isArray(v)) { v.forEach(x => visitar(x, prof + 1)); return; }
+        if (typeof v === 'object') {
+            if (v.url) candidatos.push(v.url);
+            if (v.path) candidatos.push(v.path);
+            if (v.name && typeof v.name === 'string') candidatos.push(v.name);
+            ['value', 'data', 'file', 'orig_name'].forEach(k => k in v && visitar(v[k], prof + 1));
+        }
+    })(dados, 0);
+    const eh3d = (t) => /\.(glb|gltf|obj|stl|ply)(\?|$)/i.test(t);
+    const achado = candidatos.find(t => eh3d(t) && /^https?:/i.test(t)) || candidatos.find(eh3d);
+    if (!achado) return null;
+    if (/^https?:/i.test(achado)) return achado;
+    return raiz ? raiz + '/file=' + achado : null;
 }
 
 function mensagemErro(e) {

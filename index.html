@@ -2305,7 +2305,7 @@
             const el = document.getElementById('view-gerador3d');
             const ehAdmin = !!(perfilAtual && perfilAtual.role === 'admin');
             if (!ehAdmin) { el.innerHTML = '<p class="text-sm text-inkmute">Esta ferramenta é exclusiva do administrador.</p>'; return; }
-            import('./gerador3d/gerador.js?v=1').then(m => m.iniciar(el, { ehAdmin }))
+            import('./gerador3d/gerador.js?v=2').then(m => m.iniciar(el, { ehAdmin }))
                 .catch(e => { console.error(e); el.innerHTML = '<p class="text-sm text-red-600">Não consegui carregar o Gerador 3D. Verifique a internet e recarregue a página.</p>'; });
         }
 
