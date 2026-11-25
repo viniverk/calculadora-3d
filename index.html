@@ -1821,8 +1821,9 @@
                     <button type="button" id="precAddCanal" class="text-xs font-bold text-sky-600 hover:underline">+ Adicionar canal</button>
                 </div>
                 <div class="lg:col-span-2 bg-surface p-4 sm:p-5 rounded-2xl shadow-sm border border-line min-w-0">
-                    <div class="flex items-center justify-between border-b border-line pb-2 mb-3"><h3 class="font-display font-bold text-ink">Produtos</h3><button type="button" id="precAddProd" class="text-xs font-bold text-sky-600 hover:underline">+ Adicionar produto</button></div>
+                    <div class="flex items-center justify-between border-b border-line pb-2 mb-3"><h3 class="font-display font-bold text-ink">Produtos</h3><div class="flex gap-3 flex-wrap justify-end"><button type="button" id="precCarregar" class="text-xs font-bold text-emerald-700 hover:underline">📥 Carregar das Impressões</button><button type="button" id="precAddProd" class="text-xs font-bold text-sky-600 hover:underline">+ Adicionar produto</button></div></div>
                     <div id="precProdutos" class="space-y-3"></div>
+                    <div class="mt-4 pt-3 border-t border-line flex flex-wrap items-center gap-2"><span class="text-xs text-inkmute flex-1 min-w-[10rem]">Listagem: só os produtos marcados com ☑ entram.</span><button type="button" id="precPdf" class="px-4 py-2 rounded-lg border border-line bg-surface text-ink hover:bg-surface2 text-sm font-bold">📄 Baixar PDF</button><button type="button" id="precXlsx" class="px-4 py-2 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-sm font-bold">📊 Baixar Excel</button></div>
                 </div>
             </div>
         </div>
@@ -4100,7 +4101,7 @@
             const f = (i, k, r, v) => `<div><label class="text-[10px] uppercase font-bold text-inkmute">${r}</label><input type="text" inputmode="decimal" data-pi="${i}" data-pf="${k}" value="${escHtml(v)}" class="ped-inp"></div>`;
             document.getElementById('precProdutos').innerHTML = prec.prods.length ? prec.prods.map((x, i) => {
                 const r = precCalcLinha(x), ok = r.margem != null;
-                return `<div class="rounded-xl border border-line p-3 space-y-2" data-pbox="${i}"><div class="flex gap-2"><input type="text" data-pi="${i}" data-pf="nome" value="${escHtml(x.nome)}" placeholder="Nome do produto" class="ped-inp flex-1 font-bold"><select data-pi="${i}" data-pf="canal" class="ped-inp !w-40">${opts(x.canal)}</select><button type="button" data-pdel="${i}" class="text-red-600 font-bold px-1">✕</button></div>
+                return `<div class="rounded-xl border border-line p-3 space-y-2" data-pbox="${i}"><div class="flex gap-2 items-center"><input type="checkbox" data-pi="${i}" data-pf="lista" ${x.lista === false ? '' : 'checked'} class="h-4 w-4 accent-emerald-600" title="Incluir na listagem (PDF/Excel)" aria-label="Incluir na listagem"><input type="text" data-pi="${i}" data-pf="nome" value="${escHtml(x.nome)}" placeholder="Nome do produto" class="ped-inp flex-1 font-bold"><select data-pi="${i}" data-pf="canal" class="ped-inp !w-40">${opts(x.canal)}</select><button type="button" data-pdel="${i}" class="text-red-600 font-bold px-1">✕</button></div>
                 <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${f(i, 'peso', 'Peso (g)', x.peso)}${f(i, 'horas', 'Tempo (h)', x.horas)}${f(i, 'mao_min', 'Mão de obra (min)', x.mao_min)}${f(i, 'extras', 'Embalagem (R$)', x.extras)}${f(i, 'praticado', 'Preço praticado (R$)', x.praticado)}</div>
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-surface2 rounded-lg p-2"><div><span class="text-inkmute block text-[10px]">Custo total</span><b data-o="custo">${fmtR(r.custo)}</b></div><div><span class="text-inkmute block text-[10px]">Markup</span><b data-o="markup">${r.markup.toFixed(2).replace('.', ',')}×</b></div><div><span class="text-inkmute block text-[10px]">Preço sugerido</span><b class="text-emerald-700 text-sm" data-o="sug">${fmtR(r.sugerido)}</b></div><div><span class="text-inkmute block text-[10px]">Lucro por unidade</span><b data-o="lucro">${fmtR(r.lucro)}</b></div>
                 <div class="col-span-2 sm:col-span-4 text-[11px] text-inkmute" data-o="det">Material ${fmtR(r.mat)} · Máquina ${fmtR(r.maq)} · Mão de obra ${fmtR(r.mao)} · Taxas do canal ${fmtR(r.taxaCanal)}${ok ? ` · <b class="${r.margem < 0 ? 'text-red-600' : 'text-emerald-700'}">Margem real ${(r.margem * 100).toFixed(1).replace('.', ',')}%</b>` : ''}</div></div></div>`;
@@ -4118,6 +4119,7 @@
                 const t = e.target;
                 if (t.dataset.pk) { prec.p[t.dataset.pk] = t.value; precRenderCalc(); prec.prods.forEach((_, i) => precAtualizaProd(i)); }
                 else if (t.dataset.cf) { prec.canais[t.dataset.ci][t.dataset.cf] = t.value; prec.prods.forEach((_, i) => precAtualizaProd(i)); }
+                else if (t.dataset.pf === 'lista') { prec.prods[t.dataset.pi].lista = t.checked; }
                 else if (t.dataset.pf) { prec.prods[t.dataset.pi][t.dataset.pf] = t.value; precAtualizaProd(t.dataset.pi); }
             });
             v.addEventListener('change', (e) => { const t = e.target; if (t.dataset.cf === 'nome') precRenderProds(); if (t.dataset.pf === 'canal') precAtualizaProd(t.dataset.pi); });
@@ -4128,8 +4130,72 @@
                 else if (b.id === 'precAddProd') { prec.prods.push({ nome: '', canal: prec.canais[0].nome, peso: 0, horas: 0, mao_min: 0, extras: 0, praticado: '' }); precRenderProds(); }
                 else if (b.dataset.pdel != null) { if (confirm('Remover este produto da precificação?')) { prec.prods.splice(+b.dataset.pdel, 1); precRenderProds(); } }
                 else if (b.id === 'precSalvar') { precSalvar(b); }
+                else if (b.id === 'precCarregar') { precAbrirImportar(); }
+                else if (b.id === 'precPdf') { precExportar('pdf', b); }
+                else if (b.id === 'precXlsx') { precExportar('xlsx', b); }
             });
         })();
+
+        async function precAbrirImportar() {
+            if (!projetosCacheLocal.length) { try { await carregarProjetos3d(); } catch (e) {} }
+            const jaTem = new Set(prec.prods.map(x => x.projeto_id).filter(Boolean));
+            const lista = projetosCacheLocal.filter(x => !x.kit);
+            if (!lista.length) return alert('Você ainda não tem projetos na aba Impressões.');
+            const md = document.createElement('div'); md.className = 'fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4';
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 gap-3"><h3 class="font-display font-bold text-ink text-lg">📥 Carregar das Impressões</h3><p class="text-xs text-inkmute">Marque os projetos. Peso e tempo vêm do projeto (por unidade); os demais campos você ajusta aqui.</p>
+                <input type="text" id="precBusca" placeholder="Buscar projeto…" class="ped-inp"><div id="precLista" class="overflow-y-auto space-y-1 flex-1 min-h-[120px]"></div>
+                <div class="flex gap-2"><button type="button" id="precImpCancelar" class="flex-1 border border-line rounded-xl py-2.5 text-sm font-bold text-ink">Cancelar</button><button type="button" id="precImpOk" class="flex-1 bg-emerald-700 text-white rounded-xl py-2.5 text-sm font-bold">Adicionar</button></div></div>`;
+            document.body.appendChild(md);
+            const box = md.querySelector('#precLista');
+            const pintar = () => { const t = md.querySelector('#precBusca').value.toLowerCase(); box.innerHTML = lista.filter(x => (x.nome_projeto || '').toLowerCase().includes(t)).map(x => `<label class="flex items-center gap-2 p-2 rounded-lg border border-line text-sm text-ink ${jaTem.has(x.id) ? 'opacity-50' : ''}"><input type="checkbox" value="${escHtml(x.id)}" ${jaTem.has(x.id) ? 'disabled' : ''} class="accent-emerald-600"><span class="flex-1 min-w-0 truncate">${escHtml(x.nome_projeto)}</span><span class="text-[10px] text-inkmute whitespace-nowrap">${x.peso_total_g || 0}g · ${Math.floor((x.tempo_total_min || 0) / 60)}h${String((x.tempo_total_min || 0) % 60).padStart(2, '0')}${jaTem.has(x.id) ? ' · já na lista' : ''}</span></label>`).join('') || '<p class="text-xs text-inkmute italic p-2">Nada encontrado.</p>'; };
+            const marcados = new Set(); box.addEventListener('change', (e) => { if (e.target.checked) marcados.add(e.target.value); else marcados.delete(e.target.value); });
+            md.querySelector('#precBusca').addEventListener('input', () => { pintar(); box.querySelectorAll('input').forEach(i => { if (marcados.has(i.value)) i.checked = true; }); }); pintar();
+            md.querySelector('#precImpCancelar').addEventListener('click', () => md.remove());
+            md.addEventListener('click', (e) => { if (e.target === md) md.remove(); });
+            md.querySelector('#precImpOk').addEventListener('click', () => {
+                lista.filter(x => marcados.has(x.id)).forEach(x => prec.prods.push({ projeto_id: x.id, nome: x.nome_projeto || '', canal: prec.canais[0].nome, peso: parseFloat(x.peso_total_g) || 0, horas: Math.round(((parseFloat(x.tempo_total_min) || 0) / 60) * 100) / 100, mao_min: 0, extras: 0, praticado: '' }));
+                md.remove(); precRenderProds();
+            });
+        }
+        function precLinhasExport() {
+            return prec.prods.filter(x => x.lista !== false && (x.nome || '').trim()).map(x => { const r = precCalcLinha(x); return { x, r }; });
+        }
+        async function precExportar(tipo, btn) {
+            const itens = precLinhasExport(); if (!itens.length) return alert('Nenhum produto marcado para a listagem (marque ☑ e dê nome ao produto).');
+            const hoje = new Date().toLocaleDateString('pt-BR'), arq = 'Precificacao-' + new Date().toISOString().slice(0, 10), rot = btn.textContent; btn.disabled = true; btn.textContent = 'Gerando…';
+            try {
+                if (tipo === 'xlsx') {
+                    if (!window.XLSX) await new Promise((ok, no) => { const sc = document.createElement('script'); sc.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js'; sc.onload = ok; sc.onerror = () => no(new Error('Não consegui carregar o gerador de Excel (verifique a internet).')); document.head.appendChild(sc); });
+                    const cab = ['Produto', 'Canal', 'Peso (g)', 'Tempo (h)', 'Mão de obra (min)', 'Embalagem (R$)', 'Material (R$)', 'Máquina (R$)', 'Mão de obra (R$)', 'Custo total (R$)', 'Markup (×)', 'Preço sugerido (R$)', 'Lucro por unidade (R$)', 'Preço praticado (R$)', 'Margem real (%)'];
+                    const r2 = (v) => Math.round(v * 100) / 100;
+                    const linhas = itens.map(({ x, r }) => [x.nome, x.canal, pn(x.peso), pn(x.horas), pn(x.mao_min), pn(x.extras), r2(r.mat), r2(r.maq), r2(r.mao), r2(r.custo), r2(r.markup), r2(r.sugerido), r2(r.lucro), String(x.praticado).trim() === '' ? '' : pn(x.praticado), r.margem == null ? '' : r2(r.margem * 100)]);
+                    const ws = XLSX.utils.aoa_to_sheet([cab, ...linhas]); ws['!cols'] = cab.map((c, i) => ({ wch: i === 0 ? 30 : i === 1 ? 16 : 14 }));
+                    const par = [['Parâmetro', 'Valor'], ...PREC_ROTULOS.map(([k, r]) => [r, pn(prec.p[k])]), [], ['Canal', 'Comissão (%)', 'Taxa fixa (R$)'], ...prec.canais.map(c => [c.nome, pn(c.com), pn(c.fixa)])];
+                    const wp = XLSX.utils.aoa_to_sheet(par); wp['!cols'] = [{ wch: 36 }, { wch: 14 }, { wch: 16 }];
+                    const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'Produtos'); XLSX.utils.book_append_sheet(wb, wp, 'Parâmetros');
+                    XLSX.writeFile(wb, arq + '.xlsx');
+                } else {
+                    await carregarJsPdf(); const { jsPDF } = window.jspdf, pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'landscape' }), M = 10, R = 287; let y = 14;
+                    const marca = marcaAtual || {};
+                    pdf.setFont('helvetica', 'bold'); pdf.setFontSize(15); pdf.setTextColor(6, 95, 70); pdf.text('Tabela de preços' + (marca.nome ? ' - ' + marca.nome : ''), M, y);
+                    pdf.setFont('helvetica', 'normal'); pdf.setFontSize(9); pdf.setTextColor(100, 110, 120); pdf.text('Gerada em ' + hoje, R, y, { align: 'right' }); y += 8;
+                    const cols = [['Produto', M, 'l'], ['Canal', 95, 'l'], ['Peso', 133, 'r'], ['Tempo', 150, 'r'], ['Custo', 172, 'r'], ['Markup', 192, 'r'], ['Sugerido', 218, 'r'], ['Lucro/un.', 244, 'r'], ['Praticado', 266, 'r'], ['Margem', R, 'r']];
+                    const cab = () => { pdf.setFillColor(6, 95, 70); pdf.rect(M, y, R - M, 7, 'F'); pdf.setTextColor(255, 255, 255); pdf.setFont('helvetica', 'bold'); pdf.setFontSize(8.5); cols.forEach(([t, x, al]) => pdf.text(t, al === 'l' ? x + 2 : x, y + 4.8, { align: al === 'l' ? 'left' : 'right' })); y += 7; };
+                    cab(); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5);
+                    itens.forEach(({ x, r }, i) => {
+                        if (y > 195) { pdf.addPage(); y = 14; cab(); pdf.setFont('helvetica', 'normal'); pdf.setFontSize(8.5); }
+                        if (i % 2) { pdf.setFillColor(243, 247, 245); pdf.rect(M, y, R - M, 7, 'F'); }
+                        pdf.setTextColor(30, 41, 59);
+                        const v = [pdf.splitTextToSize(x.nome, 80)[0], pdf.splitTextToSize(x.canal, 36)[0], pn(x.peso) + ' g', pn(x.horas).toFixed(1).replace('.', ',') + ' h', fmtR(r.custo), r.markup.toFixed(2).replace('.', ',') + 'x', fmtR(r.sugerido), fmtR(r.lucro), String(x.praticado).trim() === '' ? '-' : fmtR(pn(x.praticado)), r.margem == null ? '-' : (r.margem * 100).toFixed(1).replace('.', ',') + '%'];
+                        cols.forEach(([t, cx, al], k) => { if (k === 6) pdf.setFont('helvetica', 'bold'); pdf.text(String(v[k]), al === 'l' ? cx + 2 : cx, y + 4.8, { align: al === 'l' ? 'left' : 'right' }); pdf.setFont('helvetica', 'normal'); });
+                        y += 7;
+                    });
+                    pdf.save(arq + '.pdf');
+                }
+            } catch (e) { alert('Erro ao gerar: ' + e.message); }
+            btn.disabled = false; btn.textContent = rot;
+        }
+
         async function precSalvar(btn) {
             if (!precPermitido()) return; btn.disabled = true; const r = btn.textContent; btn.textContent = 'Salvando...';
             try { await colecao('config_custos').doc(usuarioAtual.uid).set({ admin_precificacao: JSON.parse(JSON.stringify(prec)), user_id: usuarioAtual.uid }, { merge: true }); btn.textContent = '✅ Salvo'; }
