@@ -1281,6 +1281,7 @@
             </div>
             <div class="flex gap-2 overflow-x-auto" id="pedFiltros">
                 <button type="button" data-filtro="fila" class="hist-tab ativo">Fila de produção</button>
+                <button type="button" data-filtro="receber" class="hist-tab">💲 A receber <span id="pedBadgeReceber" class="hidden ml-1 text-[10px] font-bold bg-amber-500 text-white rounded-full px-1.5 py-0.5"></span></button>
                 <button type="button" data-filtro="entregues" class="hist-tab">Entregues / vendidos</button>
                 <button type="button" data-filtro="todos" class="hist-tab">Todos</button>
             </div>
@@ -4581,7 +4582,16 @@
             const resumo = itens.map(it => `${it.quantidade}x ${escHtml(it.nome)}`).join(' • ');
             return `<div class="bg-surface rounded-2xl border border-line p-3 shadow-sm flex items-center gap-3">${fotoLinhaVendido(itens)}
                 <div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(o.cliente)}</p><p class="text-xs text-ink truncate">${resumo}</p><p class="text-[11px] text-inkmute truncate">Entregue em ${fmtData(o.data_entrega || o.created_at)}${o.tipo_pagamento ? ' • ' + escHtml(o.tipo_pagamento) : ''} • ${falta <= 0 ? '<span class="text-emerald-700 font-semibold">Pago</span>' : '<span class="text-amber-700 font-semibold">falta ' + brl(falta) + '</span>'}</p></div>
-                <div class="text-right shrink-0"><p class="font-mono2 text-sm font-bold text-ink">${brl(total)}</p><p class="text-[11px] ${tt.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro ${brl(tt.lucro)}</p><button onclick="excluirPedido('${o.id}')" class="text-[11px] text-red-600">Excluir</button></div></div>`;
+                <div class="text-right shrink-0"><p class="font-mono2 text-sm font-bold text-ink">${brl(total)}</p><p class="text-[11px] ${tt.lucro < 0 ? 'text-red-600' : 'text-emerald-700'}">lucro ${brl(tt.lucro)}</p>${falta > 0 ? `<button onclick="marcarPedidoPago('${o.id}')" class="block ml-auto mt-0.5 text-[11px] font-bold text-emerald-700">💲 Marcar como pago</button>` : ''}<button onclick="excluirPedido('${o.id}')" class="text-[11px] text-red-600">Excluir</button></div></div>`;
+        }
+        // Aba "A receber": pedidos (em aberto ou já entregues) que ainda não foram pagos por inteiro
+        function linhaReceber(o) {
+            const itens = itensDoPedido(o), total = totaisItens(itens).vendas, pago = valorPagoPedido(o, total), falta = Math.max(0, total - pago);
+            const resumo = itens.map(it => `${it.quantidade}x ${escHtml(it.nome)}`).join(' • ');
+            const entregue = o.status === 'Entregue', d = diasAte(o.data_entrega || (o.created_at || '').slice(0, 10)), dias = d === null ? '' : ` • há ${Math.abs(d)} dia(s)`;
+            return `<div class="bg-surface rounded-2xl border border-amber-300 p-3 shadow-sm flex items-center gap-3">${fotoLinhaVendido(itens)}
+                <div class="min-w-0 flex-1"><p class="text-sm font-bold text-ink truncate">${escHtml(o.cliente)}</p><p class="text-xs text-ink truncate">${resumo}</p><p class="text-[11px] text-inkmute truncate">${entregue ? 'Entregue em ' + fmtData(o.data_entrega || o.created_at) + dias : 'Pedido ' + escHtml(ROTULO_STATUS[o.status] || o.status || '') + ' — ainda na fila'}${o.tipo_pagamento ? ' • ' + escHtml(o.tipo_pagamento) : ''}${pago > 0 ? ' • já pagou ' + brl(pago) : ''}</p></div>
+                <div class="text-right shrink-0"><p class="text-[10px] uppercase text-inkmute">Falta receber</p><p class="font-mono2 text-sm font-bold text-amber-700">${brl(falta)}</p><button onclick="marcarPedidoPago('${o.id}')" class="mt-1 ped-btn bg-emerald-700 text-white">💲 Marcar como pago</button></div></div>`;
         }
 
         function renderizarPedidos() {
@@ -4593,21 +4603,26 @@
                 receber += Math.max(0, tot - valorPagoPedido(o, tot));
                 if (o.status !== 'Pronto') itens.forEach(it => { const pr = it.projeto_id ? projPorId(it.projeto_id) : null; minutos += ((pr && pr.tempo_total_min) || 0) * (it.quantidade || 0); });
             });
+            const pendentes = pedidosCache.filter(o => o.status !== 'Cancelado').filter(o => { const t = totaisItens(itensDoPedido(o)).vendas; return t - valorPagoPedido(o, t) > 0.005; });
+            receber = pendentes.reduce((a, o) => { const t = totaisItens(itensDoPedido(o)).vendas; return a + Math.max(0, t - valorPagoPedido(o, t)); }, 0);
+            const bd = document.getElementById('pedBadgeReceber'); if (bd) { bd.textContent = pendentes.length; bd.classList.toggle('hidden', !pendentes.length); }
             pedKpiAbertos.innerText = ativos.length; pedKpiAtrasados.innerText = atras;
             pedKpiReceber.innerText = brl(receber); pedKpiHoras.innerText = `${(minutos / 60).toFixed(1).replace('.', ',')} h`;
 
             let lista;
             if (filtroPedidos === 'fila') lista = [...ativos].sort((a, b) => (a.prazo || '9999-99-99').localeCompare(b.prazo || '9999-99-99') || (a.created_at || '').localeCompare(b.created_at || ''));
+            else if (filtroPedidos === 'receber') lista = pendentes.map(o => ({ ...o })).sort((a, b) => (a.data_entrega || a.created_at || '').localeCompare(b.data_entrega || b.created_at || ''));
             else if (filtroPedidos === 'entregues') lista = [...pedidosCache.filter(o => o.status === 'Entregue'), ...vendasSemPedido.map(v => ({ ...v, _venda: true }))].sort((a, b) => (b.data_entrega || b.data_venda || '').localeCompare(a.data_entrega || a.data_venda || ''));
             else lista = [...pedidosCache, ...vendasSemPedido.map(v => ({ ...v, _venda: true }))].sort((a, b) => (b.created_at || '').localeCompare(a.created_at || ''));
 
             if (!lista.length) {
                 listaPedidos.className = 'grid grid-cols-1 gap-3';
-                listaPedidos.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-10 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Clique em <strong>+ Novo pedido</strong> para começar.' : 'Nada por aqui ainda.') + '</div>';
+                listaPedidos.innerHTML = '<div class="xl:col-span-2 bg-surface rounded-2xl border border-line p-10 text-center text-sm text-inkmute">' + (filtroPedidos === 'fila' ? 'Nenhum pedido na fila. Clique em <strong>+ Novo pedido</strong> para começar.' : filtroPedidos === 'receber' ? '🎉 Nada a receber: todos os pedidos estão pagos.' : 'Nada por aqui ainda.') + '</div>';
                 return;
             }
-            listaPedidos.className = filtroPedidos === 'entregues' ? 'flex flex-col gap-2' : 'grid grid-cols-1 xl:grid-cols-2 gap-3';
+            listaPedidos.className = (filtroPedidos === 'entregues' || filtroPedidos === 'receber') ? 'flex flex-col gap-2' : 'grid grid-cols-1 xl:grid-cols-2 gap-3';
             if (filtroPedidos === 'entregues') { listaPedidos.innerHTML = lista.map(linhaEntregue).join(''); return; }
+            if (filtroPedidos === 'receber') { listaPedidos.innerHTML = lista.map(linhaReceber).join(''); return; }
             listaPedidos.innerHTML = lista.map((o, i) => {
                 if (o._venda) return cartaoVendaDireta(o);
                 const itens = itensDoPedido(o), tt = totaisItens(itens), total = tt.vendas;
