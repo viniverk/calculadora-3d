@@ -4097,37 +4097,60 @@
             document.getElementById('precCalc').innerHTML = `<p><b>Calculado:</b> depreciação ${fmtR(dep)}/h · energia ${fmtR(en)}/h · máquina ${fmtR(dep + en + pn(P.manut_h))}/h</p><p>Markup base (sem canal): <b>${tx < 100 ? (1 / (1 - tx / 100)).toFixed(2).replace('.', ',') + '×' : '—'}</b></p>`;
         }
         function precRenderProds() {
-            const opts = (sel) => prec.canais.map(c => `<option ${c.nome === sel ? 'selected' : ''}>${escHtml(c.nome)}</option>`).join('');
-            const f = (i, k, r, v) => `<div><label class="text-[10px] uppercase font-bold text-inkmute">${r}</label><input type="text" inputmode="decimal" data-pi="${i}" data-pf="${k}" value="${escHtml(v)}" class="ped-inp"></div>`;
-            document.getElementById('precProdutos').innerHTML = prec.prods.length ? prec.prods.map((x, i) => {
-                const r = precCalcLinha(x), ok = r.margem != null;
-                return `<div class="rounded-xl border border-line p-3 space-y-2" data-pbox="${i}"><div class="flex gap-2 items-center"><input type="checkbox" data-pi="${i}" data-pf="lista" ${x.lista === false ? '' : 'checked'} class="h-4 w-4 accent-emerald-600" title="Incluir na listagem (PDF/Excel)" aria-label="Incluir na listagem"><input type="text" data-pi="${i}" data-pf="nome" value="${escHtml(x.nome)}" placeholder="Nome do produto" class="ped-inp flex-1 font-bold"><select data-pi="${i}" data-pf="canal" class="ped-inp !w-40">${opts(x.canal)}</select><button type="button" data-pdel="${i}" class="text-red-600 font-bold px-1">✕</button></div>
-                <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">${f(i, 'peso', 'Peso (g)', x.peso)}${f(i, 'horas', 'Tempo (h)', x.horas)}${f(i, 'mao_min', 'Mão de obra (min)', x.mao_min)}${f(i, 'extras', 'Embalagem (R$)', x.extras)}${f(i, 'praticado', 'Preço praticado (R$)', x.praticado)}</div>
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs bg-surface2 rounded-lg p-2"><div><span class="text-inkmute block text-[10px]">Custo total</span><b data-o="custo">${fmtR(r.custo)}</b></div><div><span class="text-inkmute block text-[10px]">Markup</span><b data-o="markup">${r.markup.toFixed(2).replace('.', ',')}×</b></div><div><span class="text-inkmute block text-[10px]">Preço sugerido</span><b class="text-emerald-700 text-sm" data-o="sug">${fmtR(r.sugerido)}</b></div><div><span class="text-inkmute block text-[10px]">Lucro por unidade</span><b data-o="lucro">${fmtR(r.lucro)}</b></div>
-                <div class="col-span-2 sm:col-span-4 text-[11px] text-inkmute" data-o="det">Material ${fmtR(r.mat)} · Máquina ${fmtR(r.maq)} · Mão de obra ${fmtR(r.mao)} · Taxas do canal ${fmtR(r.taxaCanal)}${ok ? ` · <b class="${r.margem < 0 ? 'text-red-600' : 'text-emerald-700'}">Margem real ${(r.margem * 100).toFixed(1).replace('.', ',')}%</b>` : ''}</div></div></div>`;
-            }).join('') : '<p class="text-xs text-inkmute italic">Nenhum produto ainda.</p>';
+            const it = prec.prods.map((x, i) => ({ x, i, r: precCalcLinha(x) }));
+            document.getElementById('precProdutos').innerHTML = it.length ? it.map(({ x, i, r }) => {
+                const ok = r.margem != null, h = Math.floor(pn(x.horas)), m = Math.round((pn(x.horas) - h) * 60);
+                return `<div class="rounded-xl border border-line p-3 flex items-center gap-3 flex-wrap sm:flex-nowrap"><input type="checkbox" data-plista="${i}" ${x.lista === false ? '' : 'checked'} class="h-4 w-4 accent-emerald-600 shrink-0" title="Incluir na listagem (PDF/Excel)" aria-label="Incluir na listagem">
+                <button type="button" data-pedit="${i}" class="min-w-0 flex-1 text-left"><span class="block font-bold text-ink truncate">${escHtml(x.nome || 'Sem nome')}</span><span class="block text-[11px] text-inkmute truncate">${escHtml(x.canal)} · ${pn(x.peso)} g · ${h}h${String(m).padStart(2, '0')}min · custo ${fmtR(r.custo)}</span></button>
+                <div class="text-right shrink-0"><span class="block text-[10px] uppercase text-inkmute">Sugerido</span><b class="text-emerald-700">${fmtR(r.sugerido)}</b>${ok ? `<span class="block text-[10px] ${r.margem < 0 ? 'text-red-600' : 'text-inkmute'}">margem ${(r.margem * 100).toFixed(1).replace('.', ',')}%</span>` : ''}</div>
+                <div class="flex gap-2 shrink-0"><button type="button" data-pedit="${i}" class="text-sky-600 font-bold" aria-label="Editar">✏️</button><button type="button" data-pdel="${i}" class="text-red-600 font-bold" aria-label="Remover">✕</button></div></div>`;
+            }).join('') : '<p class="text-xs text-inkmute italic">Nenhum produto salvo ainda. Use “+ Adicionar produto” ou “Carregar das Impressões”.</p>';
         }
-        // atualiza só os resultados de um produto (sem recriar os campos, para não perder o foco)
-        function precAtualizaProd(i) {
-            const box = document.querySelector(`[data-pbox="${i}"]`); if (!box) return; const r = precCalcLinha(prec.prods[i]), ok = r.margem != null, o = (k) => box.querySelector(`[data-o="${k}"]`);
-            o('custo').textContent = fmtR(r.custo); o('markup').textContent = r.markup.toFixed(2).replace('.', ',') + '×'; o('sug').textContent = fmtR(r.sugerido); o('lucro').textContent = fmtR(r.lucro);
-            o('det').innerHTML = `Material ${fmtR(r.mat)} · Máquina ${fmtR(r.maq)} · Mão de obra ${fmtR(r.mao)} · Taxas do canal ${fmtR(r.taxaCanal)}${ok ? ` · <b class="${r.margem < 0 ? 'text-red-600' : 'text-emerald-700'}">Margem real ${(r.margem * 100).toFixed(1).replace('.', ',')}%</b>` : ''}`;
+        // janela para cadastrar / editar um produto
+        function precAbrirProduto(idx, base) {
+            const novo = idx == null, x0 = novo ? { nome: '', canal: prec.canais[0].nome, peso: '', horas: 0, mao_min: 0, extras: 0, praticado: '', ...(base || {}) } : prec.prods[idx];
+            const h0 = Math.floor(pn(x0.horas) + 1e-9), m0 = Math.round((pn(x0.horas) - h0) * 60);
+            const md = document.createElement('div'); md.className = 'fixed inset-0 z-[90] bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4';
+            const campo = (id, rot, val, extra) => `<div><label class="ped-lbl">${rot}</label><input type="text" inputmode="decimal" id="${id}" value="${escHtml(val)}" class="ped-inp" ${extra || ''}></div>`;
+            md.innerHTML = `<div class="bg-surface w-full sm:max-w-lg max-h-[94vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl shadow-2xl p-4 sm:p-5 space-y-3"><h3 class="font-display font-bold text-ink text-lg">${novo ? '➕ Novo produto' : '✏️ Editar produto'}</h3>
+                <div><label class="ped-lbl">Nome do produto</label><input type="text" id="pmNome" value="${escHtml(x0.nome)}" placeholder="Ex: Mini Jesus" class="ped-inp"></div>
+                <div><label class="ped-lbl">Canal de venda</label><select id="pmCanal" class="ped-inp">${prec.canais.map(c => `<option ${c.nome === x0.canal ? 'selected' : ''}>${escHtml(c.nome)}</option>`).join('')}</select></div>
+                <div class="grid grid-cols-3 gap-2">${campo('pmPeso', 'Peso (g)', x0.peso)}${campo('pmH', 'Tempo: horas', h0)}${campo('pmM', 'Tempo: minutos', m0)}</div>
+                <div class="grid grid-cols-2 gap-2">${campo('pmMao', 'Mão de obra (min)', x0.mao_min)}${campo('pmExtras', 'Embalagem / extras (R$)', x0.extras)}</div>
+                ${campo('pmPrat', 'Preço praticado (R$) — opcional, para ver a margem real', x0.praticado)}
+                <div id="pmRes" class="grid grid-cols-2 gap-2 text-xs bg-surface2 rounded-xl p-3"></div>
+                <div class="flex gap-2"><button type="button" id="pmCancelar" class="flex-1 border border-line rounded-xl py-2.5 text-sm font-bold text-ink">Cancelar</button><button type="button" id="pmSalvar" class="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl py-2.5 text-sm font-bold">💾 Salvar produto</button></div></div>`;
+            document.body.appendChild(md);
+            const q = (id) => md.querySelector('#' + id);
+            const ler = () => ({ ...x0, nome: q('pmNome').value.trim(), canal: q('pmCanal').value, peso: q('pmPeso').value, horas: Math.round((pn(q('pmH').value) + pn(q('pmM').value) / 60) * 10000) / 10000, mao_min: q('pmMao').value, extras: q('pmExtras').value, praticado: q('pmPrat').value });
+            const atualizar = () => {
+                const x = ler(), r = precCalcLinha(x), ok = String(x.praticado).trim() !== '' && r.margem != null;
+                q('pmRes').innerHTML = `<div><span class="text-inkmute block text-[10px]">Custo total</span><b>${fmtR(r.custo)}</b></div><div><span class="text-inkmute block text-[10px]">Markup</span><b>${r.markup.toFixed(2).replace('.', ',')}×</b></div><div><span class="text-inkmute block text-[10px]">Preço sugerido</span><b class="text-emerald-700 text-base">${fmtR(r.sugerido)}</b></div><div><span class="text-inkmute block text-[10px]">Lucro por unidade</span><b>${fmtR(r.lucro)}</b></div><div class="col-span-2 text-[11px] text-inkmute">Material ${fmtR(r.mat)} · Máquina ${fmtR(r.maq)} · Mão de obra ${fmtR(r.mao)} · Taxas do canal ${fmtR(r.taxaCanal)}${ok ? ` · <b class="${r.margem < 0 ? 'text-red-600' : 'text-emerald-700'}">Margem real ${(r.margem * 100).toFixed(1).replace('.', ',')}%</b>` : ''}</div>`;
+            };
+            md.addEventListener('input', atualizar); md.addEventListener('change', atualizar); atualizar();
+            q('pmCancelar').addEventListener('click', () => md.remove());
+            q('pmSalvar').addEventListener('click', () => {
+                const x = ler(); if (!x.nome) { alert('Dê um nome ao produto.'); q('pmNome').focus(); return; }
+                if (novo) prec.prods.push(x); else prec.prods[idx] = x;
+                md.remove(); precRenderProds(); precSalvar(document.getElementById('precSalvar'));
+            });
+            setTimeout(() => q('pmNome').focus(), 50);
         }
         (() => {
             const v = document.getElementById('view-precificacao'); if (!v) return;
             v.addEventListener('input', (e) => {
                 const t = e.target;
-                if (t.dataset.pk) { prec.p[t.dataset.pk] = t.value; precRenderCalc(); prec.prods.forEach((_, i) => precAtualizaProd(i)); }
-                else if (t.dataset.cf) { prec.canais[t.dataset.ci][t.dataset.cf] = t.value; prec.prods.forEach((_, i) => precAtualizaProd(i)); }
-                else if (t.dataset.pf === 'lista') { prec.prods[t.dataset.pi].lista = t.checked; }
-                else if (t.dataset.pf) { prec.prods[t.dataset.pi][t.dataset.pf] = t.value; precAtualizaProd(t.dataset.pi); }
+                if (t.dataset.pk) { prec.p[t.dataset.pk] = t.value; precRenderCalc(); precRenderProds(); }
+                else if (t.dataset.cf) { const c = prec.canais[t.dataset.ci]; if (t.dataset.cf === 'nome') prec.prods.forEach(x => { if (x.canal === c.nome) x.canal = t.value; }); c[t.dataset.cf] = t.value; precRenderProds(); }
+                else if (t.dataset.plista != null) { prec.prods[t.dataset.plista].lista = t.checked; }
             });
-            v.addEventListener('change', (e) => { const t = e.target; if (t.dataset.cf === 'nome') precRenderProds(); if (t.dataset.pf === 'canal') precAtualizaProd(t.dataset.pi); });
+            v.addEventListener('change', (e) => { const t = e.target; if (t.dataset.cf === 'nome') { precRenderProds(); } });
             v.addEventListener('click', (e) => {
                 const b = e.target.closest('button'); if (!b) return;
                 if (b.id === 'precAddCanal') { prec.canais.push({ nome: 'Novo canal', com: 0, fixa: 0 }); precRender(); }
                 else if (b.dataset.cdel != null) { if (prec.canais.length > 1) { const n = prec.canais[b.dataset.cdel].nome; prec.canais.splice(+b.dataset.cdel, 1); prec.prods.forEach(x => { if (x.canal === n) x.canal = prec.canais[0].nome; }); precRender(); } }
-                else if (b.id === 'precAddProd') { prec.prods.push({ nome: '', canal: prec.canais[0].nome, peso: 0, horas: 0, mao_min: 0, extras: 0, praticado: '' }); precRenderProds(); }
+                else if (b.id === 'precAddProd') { precAbrirProduto(null); }
+                else if (b.dataset.pedit != null) { precAbrirProduto(+b.dataset.pedit); }
                 else if (b.dataset.pdel != null) { if (confirm('Remover este produto da precificação?')) { prec.prods.splice(+b.dataset.pdel, 1); precRenderProds(); } }
                 else if (b.id === 'precSalvar') { precSalvar(b); }
                 else if (b.id === 'precCarregar') { precAbrirImportar(); }
@@ -4153,8 +4176,9 @@
             md.querySelector('#precImpCancelar').addEventListener('click', () => md.remove());
             md.addEventListener('click', (e) => { if (e.target === md) md.remove(); });
             md.querySelector('#precImpOk').addEventListener('click', () => {
-                lista.filter(x => marcados.has(x.id)).forEach(x => prec.prods.push({ projeto_id: x.id, nome: x.nome_projeto || '', canal: prec.canais[0].nome, peso: parseFloat(x.peso_total_g) || 0, horas: Math.round(((parseFloat(x.tempo_total_min) || 0) / 60) * 100) / 100, mao_min: 0, extras: 0, praticado: '' }));
-                md.remove(); precRenderProds();
+                const novos = lista.filter(x => marcados.has(x.id)).map(x => ({ projeto_id: x.id, nome: x.nome_projeto || '', canal: prec.canais[0].nome, peso: parseFloat(x.peso_total_g) || 0, horas: Math.round(((parseFloat(x.tempo_total_min) || 0) / 60) * 10000) / 10000, mao_min: 0, extras: 0, praticado: '' }));
+                md.remove(); if (novos.length === 1) { precAbrirProduto(null, novos[0]); return; }
+                prec.prods.push(...novos); precRenderProds(); if (novos.length) precSalvar(document.getElementById('precSalvar'));
             });
         }
         function precLinhasExport() {
